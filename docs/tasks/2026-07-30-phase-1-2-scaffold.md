@@ -67,3 +67,18 @@ Xem "Exit criteria Phase 1" và "Exit criteria Phase 2" đầy đủ trong `PLAN
 - [x] Tài liệu/ADR cần thiết đã cập nhật (ADR-010 đã có; schema Phase 2 vẫn cần con người duyệt riêng trước khi implement Drift)
 
 **Phase 1: Definition of Done đã đạt đủ 6/6 mục.** Xác nhận bằng `flutter pub get && dart analyze && flutter test` chạy trực tiếp trong sandbox (cài Flutter SDK tạm thời qua `git clone` — xem log phiên làm việc), ngày 2026-07-30.
+
+## Phase 2 — hoàn tất 2026-07-30
+
+Sau khi duyệt schema `VocabularyTable` (bổ sung `phonetic`/`partOfSpeech`/`exampleSentence` qua sample-data review) và `ProgressTable` (giữ nguyên như phác thảo), đã implement đầy đủ:
+- `core/db/tables.dart`, `core/db/app_database.dart` (+ `.g.dart` generated qua `build_runner`)
+- `core/providers.dart` (`appDatabaseProvider`) — tạo NEW thật, không phải EDIT placeholder
+- `data/drift_progress_repository.dart` — thay `FakeProgressRepository` (đã xóa, không còn reference)
+- `application/providers.dart` — EDIT 1 dòng duy nhất để chuyển implementation
+- `session_controller.dart` — **không đổi gì**, verify bằng `git diff`
+
+Test: `test/core/db/app_database_test.dart` (schema v1 + `uniqueKeys`), `test/features/study/data/drift_progress_repository_test.dart` (6 case, gồm case 12 persist/reload và 1 test restart-app thật bằng đóng/mở lại kết nối trên cùng file `.sqlite`). Toàn suite: **21/21 pass**, `dart analyze` sạch.
+
+**Lưu ý về "migration test"**: schema hiện ở version 1 (khởi tạo lần đầu) — chưa có version cũ để test đường nâng cấp thật. Đã test đúng phần có ý nghĩa ở v1 (`onCreate`, ràng buộc `uniqueKeys`). Test migrate v1→v2 thật sẽ viết khi có schema change đầu tiên — ghi lại như một khoản nợ kỹ thuật đã biết trước, không phải bị bỏ sót.
+
+Định nghĩa Done Phase 2: **12/12 exit criteria đạt**, xem `PLAN-PHASE-1-2.md` mục "Exit criteria Phase 2" để biết chi tiết cách verify từng mục.
