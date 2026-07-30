@@ -1,17 +1,21 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
+import 'seed_data.dart';
 import 'tables.dart';
 
 part 'app_database.g.dart';
 
 @DriftDatabase(tables: [VocabularyTable, ProgressTable])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+  AppDatabase() : _seedDemoData = true, super(_openConnection());
 
   /// Dùng cho test — inject `NativeDatabase.memory()` hoặc executor khác
-  /// thay vì mở file DB thật qua `drift_flutter`.
-  AppDatabase.forTesting(super.executor);
+  /// thay vì mở file DB thật qua `drift_flutter`. Không seed demo data để
+  /// giữ test hermetic.
+  AppDatabase.forTesting(super.executor) : _seedDemoData = false;
+
+  final bool _seedDemoData;
 
   @override
   int get schemaVersion => 1;
@@ -20,6 +24,11 @@ class AppDatabase extends _$AppDatabase {
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (migrator) async {
       await migrator.createAll();
+      // TẠM THỜI — seed data mẫu để app có nội dung ngay từ lần cài đầu
+      // tiên. Sẽ bỏ khi có feature nhập từ vựng thật (PLAN.md Phase 5).
+      if (_seedDemoData) {
+        await seedInitialVocabulary(this);
+      }
     },
     // onUpgrade sẽ thêm khi schemaVersion tăng — xem "Migration rules"
     // trong PLAN-PHASE-1-2.md. Chưa có version cũ nào để migrate từ đó.
