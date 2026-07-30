@@ -27,5 +27,14 @@ class AppDatabase extends _$AppDatabase {
 }
 
 QueryExecutor _openConnection() {
-  return driftDatabase(name: 'voca');
+  return driftDatabase(
+    name: 'voca',
+    // Ignored trên native, bắt buộc phải truyền khi compile ra web (drift
+    // dùng SQLite qua WASM + Web Worker thay vì file, không có path_provider).
+    // sqlite3.wasm + drift_worker.js copy từ package drift, đặt trong web/.
+    web: DriftWebOptions(
+      sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+      driftWorker: Uri.parse('drift_worker.js'),
+    ),
+  );
 }
