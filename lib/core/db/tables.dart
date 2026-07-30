@@ -57,6 +57,11 @@ class ProgressTable extends Table {
   /// không reset, chỉ tăng.
   IntColumn get lapses => integer()();
 
+  /// `null` = đã graduate, ở review phase (`interval` tính bằng ngày).
+  /// `0, 1, ...` = đang ở learning/relearning phase, index vào
+  /// `learningStepsMinutes` (phút) — xem ADR-011. Thêm ở schema v2.
+  IntColumn get learningStep => integer().nullable()();
+
   /// Mốc thời gian thẻ này đến hạn ôn lại tiếp theo.
   DateTimeColumn get nextReview => dateTime()();
 

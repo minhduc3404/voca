@@ -113,8 +113,11 @@ void main() {
       expect(rows.where((r) => r.vocabId == cardId).length, 1);
 
       final finalProgress = await repository.getProgress(cardId);
+      // Thẻ vẫn ở learning phase (chưa từng graduate) → Again không phải
+      // lapse thật, xem ADR-011.
       expect(finalProgress.reps, 0);
-      expect(finalProgress.lapses, 1);
+      expect(finalProgress.lapses, 0);
+      expect(finalProgress.learningStep, 0);
     });
 
     test(

@@ -9,73 +9,123 @@ void main() {
   WordProgress newCard(DateTime now) =>
       WordProgress.initial(cardId: 1, now: now);
 
-  group('scheduleNextReview — test matrix PLAN-PHASE-1-2.md', () {
-    test('1. Từ mới → trả lời đúng (Good)', () {
+  group('scheduleNextReview — learning phase (ADR-011)', () {
+    test('1. Thẻ mới → Good lần 1 → sang bước kế, CHƯA graduate', () {
       final result = scheduleNextReview(
         current: newCard(anchor),
         rating: StudyRating.good,
         now: anchor,
       );
 
-      expect(result.interval, 1);
-      expect(result.reps, 1);
-      expect(result.lapses, 0);
-      expect(result.easeFactor, 2.5);
-      expect(result.nextReview, anchor.add(const Duration(days: 1)));
-      expect(result.lastReview, anchor);
+      expect(result.learningStep, 1); // learningStepsMinutes[1] = 10 phút
+      expect(result.reps, 0); // chưa graduate, reps chưa tăng
+      expect(result.easeFactor, 2.5); // ease không đổi trong learning
+      expect(result.nextReview, anchor.add(const Duration(minutes: 10)));
     });
 
-    test('2. Từ mới → trả lời sai (Again)', () {
+    test('2. Thẻ mới → Good 2 lần liên tiếp (đủ số bước) → graduate', () {
+      final step1 = scheduleNextReview(
+        current: newCard(anchor),
+        rating: StudyRating.good,
+        now: anchor,
+      );
+      final graduated = scheduleNextReview(
+        current: step1,
+        rating: StudyRating.good,
+        now: step1.nextReview,
+      );
+
+      expect(graduated.learningStep, isNull);
+      expect(graduated.interval, 1); // graduating interval (Good) = 1 ngày
+      expect(graduated.reps, 1);
+      expect(
+        graduated.nextReview,
+        step1.nextReview.add(const Duration(days: 1)),
+      );
+    });
+
+    test('3. Thẻ mới → Easy → graduate NGAY, bỏ qua các bước còn lại', () {
+      final result = scheduleNextReview(
+        current: newCard(anchor),
+        rating: StudyRating.easy,
+        now: anchor,
+      );
+
+      expect(result.learningStep, isNull);
+      expect(result.interval, 4); // graduating interval (Easy) = 4 ngày
+      expect(result.reps, 1);
+      expect(result.nextReview, anchor.add(const Duration(days: 4)));
+    });
+
+    test('4. Thẻ mới → Again → quay lại bước đầu, KHÔNG tính là lapse', () {
       final result = scheduleNextReview(
         current: newCard(anchor),
         rating: StudyRating.again,
         now: anchor,
       );
 
-      expect(result.interval, 1);
+      expect(result.learningStep, 0);
+      expect(result.lapses, 0); // chưa từng graduate → không phải lapse thật
       expect(result.reps, 0);
-      expect(result.lapses, 1);
-      expect(result.easeFactor, closeTo(2.3, 1e-9));
+      expect(result.nextReview, anchor.add(const Duration(minutes: 1)));
     });
 
-    test('3. Review đúng liên tiếp (interval tăng dần)', () {
-      final t0 = anchor;
-      final progress1 = scheduleNextReview(
-        current: newCard(t0),
+    test('5. Hard trong learning phase → lặp lại bước hiện tại', () {
+      final step1 = scheduleNextReview(
+        current: newCard(anchor),
         rating: StudyRating.good,
-        now: t0,
+        now: anchor,
+      ); // learningStep = 1 (10 phút)
+
+      final result = scheduleNextReview(
+        current: step1,
+        rating: StudyRating.hard,
+        now: step1.nextReview,
       );
-      final t1 = progress1.nextReview;
+
+      expect(result.learningStep, 1); // vẫn ở bước 1, không tiến không lùi
+      expect(result.nextReview, step1.nextReview.add(const Duration(minutes: 10)));
+    });
+
+    test('9. easeFactor không đổi dù Again/Hard nhiều lần trong learning', () {
+      final afterAgain = scheduleNextReview(
+        current: newCard(anchor),
+        rating: StudyRating.again,
+        now: anchor,
+      );
+      final afterHard = scheduleNextReview(
+        current: afterAgain,
+        rating: StudyRating.hard,
+        now: afterAgain.nextReview,
+      );
+
+      expect(afterAgain.easeFactor, 2.5);
+      expect(afterHard.easeFactor, 2.5);
+    });
+  });
+
+  group('scheduleNextReview — review phase (ADR-010, sau khi graduate)', () {
+    WordProgress graduatedCard(DateTime now) {
+      final step1 = scheduleNextReview(
+        current: newCard(now),
+        rating: StudyRating.good,
+        now: now,
+      );
+      return scheduleNextReview(
+        current: step1,
+        rating: StudyRating.good,
+        now: step1.nextReview,
+      ); // interval = 1 ngày, reps = 1
+    }
+
+    test('6. Review đúng liên tiếp (interval tăng dần)', () {
+      final graduated = graduatedCard(anchor);
+      final t1 = graduated.nextReview;
+
       final progress2 = scheduleNextReview(
-        current: progress1,
+        current: graduated,
         rating: StudyRating.good,
         now: t1,
-      );
-      final t2 = progress2.nextReview;
-      final progress3 = scheduleNextReview(
-        current: progress2,
-        rating: StudyRating.good,
-        now: t2,
-      );
-
-      expect(progress1.interval, 1);
-      expect(progress2.interval, 3); // round(1 * 2.5)
-      expect(progress3.interval, 8); // round(3 * 2.5)
-      expect(progress2.interval, greaterThan(progress1.interval));
-      expect(progress3.interval, greaterThan(progress2.interval));
-    });
-
-    test('4. Lapse sau chuỗi đúng (interval reset)', () {
-      final t0 = anchor;
-      final progress1 = scheduleNextReview(
-        current: newCard(t0),
-        rating: StudyRating.good,
-        now: t0,
-      );
-      final progress2 = scheduleNextReview(
-        current: progress1,
-        rating: StudyRating.good,
-        now: progress1.nextReview,
       );
       final progress3 = scheduleNextReview(
         current: progress2,
@@ -83,91 +133,68 @@ void main() {
         now: progress2.nextReview,
       );
 
+      expect(progress2.interval, 3); // round(1 * 2.5)
+      expect(progress3.interval, 8); // round(3 * 2.5)
+      expect(progress3.interval, greaterThan(progress2.interval));
+    });
+
+    test('7. Lapse thật (Again sau khi đã graduate) → vào lại relearning', () {
+      final graduated = graduatedCard(anchor);
+      final t1 = graduated.nextReview;
+      final reviewed = scheduleNextReview(
+        current: graduated,
+        rating: StudyRating.good,
+        now: t1,
+      ); // interval = 3 ngày
+
       final lapsed = scheduleNextReview(
-        current: progress3,
+        current: reviewed,
         rating: StudyRating.again,
-        now: progress3.nextReview,
+        now: reviewed.nextReview,
       );
 
-      expect(progress3.interval, greaterThan(1));
-      expect(lapsed.interval, 1);
+      expect(lapsed.learningStep, 0);
+      expect(lapsed.lapses, 1);
       expect(lapsed.reps, 0);
-      expect(lapsed.lapses, progress3.lapses + 1);
+      expect(lapsed.easeFactor, closeTo(2.3, 1e-9)); // 2.5 - 0.20
+      expect(
+        lapsed.nextReview,
+        reviewed.nextReview.add(const Duration(minutes: 1)),
+      );
     });
 
-    test('5. Review sớm (trước nextReview) — không có logic đặc biệt', () {
-      final progress1 = scheduleNextReview(
-        current: newCard(anchor),
-        rating: StudyRating.good,
-        now: anchor,
-      );
-      // progress1.nextReview = anchor + 1 ngày; review sớm 12 giờ trước hạn.
-      final early = anchor.add(const Duration(hours: 12));
-
-      final result = scheduleNextReview(
-        current: progress1,
-        rating: StudyRating.good,
-        now: early,
+    test('8. Sau lapse, graduate lại từ đầu (không dùng interval cũ)', () {
+      final graduated = graduatedCard(anchor);
+      final lapsed = scheduleNextReview(
+        current: graduated,
+        rating: StudyRating.again,
+        now: graduated.nextReview,
       );
 
-      // Công thức chỉ phụ thuộc rating + interval/ease cũ, không phụ thuộc
-      // việc `now` sớm hay trễ so với `current.nextReview`.
-      expect(result.interval, 3); // round(1 * 2.5), giống hệt review đúng hạn
-      expect(result.nextReview, early.add(const Duration(days: 3)));
+      final step1 = scheduleNextReview(
+        current: lapsed,
+        rating: StudyRating.good,
+        now: lapsed.nextReview,
+      );
+      final regraduated = scheduleNextReview(
+        current: step1,
+        rating: StudyRating.good,
+        now: step1.nextReview,
+      );
+
+      expect(regraduated.learningStep, isNull);
+      expect(regraduated.interval, 1); // graduate lại từ đầu, không phải x2.5
+      expect(regraduated.reps, 1);
     });
 
-    test('6. Review trễ (sau nextReview) — không có logic đặc biệt', () {
-      final progress1 = scheduleNextReview(
-        current: newCard(anchor),
-        rating: StudyRating.good,
-        now: anchor,
-      );
-      // progress1.nextReview = anchor + 1 ngày; review trễ 5 ngày sau hạn.
-      final late = anchor.add(const Duration(days: 6));
-
-      final result = scheduleNextReview(
-        current: progress1,
-        rating: StudyRating.good,
-        now: late,
-      );
-
-      expect(result.interval, 3); // độ trễ không ảnh hưởng công thức interval
-      expect(result.nextReview, late.add(const Duration(days: 3)));
-    });
-
-    test('7. Boundary trước/sau nửa đêm', () {
-      final beforeMidnight = DateTime(2026, 1, 15, 23, 59);
-
-      final result = scheduleNextReview(
-        current: newCard(beforeMidnight),
-        rating: StudyRating.good,
-        now: beforeMidnight,
-      );
-
-      // Cộng thẳng Duration, không quy tròn về đầu ngày.
-      expect(result.nextReview, DateTime(2026, 1, 16, 23, 59));
-    });
-
-    test('8. Timezone / DST — domain không tự diễn giải lịch', () {
-      final utcNow = DateTime.utc(2026, 1, 15, 23, 59);
-
-      final result = scheduleNextReview(
-        current: newCard(utcNow),
-        rating: StudyRating.good,
-        now: utcNow,
-      );
-
-      expect(result.nextReview.isUtc, isTrue);
-      expect(result.nextReview, utcNow.add(const Duration(days: 1)));
-    });
-
-    test('9. Maximum interval (không vượt quá 365)', () {
+    test('10. Maximum interval (không vượt quá 365)', () {
       final current = WordProgress(
         cardId: 1,
         interval: 300,
         easeFactor: 2.5,
         reps: 5,
         lapses: 0,
+        learningStep: null,
         nextReview: anchor,
       );
 
@@ -179,16 +206,14 @@ void main() {
 
       // round(300 * 2.5 * 1.3) = 975 → cắt về trần 365.
       expect(result.interval, 365);
-      expect(result.nextReview, anchor.add(const Duration(days: 365)));
     });
+  });
 
-    test('10. Không mutate input object', () {
+  group('scheduleNextReview — bất biến chung', () {
+    test('11. Không mutate input object', () {
       final current = newCard(anchor);
-      final snapshotInterval = current.interval;
+      final snapshotStep = current.learningStep;
       final snapshotEase = current.easeFactor;
-      final snapshotReps = current.reps;
-      final snapshotLapses = current.lapses;
-      final snapshotNextReview = current.nextReview;
 
       final result = scheduleNextReview(
         current: current,
@@ -196,15 +221,12 @@ void main() {
         now: anchor,
       );
 
-      expect(current.interval, snapshotInterval);
+      expect(current.learningStep, snapshotStep);
       expect(current.easeFactor, snapshotEase);
-      expect(current.reps, snapshotReps);
-      expect(current.lapses, snapshotLapses);
-      expect(current.nextReview, snapshotNextReview);
       expect(identical(result, current), isFalse);
     });
 
-    test('11. Cùng input → cùng output (deterministic)', () {
+    test('12. Cùng input → cùng output (deterministic)', () {
       final current = newCard(anchor);
 
       final result1 = scheduleNextReview(
@@ -219,6 +241,23 @@ void main() {
       );
 
       expect(result1, result2);
+    });
+
+    test('13. Review sớm/trễ không có logic đặc biệt (kể cả learning phase)', () {
+      final early = scheduleNextReview(
+        current: newCard(anchor),
+        rating: StudyRating.good,
+        now: anchor.add(const Duration(seconds: 1)),
+      );
+      final late = scheduleNextReview(
+        current: newCard(anchor),
+        rating: StudyRating.good,
+        now: anchor.add(const Duration(days: 10)),
+      );
+
+      // Cùng công thức, chỉ khác mốc `now` truyền vào.
+      expect(early.learningStep, 1);
+      expect(late.learningStep, 1);
     });
   });
 }

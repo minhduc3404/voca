@@ -18,7 +18,7 @@ class AppDatabase extends _$AppDatabase {
   final bool _seedDemoData;
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -30,8 +30,15 @@ class AppDatabase extends _$AppDatabase {
         await seedInitialVocabulary(this);
       }
     },
-    // onUpgrade sẽ thêm khi schemaVersion tăng — xem "Migration rules"
-    // trong PLAN-PHASE-1-2.md. Chưa có version cũ nào để migrate từ đó.
+    onUpgrade: (migrator, from, to) async {
+      if (from < 2) {
+        // ADR-011: thêm learning steps. Dữ liệu v1 không có khái niệm
+        // learning phase → migrate lên coi như đã graduate — cột mới
+        // nullable, không set default nên tự NULL cho dòng cũ, đúng ý
+        // nghĩa "learningStep = null = review phase".
+        await migrator.addColumn(progressTable, progressTable.learningStep);
+      }
+    },
   );
 }
 

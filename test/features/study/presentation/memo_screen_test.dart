@@ -75,14 +75,17 @@ void main() {
       expect(find.text('apple'), findsOneWidget);
 
       await tester.tap(find.text('Good'));
-      await tester.pumpAndSettle();
+      await tester.pump(); // setState(_showSaved = true)
+      expect(find.text('Đã lưu!'), findsOneWidget);
+      await tester.pump(const Duration(milliseconds: 700)); // qua transient
 
       expect(find.text('banana'), findsOneWidget);
 
       await tester.tap(find.text('Good'));
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 700));
 
-      expect(find.text('Đã ôn hết thẻ đến hạn hôm nay.'), findsOneWidget);
+      expect(find.text('Đã ôn hết thẻ đến hạn hôm nay'), findsOneWidget);
     },
   );
 }

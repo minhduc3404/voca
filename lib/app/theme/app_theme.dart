@@ -11,4 +11,15 @@ class AppTheme {
       fontFamily: 'NotoSans',
     );
   }
+
+  static ThemeData dark() {
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.deepPurple,
+        brightness: Brightness.dark,
+      ),
+      fontFamily: 'NotoSans',
+    );
+  }
 }

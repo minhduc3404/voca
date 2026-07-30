@@ -346,7 +346,7 @@ Mũi tên `data ←── core/db`: data layer phụ thuộc infrastructure — 
 
 - [x] `dart analyze` sạch — không regression từ Phase 1. *(verify 2026-07-30, "No issues found!")*
 - [x] `dart run build_runner build` thành công, generated file hợp lệ. *(`app_database.g.dart` sinh thành công, `dart analyze` pass với file này.)*
-- [x] Migration test pass — *(scope thật đã làm: schemaVersion đang ở v1, chưa có version cũ nào để "migrate từ" — chưa có gì để test upgrade thật. Đã test đúng phần có ý nghĩa ở v1: `onCreate` tạo đúng bảng + `uniqueKeys` enforce đúng, xem `test/core/db/app_database_test.dart`. Test upgrade v1→v2 thật sẽ viết khi có schema change đầu tiên.)*
+- [x] Migration test pass — *(ban đầu chỉ test được `onCreate` vì schema mới ở v1. Đã có migration test v1→v2 THẬT từ 2026-07-30 khi ADR-011 thêm cột `learningStep` — xem `test/core/db/migration_test.dart`: dựng schema v1 bằng raw SQL, insert dữ liệu, mở lại bằng `AppDatabase` v2, verify dữ liệu cũ nguyên vẹn + cột mới nhận giá trị mặc định đúng ý nghĩa.)*
 - [x] Repository test pass — insert vocab, insert progress, join, đọc đúng. *(5 test trong `drift_progress_repository_test.dart`, tất cả pass.)*
 - [x] UI không import `core/db/` hoặc Drift table trực tiếp. *(verify bằng grep — rỗng.)*
 - [x] `session_controller.dart` không bị sửa (chỉ inject contract, không biết Drift tồn tại). *(verify bằng `git diff` giữa 2 commit — không có thay đổi.)*

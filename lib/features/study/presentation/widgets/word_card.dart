@@ -37,17 +37,42 @@ class _WordCardState extends State<WordCard> {
       child: Card(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Center(
-            child: _showDefinition
-                ? _CardBack(card: widget.card, textTheme: textTheme)
-                : _CardFront(
-                    card: widget.card,
-                    textTheme: textTheme,
-                    onSpeak: widget.onSpeak,
-                  ),
+          child: Stack(
+            children: [
+              if (!_showDefinition)
+                const Align(alignment: Alignment.topCenter, child: _FlipHint()),
+              Center(
+                child: _showDefinition
+                    ? _CardBack(card: widget.card, textTheme: textTheme)
+                    : _CardFront(
+                        card: widget.card,
+                        textTheme: textTheme,
+                        onSpeak: widget.onSpeak,
+                      ),
+              ),
+            ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _FlipHint extends StatelessWidget {
+  const _FlipHint();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.sync_alt, size: 14, color: Colors.grey.shade600),
+        const SizedBox(width: 4),
+        Text(
+          'Chạm vào thẻ để lật',
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+        ),
+      ],
     );
   }
 }

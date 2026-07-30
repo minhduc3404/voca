@@ -59,6 +59,7 @@ class DriftProgressRepository implements ProgressRepository {
               easeFactor: progress.easeFactor,
               reps: progress.reps,
               lapses: progress.lapses,
+              learningStep: Value(progress.learningStep),
               nextReview: progress.nextReview,
               lastReview: Value(progress.lastReview),
               createdAt: now,
@@ -74,6 +75,7 @@ class DriftProgressRepository implements ProgressRepository {
           easeFactor: Value(progress.easeFactor),
           reps: Value(progress.reps),
           lapses: Value(progress.lapses),
+          learningStep: Value(progress.learningStep),
           nextReview: Value(progress.nextReview),
           lastReview: Value(progress.lastReview),
           updatedAt: Value(now),
@@ -101,6 +103,7 @@ class DriftProgressRepository implements ProgressRepository {
       easeFactor: row.easeFactor,
       reps: row.reps,
       lapses: row.lapses,
+      learningStep: row.learningStep,
       nextReview: row.nextReview,
       lastReview: row.lastReview,
     );

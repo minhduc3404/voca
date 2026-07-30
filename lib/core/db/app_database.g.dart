@@ -609,6 +609,17 @@ class $ProgressTableTable extends ProgressTable
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _learningStepMeta = const VerificationMeta(
+    'learningStep',
+  );
+  @override
+  late final GeneratedColumn<int> learningStep = GeneratedColumn<int>(
+    'learning_step',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _nextReviewMeta = const VerificationMeta(
     'nextReview',
   );
@@ -661,6 +672,7 @@ class $ProgressTableTable extends ProgressTable
     easeFactor,
     reps,
     lapses,
+    learningStep,
     nextReview,
     lastReview,
     createdAt,
@@ -720,6 +732,15 @@ class $ProgressTableTable extends ProgressTable
       );
     } else if (isInserting) {
       context.missing(_lapsesMeta);
+    }
+    if (data.containsKey('learning_step')) {
+      context.handle(
+        _learningStepMeta,
+        learningStep.isAcceptableOrUnknown(
+          data['learning_step']!,
+          _learningStepMeta,
+        ),
+      );
     }
     if (data.containsKey('next_review')) {
       context.handle(
@@ -788,6 +809,10 @@ class $ProgressTableTable extends ProgressTable
         DriftSqlType.int,
         data['${effectivePrefix}lapses'],
       )!,
+      learningStep: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}learning_step'],
+      ),
       nextReview: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}next_review'],
@@ -836,6 +861,11 @@ class ProgressTableData extends DataClass
   /// không reset, chỉ tăng.
   final int lapses;
 
+  /// `null` = đã graduate, ở review phase (`interval` tính bằng ngày).
+  /// `0, 1, ...` = đang ở learning/relearning phase, index vào
+  /// `learningStepsMinutes` (phút) — xem ADR-011. Thêm ở schema v2.
+  final int? learningStep;
+
   /// Mốc thời gian thẻ này đến hạn ôn lại tiếp theo.
   final DateTime nextReview;
 
@@ -856,6 +886,7 @@ class ProgressTableData extends DataClass
     required this.easeFactor,
     required this.reps,
     required this.lapses,
+    this.learningStep,
     required this.nextReview,
     this.lastReview,
     required this.createdAt,
@@ -870,6 +901,9 @@ class ProgressTableData extends DataClass
     map['ease_factor'] = Variable<double>(easeFactor);
     map['reps'] = Variable<int>(reps);
     map['lapses'] = Variable<int>(lapses);
+    if (!nullToAbsent || learningStep != null) {
+      map['learning_step'] = Variable<int>(learningStep);
+    }
     map['next_review'] = Variable<DateTime>(nextReview);
     if (!nullToAbsent || lastReview != null) {
       map['last_review'] = Variable<DateTime>(lastReview);
@@ -887,6 +921,9 @@ class ProgressTableData extends DataClass
       easeFactor: Value(easeFactor),
       reps: Value(reps),
       lapses: Value(lapses),
+      learningStep: learningStep == null && nullToAbsent
+          ? const Value.absent()
+          : Value(learningStep),
       nextReview: Value(nextReview),
       lastReview: lastReview == null && nullToAbsent
           ? const Value.absent()
@@ -908,6 +945,7 @@ class ProgressTableData extends DataClass
       easeFactor: serializer.fromJson<double>(json['easeFactor']),
       reps: serializer.fromJson<int>(json['reps']),
       lapses: serializer.fromJson<int>(json['lapses']),
+      learningStep: serializer.fromJson<int?>(json['learningStep']),
       nextReview: serializer.fromJson<DateTime>(json['nextReview']),
       lastReview: serializer.fromJson<DateTime?>(json['lastReview']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -924,6 +962,7 @@ class ProgressTableData extends DataClass
       'easeFactor': serializer.toJson<double>(easeFactor),
       'reps': serializer.toJson<int>(reps),
       'lapses': serializer.toJson<int>(lapses),
+      'learningStep': serializer.toJson<int?>(learningStep),
       'nextReview': serializer.toJson<DateTime>(nextReview),
       'lastReview': serializer.toJson<DateTime?>(lastReview),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -938,6 +977,7 @@ class ProgressTableData extends DataClass
     double? easeFactor,
     int? reps,
     int? lapses,
+    Value<int?> learningStep = const Value.absent(),
     DateTime? nextReview,
     Value<DateTime?> lastReview = const Value.absent(),
     DateTime? createdAt,
@@ -949,6 +989,7 @@ class ProgressTableData extends DataClass
     easeFactor: easeFactor ?? this.easeFactor,
     reps: reps ?? this.reps,
     lapses: lapses ?? this.lapses,
+    learningStep: learningStep.present ? learningStep.value : this.learningStep,
     nextReview: nextReview ?? this.nextReview,
     lastReview: lastReview.present ? lastReview.value : this.lastReview,
     createdAt: createdAt ?? this.createdAt,
@@ -964,6 +1005,9 @@ class ProgressTableData extends DataClass
           : this.easeFactor,
       reps: data.reps.present ? data.reps.value : this.reps,
       lapses: data.lapses.present ? data.lapses.value : this.lapses,
+      learningStep: data.learningStep.present
+          ? data.learningStep.value
+          : this.learningStep,
       nextReview: data.nextReview.present
           ? data.nextReview.value
           : this.nextReview,
@@ -984,6 +1028,7 @@ class ProgressTableData extends DataClass
           ..write('easeFactor: $easeFactor, ')
           ..write('reps: $reps, ')
           ..write('lapses: $lapses, ')
+          ..write('learningStep: $learningStep, ')
           ..write('nextReview: $nextReview, ')
           ..write('lastReview: $lastReview, ')
           ..write('createdAt: $createdAt, ')
@@ -1000,6 +1045,7 @@ class ProgressTableData extends DataClass
     easeFactor,
     reps,
     lapses,
+    learningStep,
     nextReview,
     lastReview,
     createdAt,
@@ -1015,6 +1061,7 @@ class ProgressTableData extends DataClass
           other.easeFactor == this.easeFactor &&
           other.reps == this.reps &&
           other.lapses == this.lapses &&
+          other.learningStep == this.learningStep &&
           other.nextReview == this.nextReview &&
           other.lastReview == this.lastReview &&
           other.createdAt == this.createdAt &&
@@ -1028,6 +1075,7 @@ class ProgressTableCompanion extends UpdateCompanion<ProgressTableData> {
   final Value<double> easeFactor;
   final Value<int> reps;
   final Value<int> lapses;
+  final Value<int?> learningStep;
   final Value<DateTime> nextReview;
   final Value<DateTime?> lastReview;
   final Value<DateTime> createdAt;
@@ -1039,6 +1087,7 @@ class ProgressTableCompanion extends UpdateCompanion<ProgressTableData> {
     this.easeFactor = const Value.absent(),
     this.reps = const Value.absent(),
     this.lapses = const Value.absent(),
+    this.learningStep = const Value.absent(),
     this.nextReview = const Value.absent(),
     this.lastReview = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -1051,6 +1100,7 @@ class ProgressTableCompanion extends UpdateCompanion<ProgressTableData> {
     required double easeFactor,
     required int reps,
     required int lapses,
+    this.learningStep = const Value.absent(),
     required DateTime nextReview,
     this.lastReview = const Value.absent(),
     required DateTime createdAt,
@@ -1070,6 +1120,7 @@ class ProgressTableCompanion extends UpdateCompanion<ProgressTableData> {
     Expression<double>? easeFactor,
     Expression<int>? reps,
     Expression<int>? lapses,
+    Expression<int>? learningStep,
     Expression<DateTime>? nextReview,
     Expression<DateTime>? lastReview,
     Expression<DateTime>? createdAt,
@@ -1082,6 +1133,7 @@ class ProgressTableCompanion extends UpdateCompanion<ProgressTableData> {
       if (easeFactor != null) 'ease_factor': easeFactor,
       if (reps != null) 'reps': reps,
       if (lapses != null) 'lapses': lapses,
+      if (learningStep != null) 'learning_step': learningStep,
       if (nextReview != null) 'next_review': nextReview,
       if (lastReview != null) 'last_review': lastReview,
       if (createdAt != null) 'created_at': createdAt,
@@ -1096,6 +1148,7 @@ class ProgressTableCompanion extends UpdateCompanion<ProgressTableData> {
     Value<double>? easeFactor,
     Value<int>? reps,
     Value<int>? lapses,
+    Value<int?>? learningStep,
     Value<DateTime>? nextReview,
     Value<DateTime?>? lastReview,
     Value<DateTime>? createdAt,
@@ -1108,6 +1161,7 @@ class ProgressTableCompanion extends UpdateCompanion<ProgressTableData> {
       easeFactor: easeFactor ?? this.easeFactor,
       reps: reps ?? this.reps,
       lapses: lapses ?? this.lapses,
+      learningStep: learningStep ?? this.learningStep,
       nextReview: nextReview ?? this.nextReview,
       lastReview: lastReview ?? this.lastReview,
       createdAt: createdAt ?? this.createdAt,
@@ -1136,6 +1190,9 @@ class ProgressTableCompanion extends UpdateCompanion<ProgressTableData> {
     if (lapses.present) {
       map['lapses'] = Variable<int>(lapses.value);
     }
+    if (learningStep.present) {
+      map['learning_step'] = Variable<int>(learningStep.value);
+    }
     if (nextReview.present) {
       map['next_review'] = Variable<DateTime>(nextReview.value);
     }
@@ -1160,6 +1217,7 @@ class ProgressTableCompanion extends UpdateCompanion<ProgressTableData> {
           ..write('easeFactor: $easeFactor, ')
           ..write('reps: $reps, ')
           ..write('lapses: $lapses, ')
+          ..write('learningStep: $learningStep, ')
           ..write('nextReview: $nextReview, ')
           ..write('lastReview: $lastReview, ')
           ..write('createdAt: $createdAt, ')
@@ -1575,6 +1633,7 @@ typedef $$ProgressTableTableCreateCompanionBuilder =
       required double easeFactor,
       required int reps,
       required int lapses,
+      Value<int?> learningStep,
       required DateTime nextReview,
       Value<DateTime?> lastReview,
       required DateTime createdAt,
@@ -1588,6 +1647,7 @@ typedef $$ProgressTableTableUpdateCompanionBuilder =
       Value<double> easeFactor,
       Value<int> reps,
       Value<int> lapses,
+      Value<int?> learningStep,
       Value<DateTime> nextReview,
       Value<DateTime?> lastReview,
       Value<DateTime> createdAt,
@@ -1653,6 +1713,11 @@ class $$ProgressTableTableFilterComposer
 
   ColumnFilters<int> get lapses => $composableBuilder(
     column: $table.lapses,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get learningStep => $composableBuilder(
+    column: $table.learningStep,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1734,6 +1799,11 @@ class $$ProgressTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get learningStep => $composableBuilder(
+    column: $table.learningStep,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get nextReview => $composableBuilder(
     column: $table.nextReview,
     builder: (column) => ColumnOrderings(column),
@@ -1803,6 +1873,11 @@ class $$ProgressTableTableAnnotationComposer
 
   GeneratedColumn<int> get lapses =>
       $composableBuilder(column: $table.lapses, builder: (column) => column);
+
+  GeneratedColumn<int> get learningStep => $composableBuilder(
+    column: $table.learningStep,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get nextReview => $composableBuilder(
     column: $table.nextReview,
@@ -1878,6 +1953,7 @@ class $$ProgressTableTableTableManager
                 Value<double> easeFactor = const Value.absent(),
                 Value<int> reps = const Value.absent(),
                 Value<int> lapses = const Value.absent(),
+                Value<int?> learningStep = const Value.absent(),
                 Value<DateTime> nextReview = const Value.absent(),
                 Value<DateTime?> lastReview = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -1889,6 +1965,7 @@ class $$ProgressTableTableTableManager
                 easeFactor: easeFactor,
                 reps: reps,
                 lapses: lapses,
+                learningStep: learningStep,
                 nextReview: nextReview,
                 lastReview: lastReview,
                 createdAt: createdAt,
@@ -1902,6 +1979,7 @@ class $$ProgressTableTableTableManager
                 required double easeFactor,
                 required int reps,
                 required int lapses,
+                Value<int?> learningStep = const Value.absent(),
                 required DateTime nextReview,
                 Value<DateTime?> lastReview = const Value.absent(),
                 required DateTime createdAt,
@@ -1913,6 +1991,7 @@ class $$ProgressTableTableTableManager
                 easeFactor: easeFactor,
                 reps: reps,
                 lapses: lapses,
+                learningStep: learningStep,
                 nextReview: nextReview,
                 lastReview: lastReview,
                 createdAt: createdAt,

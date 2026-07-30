@@ -6,10 +6,12 @@ class WordProgress {
     required this.reps,
     required this.lapses,
     required this.nextReview,
+    required this.learningStep,
     this.lastReview,
   });
 
-  /// Trạng thái ban đầu cho một thẻ chưa từng được ôn — xem ADR-010.
+  /// Trạng thái ban đầu cho một thẻ chưa từng được ôn — bắt đầu ở learning
+  /// phase (`learningStep = 0`), xem ADR-011.
   factory WordProgress.initial({required int cardId, required DateTime now}) {
     return WordProgress(
       cardId: cardId,
@@ -18,16 +20,26 @@ class WordProgress {
       reps: 0,
       lapses: 0,
       nextReview: now,
+      learningStep: 0,
       lastReview: null,
     );
   }
 
   final int cardId;
+
+  /// Số NGÀY tới lần ôn tiếp theo — chỉ có ý nghĩa khi [learningStep] là
+  /// `null` (đã graduate, ở review phase). Xem ADR-010/ADR-011.
   final int interval;
   final double easeFactor;
   final int reps;
   final int lapses;
   final DateTime nextReview;
+
+  /// `null` = đã graduate, ở review phase (SM-2 theo ngày).
+  /// `0, 1, ...` = đang ở learning/relearning phase, index vào
+  /// `learningSteps` (phút) — xem ADR-011.
+  final int? learningStep;
+
   final DateTime? lastReview;
 
   WordProgress copyWith({
@@ -45,6 +57,7 @@ class WordProgress {
       reps: reps ?? this.reps,
       lapses: lapses ?? this.lapses,
       nextReview: nextReview ?? this.nextReview,
+      learningStep: learningStep,
       lastReview: lastReview ?? this.lastReview,
     );
   }
@@ -59,6 +72,7 @@ class WordProgress {
         other.reps == reps &&
         other.lapses == lapses &&
         other.nextReview == nextReview &&
+        other.learningStep == learningStep &&
         other.lastReview == lastReview;
   }
 
@@ -70,6 +84,7 @@ class WordProgress {
     reps,
     lapses,
     nextReview,
+    learningStep,
     lastReview,
   );
 }
