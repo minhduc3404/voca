@@ -59,11 +59,11 @@ Xem "Exit criteria Phase 1" và "Exit criteria Phase 2" đầy đủ trong `PLAN
 
 ## Definition of Done (§14.5) — tick trước khi merge
 
-- [x] Code đúng kiến trúc — Phase 1 đã implement (`lib/features/study/` đủ 4 lớp), rà bằng grep thủ công khớp toàn bộ rule `import_lint`.
-- [ ] Test liên quan đã có và qua — đã viết `srs_scheduler_test.dart` (11/12 case, case 12 nằm ở `fake_progress_repository_test.dart`); **chưa chạy được `flutter test`** vì sandbox không có Flutter/Dart SDK. Cần người có toolchain chạy xác nhận trước khi merge.
+- [x] Code đúng kiến trúc — Phase 1 đã implement (`lib/features/study/` đủ 4 lớp), verify bằng `dart analyze` thật (cài Flutter 3.44.8 vào sandbox) — `import_lint` pass, không vi phạm layer nào.
+- [x] Test liên quan đã có và qua — `flutter test`: **15/15 pass** (11 case `srs_scheduler_test.dart` + case 12 và 2 case khác trong `fake_progress_repository_test.dart` + `widget_test.dart` có sẵn từ Phase 0 vẫn pass không cần sửa).
 - [x] Không phá dependency direction
 - [x] Không thêm folder/file rỗng — `lib/core/` chủ động **không tạo** ở Phase 1 (chưa có nội dung thật), dời `providers.dart` sang Phase 2.
-- [x] Không tạo import vòng hoặc import trái tầng — verify bằng grep thủ công (không có `dart analyze` trong sandbox).
+- [x] Không tạo import vòng hoặc import trái tầng — `dart analyze` sạch (bao gồm `import_lint`), không còn chỉ là grep thủ công.
 - [x] Tài liệu/ADR cần thiết đã cập nhật (ADR-010 đã có; schema Phase 2 vẫn cần con người duyệt riêng trước khi implement Drift)
 
-**Việc còn treo trước khi merge**: chạy `flutter pub get && dart analyze && flutter test` trên máy có Flutter SDK để xác nhận build sạch và test pass — sandbox hiện tại không có Flutter/Dart toolchain.
+**Phase 1: Definition of Done đã đạt đủ 6/6 mục.** Xác nhận bằng `flutter pub get && dart analyze && flutter test` chạy trực tiếp trong sandbox (cài Flutter SDK tạm thời qua `git clone` — xem log phiên làm việc), ngày 2026-07-30.

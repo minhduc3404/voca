@@ -153,14 +153,16 @@ control_bar                      study_card
 
 ## Exit criteria Phase 1
 
-- [ ] `dart analyze` sạch, không warning.
-- [ ] Không có Flutter/Riverpod/Drift import trong `features/study/domain/`.
-- [ ] `srs_scheduler` test pass (≥ 5 test case), không cần `pumpWidget`.
-- [ ] Flow chạy end-to-end: màn hình → controller → scheduler → repo → UI update.
-- [ ] Repository inject được qua provider, override được cho test.
-- [ ] Thay `FakeProgressRepository` bằng implementation khác chỉ cần sửa `application/providers.dart` (nơi duy nhất khởi tạo nó) — không đụng `domain/`, `session_controller.dart`, hay `presentation/`.
-- [ ] Domain model không bị leak ra presentation dưới dạng mutable.
-- [ ] Không folder rỗng, không barrel file.
+- [x] `dart analyze` sạch, không warning. *(verify 2026-07-30: `flutter pub get && dart analyze` — "No issues found!", kể cả `import_lint`.)*
+- [x] Không có Flutter/Riverpod/Drift import trong `features/study/domain/`. *(verify qua `import_lint` trong `dart analyze` — pass.)*
+- [x] `srs_scheduler` test pass (≥ 5 test case), không cần `pumpWidget`. *(11/12 case, `flutter test` pass, thuần Dart không `pumpWidget`.)*
+- [x] Flow chạy end-to-end: màn hình → controller → scheduler → repo → UI update. *(`memo_screen_test.dart` — pump MemoScreen, tap "Good" 2 lần, xác nhận chuyển thẻ rồi hiện "Đã ôn hết".)*
+- [x] Repository inject được qua provider, override được cho test. *(`memo_screen_test.dart` dùng `progressRepositoryProvider.overrideWithValue(...)`.)*
+- [x] Thay `FakeProgressRepository` bằng implementation khác chỉ cần sửa `application/providers.dart` (nơi duy nhất khởi tạo nó) — không đụng `domain/`, `session_controller.dart`, hay `presentation/`. *(đúng theo code — chỉ `providers.dart` import `FakeProgressRepository`.)*
+- [x] Domain model không bị leak ra presentation dưới dạng mutable. *(`StudyCard`/`WordProgress` immutable, field `final`, sửa qua `copyWith`.)*
+- [x] Không folder rỗng, không barrel file. *(`lib/core/` chủ động chưa tạo — xem phần "Chưa tồn tại".)*
+
+**Phase 1 exit criteria: đạt đủ 8/8, verify bằng `flutter test` thật (16/16 pass) — 2026-07-30.**
 
 ---
 
