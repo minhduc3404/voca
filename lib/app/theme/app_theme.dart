@@ -7,6 +7,8 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+      // Bundled TTF (ADR-006) — không phụ thuộc Google Fonts CDN lúc runtime.
+      fontFamily: 'NotoSans',
     );
   }
 }
