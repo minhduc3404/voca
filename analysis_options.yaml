@@ -34,6 +34,16 @@ import_lint:
       from: "package:shared_preferences/**"
       except: []
 
+    # application: PLAN.md §6.2 / CLAUDE.md §2 — no direct Drift/shared_preferences access.
+    application_no_drift:
+      target: "package:voca_app/**/application/**/*.dart"
+      from: "package:drift/**"
+      except: []
+    application_no_shared_preferences:
+      target: "package:voca_app/**/application/**/*.dart"
+      from: "package:shared_preferences/**"
+      except: []
+
     # presentation: PLAN.md §6.1 — no direct data-layer import.
     presentation_no_data:
       target: "package:voca_app/**/presentation/**/*.dart"

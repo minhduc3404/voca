@@ -32,7 +32,7 @@ Ngoài phạm vi này = ngoài task (không đụng `features/deck/`, `features/
 ## Ràng buộc kiến trúc
 
 - `domain/` không import Flutter/Riverpod/Drift/shared_preferences (CLAUDE.md §2, enforce tự động qua `import_lint` trong `analysis_options.yaml`).
-- `application/` không import Drift table/query hay `shared_preferences` trực tiếp — **lưu ý**: `import_lint` hiện chưa có rule chặn việc này tự động, cần review tay hoặc bổ sung rule `application_no_drift`/`application_no_shared_preferences` trước khi code Phase 2.
+- `application/` không import Drift table/query hay `shared_preferences` trực tiếp (CLAUDE.md §2, enforce tự động qua `application_no_drift`/`application_no_shared_preferences` trong `import_lint`).
 - `presentation/` không import `data/` trực tiếp (đã có `presentation_no_data` trong import_lint).
 - `session_controller.dart` không được sửa ở Phase 2 — chỉ inject `ProgressRepository` contract, không biết Drift tồn tại.
 - Approval zone bị chạm: **domain contract** (SRS algorithm — đã duyệt qua ADR-010) và **persistence schema/migration** (Phase 2 — cần duyệt schema `VocabularyTable`/`ProgressTable` trước khi implement thật).
