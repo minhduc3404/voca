@@ -108,7 +108,7 @@ Không tạo ở Phase 1 — `constants.dart` chưa có hằng số thật, `pro
 
 | # | File | Mô tả | Import hợp lệ |
 |---|------|-------|--------------|
-| 7 | `study_card.dart` | Model thẻ học: term, definition, language | `dart:core` |
+| 7 | `study_card.dart` | Model thẻ học: term, definition, language, phonetic, partOfSpeech, exampleSentence | `dart:core` |
 | 8 | `word_progress.dart` | Trạng thái SRS: interval, easeFactor, nextReview, reps, lapses | `dart:core` |
 | 9 | `study_rating.dart` | `enum StudyRating { again, hard, good, easy }` — tách riêng khỏi `srs_scheduler.dart` để presentation import type mà không kéo theo thuật toán | `dart:core` |
 | 10 | `srs_scheduler.dart` | Hàm thuần: `(currentProgress, rating, now) → newProgress`, SM-2 theo ADR-010 | `dart:core`, `study_rating`, `word_progress` |
@@ -236,6 +236,8 @@ VocaApp/
 
 ### NEW — `core/db/tables.dart`
 
+**VocabularyTable đã duyệt kèm sample data review (2026-07-30)** — bổ sung `phonetic`, `partOfSpeech`, `exampleSentence` so với bản nháp ban đầu vì term+definition trần không đủ dùng cho một thẻ từ vựng thật. `language` giữ nguyên, cố định `'en'` (app chỉ học tiếng Anh, UI/definition tiếng Việt — không cần `termLanguage`/`definitionLanguage` riêng).
+
 ```dart
 // Định nghĩa Drift table — không chứa business logic
 VocabularyTable:
@@ -243,6 +245,9 @@ VocabularyTable:
   term: text
   definition: text
   language: text
+  phonetic: text
+  partOfSpeech: text
+  exampleSentence: text
   createdAt: dateTime
 
 ProgressTable:

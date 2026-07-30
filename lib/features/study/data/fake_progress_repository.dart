@@ -16,14 +16,83 @@ class FakeProgressRepository implements ProgressRepository {
   }
 
   static const List<StudyCard> _seedCards = [
-    StudyCard(id: 1, term: 'ephemeral', definition: 'phù du, chóng tàn', language: 'en'),
-    StudyCard(id: 2, term: 'resilient', definition: 'kiên cường, có sức bật', language: 'en'),
-    StudyCard(id: 3, term: 'meticulous', definition: 'tỉ mỉ, cẩn thận', language: 'en'),
-    StudyCard(id: 4, term: 'ambiguous', definition: 'mơ hồ, không rõ ràng', language: 'en'),
-    StudyCard(id: 5, term: 'candid', definition: 'thẳng thắn, chân thật', language: 'en'),
-    StudyCard(id: 6, term: 'diligent', definition: 'chăm chỉ, siêng năng', language: 'en'),
-    StudyCard(id: 7, term: 'genuine', definition: 'chân thực, thật sự', language: 'en'),
-    StudyCard(id: 8, term: 'inevitable', definition: 'tất yếu, không thể tránh khỏi', language: 'en'),
+    StudyCard(
+      id: 1,
+      term: 'ephemeral',
+      definition: 'phù du, chóng tàn',
+      language: 'en',
+      phonetic: '/ɪˈfem.ər.əl/',
+      partOfSpeech: 'adj',
+      exampleSentence:
+          'Fame in the entertainment industry is often ephemeral.',
+    ),
+    StudyCard(
+      id: 2,
+      term: 'resilient',
+      definition: 'kiên cường, có sức bật',
+      language: 'en',
+      phonetic: '/rɪˈzɪl.i.ənt/',
+      partOfSpeech: 'adj',
+      exampleSentence:
+          'Children are often remarkably resilient after difficult experiences.',
+    ),
+    StudyCard(
+      id: 3,
+      term: 'meticulous',
+      definition: 'tỉ mỉ, cẩn thận',
+      language: 'en',
+      phonetic: '/məˈtɪk.jə.ləs/',
+      partOfSpeech: 'adj',
+      exampleSentence:
+          'She is meticulous about checking every detail of her work.',
+    ),
+    StudyCard(
+      id: 4,
+      term: 'ambiguous',
+      definition: 'mơ hồ, không rõ ràng',
+      language: 'en',
+      phonetic: '/æmˈbɪɡ.ju.əs/',
+      partOfSpeech: 'adj',
+      exampleSentence:
+          'His answer was so ambiguous that no one knew what he meant.',
+    ),
+    StudyCard(
+      id: 5,
+      term: 'candid',
+      definition: 'thẳng thắn, chân thật',
+      language: 'en',
+      phonetic: '/ˈkæn.dɪd/',
+      partOfSpeech: 'adj',
+      exampleSentence: 'I appreciate your candid feedback on my presentation.',
+    ),
+    StudyCard(
+      id: 6,
+      term: 'diligent',
+      definition: 'chăm chỉ, siêng năng',
+      language: 'en',
+      phonetic: '/ˈdɪl.ɪ.dʒənt/',
+      partOfSpeech: 'adj',
+      exampleSentence: 'She is a diligent student who never misses a deadline.',
+    ),
+    StudyCard(
+      id: 7,
+      term: 'genuine',
+      definition: 'chân thực, thật sự',
+      language: 'en',
+      phonetic: '/ˈdʒen.ju.ɪn/',
+      partOfSpeech: 'adj',
+      exampleSentence:
+          "He showed genuine concern for his friend's well-being.",
+    ),
+    StudyCard(
+      id: 8,
+      term: 'inevitable',
+      definition: 'tất yếu, không thể tránh khỏi',
+      language: 'en',
+      phonetic: '/ɪˈnev.ɪ.tə.bəl/',
+      partOfSpeech: 'adj',
+      exampleSentence: 'Change is inevitable in any growing business.',
+    ),
   ];
 
   final Map<int, WordProgress> _progress;

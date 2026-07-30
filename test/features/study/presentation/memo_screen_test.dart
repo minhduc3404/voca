@@ -41,12 +41,18 @@ void main() {
           term: 'apple',
           definition: 'quả táo',
           language: 'en',
+          phonetic: '/ˈæp.əl/',
+          partOfSpeech: 'noun',
+          exampleSentence: 'She ate a red apple.',
         ),
         const StudyCard(
           id: 2,
           term: 'banana',
           definition: 'quả chuối',
           language: 'en',
+          phonetic: '/bəˈnɑː.nə/',
+          partOfSpeech: 'noun',
+          exampleSentence: 'He bought a bunch of bananas.',
         ),
       ];
       final repository = _InMemoryRepository(cards, now);
