@@ -58,7 +58,11 @@ Mọi task không tầm thường phải điền `docs/templates/task-contract.m
 
 AI không tự thực hiện thay đổi trong các vùng này nếu task contract chưa được duyệt (§14.2).
 
-## 10. Definition of Done
+## 10. Icon
+
+Xem ADR-009. Icon dùng bộ Reicon weight duotone, vendor thủ công thành SVG asset tại `assets/icons/<kebab-case-name>.svg`, render qua `flutter_svg`. Chỉ thêm icon khi feature thật sự cần, không import hàng loạt.
+
+## 11. Definition of Done
 
 - [ ] Code đúng kiến trúc, không phá dependency direction
 - [ ] Test liên quan đã có và pass
