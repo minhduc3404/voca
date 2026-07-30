@@ -2,7 +2,21 @@
 
 ## Trạng thái đầu vào
 
-Repo trống, không có `pubspec.yaml`, không có `lib/`, không có `android/`, không có `ios/`.
+Phase 0 đã scaffold xong (commit `958fc7d`): `pubspec.yaml`, `analysis_options.yaml` (đã bật `import_lint` cho domain/presentation/data theo PLAN.md §6), `android/`, `ios/`, và bộ khung `lib/` sau đã tồn tại — không phải tạo mới ở Phase 1:
+
+```
+lib/
+├── main.dart                     → gọi bootstrap()
+├── app/
+│   ├── app.dart                  → App widget (MaterialApp), hiện home: _HomePlaceholder
+│   ├── bootstrap/bootstrap.dart  → runApp(ProviderScope(child: App()))
+│   └── theme/app_theme.dart      → AppTheme.light()
+└── l10n/arb/
+    ├── app_vi.arb, app_en.arb
+    └── app_localizations.dart    (generated)
+```
+
+`pubspec.yaml` cũng đã có sẵn toàn bộ dependency của **cả Phase 1 lẫn Phase 2** (được thêm từ Phase 0): `flutter_riverpod`, `drift`, `drift_flutter`, `sqlite3_flutter_libs`, `path_provider`, `shared_preferences`, `intl`, `flutter_svg`, và dev deps `drift_dev`, `build_runner`, `import_lint`. Do đó các bước "tạo/sửa pubspec.yaml" bên dưới ở cả hai phase **không cần thực hiện** — chỉ còn việc tạo code trong `lib/core/` và `lib/features/study/`.
 
 ---
 
@@ -29,12 +43,15 @@ Kiểm chứng: dependency direction, provider injection, testability domain.
 
 ```
 VocaApp/
-├── pubspec.yaml                          NEW
-├── analysis_options.yaml                 NEW
+├── pubspec.yaml                          NONE (đã có từ Phase 0, đủ dependency)
+├── analysis_options.yaml                 NONE (đã có từ Phase 0, import_lint đã bật)
 │
 └── lib/
-    ├── main.dart                         NEW
-    ├── app.dart                          NEW
+    ├── main.dart                         NONE (đã có từ Phase 0)
+    ├── app/
+    │   ├── app.dart                       EDIT (home: trỏ sang MemoScreen thay _HomePlaceholder)
+    │   ├── bootstrap/bootstrap.dart        NONE (đã có từ Phase 0)
+    │   └── theme/app_theme.dart            NONE (đã có từ Phase 0)
     │
     ├── core/
     │   ├── constants.dart                NEW  (nếu có hằng số thật)
@@ -62,23 +79,25 @@ VocaApp/
                     └── control_bar.dart    NEW
 ```
 
-Tổng: **15 file** — tất cả NEW. Không có `core/db/`, `features/deck/`, `features/settings/`, barrel file.
+Tổng: **11 file NEW** (2 core + 4 domain + 1 data + 2 application + 3 presentation, `constants.dart` chỉ tạo nếu có hằng số thật) + **1 file EDIT** (`app/app.dart`, để nối UI đã scaffold sang `MemoScreen`). Không tạo lại `main.dart`/`bootstrap.dart`/`app_theme.dart`/`pubspec.yaml`/`analysis_options.yaml` — các file này đã đúng chuẩn từ Phase 0. Không có `core/db/`, `features/deck/`, `features/settings/`, barrel file.
 
 ## Chi tiết từng file
 
 ### Project root
 
-| # | File | Nội dung tối thiểu |
-|---|------|-------------------|
-| 1 | `pubspec.yaml` | `flutter`, `flutter_riverpod`, `flutter_localizations`, `intl`, `flutter_lints` (dev), `build_runner` (dev) |
-| 2 | `analysis_options.yaml` | `include: package:flutter_lints/flutter.yaml` |
+| # | File | Trạng thái | Nội dung |
+|---|------|-----------|----------|
+| 1 | `pubspec.yaml` | NONE | Đã có từ Phase 0: `flutter_riverpod`, `flutter_localizations`, `intl`, `flutter_lints` (dev), `build_runner` (dev), và cả dependency Phase 2 (`drift`, `drift_flutter`, `shared_preferences`...) |
+| 2 | `analysis_options.yaml` | NONE | Đã có từ Phase 0: `include: package:flutter_lints/flutter.yaml` + `import_lint` rules cho domain/presentation/data |
 
 ### `lib/` — App entry
 
-| # | File | Lớp | Nội dung | Cấm import |
-|---|------|-----|----------|------------|
-| 3 | `main.dart` | entry | `runApp(ProviderScope(child: App()))` | — |
-| 4 | `app.dart` | presentation | `MaterialApp` + theme + supportedLocales + localizationsDelegates + home | domain/data/DB trực tiếp |
+| # | File | Trạng thái | Lớp | Nội dung | Cấm import |
+|---|------|-----------|-----|----------|------------|
+| 3 | `main.dart` | NONE | entry | Đã gọi `bootstrap()` (Phase 0) | — |
+| — | `app/bootstrap/bootstrap.dart` | NONE | entry | Đã có `runApp(ProviderScope(child: App()))` (Phase 0) | — |
+| 4 | `app/app.dart` | EDIT | presentation | Đã có `MaterialApp` + theme + supportedLocales + localizationsDelegates (Phase 0); Phase 1 sửa `home:` từ `_HomePlaceholder` sang `MemoScreen` | domain/data/DB trực tiếp |
+| — | `app/theme/app_theme.dart` | NONE | presentation | Đã có `AppTheme.light()` (Phase 0) | — |
 
 ### `lib/core/`
 
@@ -102,7 +121,7 @@ Tổng: **15 file** — tất cả NEW. Không có `core/db/`, `features/deck/`,
 
 | # | File | Mô tả | Import hợp lệ |
 |---|------|-------|--------------|
-| 11 | `fake_progress_repository.dart` | Implement `ProgressRepository` bằng `Map<int, WordProgress>` in-memory | `domain/`, `dart:collection` |
+| 11 | `fake_progress_repository.dart` | Implement `ProgressRepository` bằng `Map<int, WordProgress>` in-memory, seed sẵn 5–10 `StudyCard` cứng trong constructor để `getDueCards()` có dữ liệu trả về | `domain/`, `dart:collection` |
 
 ### `lib/features/study/application/`
 
@@ -140,7 +159,7 @@ control_bar                      study_card
 - [ ] `srs_scheduler` test pass (≥ 5 test case), không cần `pumpWidget`.
 - [ ] Flow chạy end-to-end: màn hình → controller → scheduler → repo → UI update.
 - [ ] Repository inject được qua provider, override được cho test.
-- [ ] Có thể xóa `fake_progress_repository.dart` mà không sửa bất kỳ file nào khác.
+- [ ] Thay `FakeProgressRepository` bằng implementation khác chỉ cần sửa `application/providers.dart` (nơi duy nhất khởi tạo nó) — không đụng `domain/`, `session_controller.dart`, hay `presentation/`.
 - [ ] Domain model không bị leak ra presentation dưới dạng mutable.
 - [ ] Không folder rỗng, không barrel file.
 
@@ -156,12 +175,15 @@ Thay fake/in-memory repository bằng Drift thật. Schema tồn tại, migratio
 
 ```
 VocaApp/
-├── pubspec.yaml                          EDIT (+drift, +drift_flutter)
+├── pubspec.yaml                          NONE (drift/drift_flutter đã có sẵn từ Phase 0)
 ├── analysis_options.yaml                 NONE
 │
 └── lib/
     ├── main.dart                         NONE
-    ├── app.dart                          NONE
+    ├── app/
+    │   ├── app.dart                       NONE (đã trỏ MemoScreen từ Phase 1)
+    │   ├── bootstrap/bootstrap.dart        NONE
+    │   └── theme/app_theme.dart            NONE
     │
     ├── core/
     │   ├── constants.dart                NONE
@@ -197,33 +219,19 @@ VocaApp/
 
 | Status | Số file | Ghi chú |
 |--------|---------|---------|
-| NEW | 3 | tables.dart, app_database.dart, drift_progress_repository.dart |
-| EDIT | 3 | pubspec.yaml, core/providers.dart, application/providers.dart |
-| DELETE | 1 | fake_progress_repository.dart |
-| NONE | 12 | toàn bộ domain, controller, presentation, main, app |
-| **Tổng** | **19** | (15 Phase 1 + 3 NEW − 1 DELETE + 2 file mở rộng) |
+| NEW | 3 | `core/db/tables.dart`, `core/db/app_database.dart` (+ `.g.dart` generated), `data/drift_progress_repository.dart` |
+| EDIT | 2 | `core/providers.dart`, `application/providers.dart` |
+| DELETE | 1 | `data/fake_progress_repository.dart` |
+| NONE | 15 | `main.dart`, `app/app.dart`, `app/bootstrap/bootstrap.dart`, `app/theme/app_theme.dart`, `pubspec.yaml`, `analysis_options.yaml`, `core/constants.dart`, toàn bộ `domain/` (4 file), `session_controller.dart`, toàn bộ `presentation/` (3 file) |
+| **Tổng** | **21** | (13 file Phase 1 tạo/sửa + 3 NEW + 2 EDIT + 1 DELETE Phase 2, cộng dồn trên nền Phase 0) |
 
-**12/19 file không cần sửa** khi thay toàn bộ persistence layer — bằng chứng kiến trúc đúng.
+**15/21 file không cần sửa** khi thay toàn bộ persistence layer — bằng chứng kiến trúc đúng. (pubspec.yaml không cần EDIT vì drift/drift_flutter đã có sẵn từ Phase 0.)
 
 ## Chi tiết file thay đổi
 
-### EDIT — `pubspec.yaml`
+### NONE — `pubspec.yaml`
 
-Thêm:
-
-```yaml
-dependencies:
-  drift: ^2.x
-  drift_flutter: ^0.x
-  sqlite3_flutter_libs: ^0.x   # nếu drift docs yêu cầu
-  path_provider: ^2.x          # nếu drift docs yêu cầu
-
-dev_dependencies:
-  drift_dev: ^2.x
-  build_runner: ^2.x
-```
-
-Phiên bản cụ thể tra drift docs tại thời điểm code.
+Đã có sẵn từ Phase 0: `drift: ^2.34.3`, `drift_flutter: ^0.3.1`, `sqlite3_flutter_libs: ^0.6.0`, `path_provider: ^2.1.6` (dependencies), `drift_dev: 2.34.0`, `build_runner: ^2.15.1` (dev_dependencies). Không cần sửa file này ở Phase 2.
 
 ### NEW — `core/db/tables.dart`
 
@@ -365,15 +373,23 @@ output: WordProgress new (immutable, không mutate input)
 
 Không gọi `DateTime.now()` bên trong. Clock được inject qua tham số.
 
-### Phải chốt trước khi code
+### Đã chốt — xem ADR-010
 
-- Rating scale (0–3 hoặc 0–4)
-- Interval sequence
-- Reset/lapse behavior
-- Same-day review behavior
-- Timezone / day boundary
-- Maximum interval
-- Due-date rounding
+Thuật toán: **SM-2 cổ điển (kiểu Anki)**, chốt trong `docs/adr/ADR-010-srs-sm2-algorithm.md`. Tóm tắt:
+
+| Quyết định | Giá trị |
+|---|---|
+| Rating scale | 0–3: `Again/Hard/Good/Easy` |
+| Ease factor | init `2.5`, sàn `1.3`, delta: Again `-0.20`, Hard `-0.15`, Good `0`, Easy `+0.15` |
+| Interval (thẻ mới) | Again/Hard/Good = 1 ngày, Easy = 4 ngày |
+| Interval (đã học) | Again = 1 ngày (lapse); Hard = `max(round(i×1.2), i+1)`; Good = `round(i×ease)`; Easy = `round(i×ease×1.3)` |
+| Reset/lapse | Again ở thẻ đã học → `reps=0`, `lapses+=1`, interval về 1 ngày |
+| Same-day review | Không xử lý đặc biệt trong domain — scheduler luôn tính theo `rating`+`now` truyền vào |
+| Timezone / day boundary | Không có "ngày lịch" trong domain — `nextReview = now.add(Duration(days: interval))`, due-check so sánh `DateTime` đầy đủ |
+| Maximum interval | Trần cứng 365 ngày |
+| Due-date rounding | Không quy tròn — giữ nguyên giờ/phút |
+
+Chi tiết đầy đủ + rationale: xem ADR-010.
 
 ### Test matrix tối thiểu (12 case)
 
@@ -406,7 +422,8 @@ Không gọi `DateTime.now()` bên trong. Clock được inject qua tham số.
 ### Chưa tồn tại (đúng ý đồ)
 - `core/db/` — sẽ tạo ở Phase 2
 - `features/deck/`, `features/settings/` — chưa có code thật
-- Drift, freezed, go_router, google_fonts — không có trong pubspec.yaml
+- `freezed`, `go_router`, `google_fonts` — không có trong pubspec.yaml
+- Lưu ý: `drift`/`drift_flutter`/`shared_preferences` **đã có sẵn** trong pubspec.yaml từ Phase 0, nhưng chưa được dùng ở đâu (chưa có `core/db/`, chưa có `DriftProgressRepository`) — dependency có mặt không đồng nghĩa persistence layer đã tồn tại.
 
 ---
 
@@ -414,7 +431,7 @@ Không gọi `DateTime.now()` bên trong. Clock được inject qua tham số.
 
 | File | Phase 1 | Phase 2 | Lý do |
 |------|---------|---------|-------|
-| `pubspec.yaml` | flutter + riverpod | +drift +drift_flutter | Persistence infrastructure |
+| `pubspec.yaml` | đã có drift + riverpod (từ Phase 0) | NONE | Dependency đã sẵn sàng trước cả Phase 1 |
 | `core/providers.dart` | placeholder | +appDatabaseProvider | Mở DB thật |
 | `core/db/tables.dart` | — | NEW | Schema |
 | `core/db/app_database.dart` | — | NEW | DB + migration |
@@ -422,8 +439,8 @@ Không gọi `DateTime.now()` bên trong. Clock được inject qua tham số.
 | `study/data/drift_progress_repository.dart` | — | NEW | Query + mapper |
 | `study/application/providers.dart` | Fake repo | Drift repo | Chuyển implementation |
 
-### Không thay đổi (12 file)
-`main.dart`, `app.dart`, `analysis_options.yaml`, `core/constants.dart`, toàn bộ `domain/` (4 file), `session_controller.dart`, toàn bộ `presentation/` (3 file).
+### Không thay đổi (15 file)
+`main.dart`, `app/app.dart`, `app/bootstrap/bootstrap.dart`, `app/theme/app_theme.dart`, `pubspec.yaml`, `analysis_options.yaml`, `core/constants.dart`, toàn bộ `domain/` (4 file), `session_controller.dart`, toàn bộ `presentation/` (3 file).
 
 ---
 
@@ -431,20 +448,20 @@ Không gọi `DateTime.now()` bên trong. Clock được inject qua tham số.
 
 ### Phase 1
 
-1. Tạo `pubspec.yaml` + `analysis_options.yaml`.
-2. Tạo `main.dart` + `app.dart` — chạy được app trắng.
+1. ~~Tạo `pubspec.yaml` + `analysis_options.yaml`~~ — đã có từ Phase 0, bỏ qua.
+2. ~~Tạo `main.dart` + `app.dart`~~ — đã có từ Phase 0 (app trắng chạy được qua `_HomePlaceholder`); chỉ cần sửa `home:` trong `app/app.dart` sang `MemoScreen` ở bước 8.
 3. Tạo domain model: `study_card.dart`, `word_progress.dart`.
 4. Tạo `srs_scheduler.dart` + **viết test trước** (test matrix ≥ 5 case).
 5. Tạo `progress_repository.dart` (interface).
 6. Tạo `fake_progress_repository.dart`.
 7. Tạo `session_controller.dart` + `providers.dart`.
-8. Tạo presentation: `memo_screen.dart`, `word_card.dart`, `control_bar.dart`.
+8. Tạo presentation: `memo_screen.dart`, `word_card.dart`, `control_bar.dart`; sửa `app/app.dart` để `home:` trỏ sang `MemoScreen`.
 9. Verify dependency direction.
 10. Verify flow end-to-end.
 
 ### Phase 2
 
-1. Thêm drift dependencies vào `pubspec.yaml`.
+1. ~~Thêm drift dependencies vào `pubspec.yaml`~~ — đã có từ Phase 0, bỏ qua.
 2. Tạo `core/db/tables.dart`.
 3. Tạo `core/db/app_database.dart` (schema v1, migration strategy).
 4. Chạy `build_runner` — verify generated code.

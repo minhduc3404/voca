@@ -1,4 +1,4 @@
-package com.voca.remember.voca_app
+package com.voca.remember
 
 import io.flutter.embedding.android.FlutterActivity
 
