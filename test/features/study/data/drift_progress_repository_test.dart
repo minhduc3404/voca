@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:voca_app/core/db/app_database.dart';
@@ -21,7 +22,7 @@ void main() {
             definition: '$term (định nghĩa)',
             language: 'en',
             phonetic: '/$term/',
-            partOfSpeech: 'noun',
+            partOfSpeech: const Value('noun'),
             exampleSentence: 'This is $term.',
             createdAt: seededAt,
           ),
@@ -132,7 +133,7 @@ void main() {
                 definition: 'quả sung',
                 language: 'en',
                 phonetic: '/fig/',
-                partOfSpeech: 'noun',
+                partOfSpeech: const Value('noun'),
                 exampleSentence: 'A ripe fig.',
                 createdAt: seededAt,
               ),

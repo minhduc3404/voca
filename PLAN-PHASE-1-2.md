@@ -236,31 +236,32 @@ VocaApp/
 
 ### NEW — `core/db/tables.dart`
 
-**VocabularyTable đã duyệt kèm sample data review (2026-07-30)** — bổ sung `phonetic`, `partOfSpeech`, `exampleSentence` so với bản nháp ban đầu vì term+definition trần không đủ dùng cho một thẻ từ vựng thật. `language` giữ nguyên, cố định `'en'` (app chỉ học tiếng Anh, UI/definition tiếng Việt — không cần `termLanguage`/`definitionLanguage` riêng).
+**VocabularyTable đã duyệt kèm sample data review (2026-07-30)** — bổ sung `phonetic`, `partOfSpeech`, `exampleSentence` so với bản nháp ban đầu vì term+definition trần không đủ dùng cho một thẻ từ vựng thật. `language` giữ nguyên, cố định `'en'` (app chỉ học tiếng Anh, UI/definition tiếng Việt — không cần `termLanguage`/`definitionLanguage` riêng). `partOfSpeech` sau đó đổi thành **nullable** (không phải nguồn dữ liệu nào cũng xác định được từ loại — vd import tự động từ điển sau này) — UI (`word_card.dart`) tự xử lý khi thiếu, ẩn phần "· từ loại" thay vì hiển thị rỗng.
 
 ```dart
-// Định nghĩa Drift table — không chứa business logic
+// Định nghĩa Drift table — không chứa business logic. Doc-comment đầy đủ
+// cho từng field xem trực tiếp lib/core/db/tables.dart.
 VocabularyTable:
-  id: int (autoIncrement)
-  term: text
-  definition: text
-  language: text
-  phonetic: text
-  partOfSpeech: text
-  exampleSentence: text
-  createdAt: dateTime
+  id: int (autoIncrement)                    // PK
+  term: text                                 // từ tiếng Anh — mặt trước thẻ
+  definition: text                           // nghĩa tiếng Việt — mặt sau thẻ
+  language: text                             // cố định 'en'
+  phonetic: text                             // IPA, bắt buộc
+  partOfSpeech: text?                        // noun/verb/adj... — NULLABLE
+  exampleSentence: text                      // câu ví dụ, bắt buộc
+  createdAt: dateTime                        // audit, không dùng cho SRS
 
 ProgressTable:
-  id: int (autoIncrement)
-  vocabId: int (→ VocabularyTable)
-  interval: int
-  easeFactor: double
-  reps: int
-  lapses: int
-  nextReview: dateTime
-  lastReview: dateTime
-  createdAt: dateTime
-  updatedAt: dateTime
+  id: int (autoIncrement)                    // PK
+  vocabId: int (→ VocabularyTable, CASCADE)  // FK, UNIQUE — 1 từ = 1 dòng progress
+  interval: int                              // đơn vị NGÀY (ADR-010)
+  easeFactor: double                         // SM-2, init 2.5, sàn 1.3 (ADR-010)
+  reps: int                                  // số lần đúng liên tiếp từ lapse gần nhất
+  lapses: int                                // tổng số lần Again, không reset
+  nextReview: dateTime                       // hạn ôn tiếp theo
+  lastReview: dateTime?                      // null = thẻ có progress nhưng chưa từng ôn
+  createdAt: dateTime                        // lần đầu tạo dòng progress
+  updatedAt: dateTime                        // lần ghi đè gần nhất
 ```
 
 ### NEW — `core/db/app_database.dart`

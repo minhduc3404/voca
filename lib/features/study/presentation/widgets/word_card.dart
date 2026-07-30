@@ -62,7 +62,9 @@ class _CardFront extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          '${card.phonetic} · ${card.partOfSpeech}',
+          card.partOfSpeech == null
+              ? card.phonetic
+              : '${card.phonetic} · ${card.partOfSpeech}',
           style: textTheme.bodyMedium?.copyWith(color: Colors.grey),
           textAlign: TextAlign.center,
         ),

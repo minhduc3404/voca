@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:voca_app/core/db/app_database.dart';
@@ -30,7 +31,7 @@ void main() {
               definition: 'phù du, chóng tàn',
               language: 'en',
               phonetic: '/ɪˈfem.ər.əl/',
-              partOfSpeech: 'adj',
+              partOfSpeech: const Value('adj'),
               exampleSentence: 'Fame is ephemeral.',
               createdAt: DateTime(2026, 1, 1),
             ),
@@ -76,7 +77,7 @@ void main() {
             definition: 'test',
             language: 'en',
             phonetic: '/test/',
-            partOfSpeech: 'noun',
+            partOfSpeech: const Value('noun'),
             exampleSentence: 'A test.',
             createdAt: DateTime(2026, 1, 1),
           ),

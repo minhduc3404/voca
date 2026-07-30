@@ -71,9 +71,9 @@ class $VocabularyTableTable extends VocabularyTable
   late final GeneratedColumn<String> partOfSpeech = GeneratedColumn<String>(
     'part_of_speech',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _exampleSentenceMeta = const VerificationMeta(
     'exampleSentence',
@@ -163,8 +163,6 @@ class $VocabularyTableTable extends VocabularyTable
           _partOfSpeechMeta,
         ),
       );
-    } else if (isInserting) {
-      context.missing(_partOfSpeechMeta);
     }
     if (data.containsKey('example_sentence')) {
       context.handle(
@@ -217,7 +215,7 @@ class $VocabularyTableTable extends VocabularyTable
       partOfSpeech: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}part_of_speech'],
-      )!,
+      ),
       exampleSentence: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}example_sentence'],
@@ -237,13 +235,32 @@ class $VocabularyTableTable extends VocabularyTable
 
 class VocabularyTableData extends DataClass
     implements Insertable<VocabularyTableData> {
+  /// Khóa chính, tự tăng.
   final int id;
+
+  /// Từ tiếng Anh cần học — mặt trước của thẻ.
   final String term;
+
+  /// Nghĩa tiếng Việt — mặt sau của thẻ.
   final String definition;
+
+  /// Ngôn ngữ của [term]. Hiện cố định `'en'` — app chỉ học tiếng Anh, UI/
+  /// [definition] luôn tiếng Việt. Không tách `termLanguage`/
+  /// `definitionLanguage` trừ khi thật sự cần hỗ trợ nhiều cặp ngôn ngữ.
   final String language;
+
+  /// Phiên âm IPA, vd `/ɪˈfem.ər.əl/` — bắt buộc để người học đọc đúng.
   final String phonetic;
-  final String partOfSpeech;
+
+  /// Từ loại (noun/verb/adj/adv...). Nullable — không phải nguồn dữ liệu
+  /// nào cũng xác định được từ loại rõ ràng (vd import tự động từ điển),
+  /// UI cần tự xử lý khi thiếu (không hiển thị thay vì hiển thị rỗng).
+  final String? partOfSpeech;
+
+  /// Câu ví dụ có dùng [term] — cho ngữ cảnh, tăng hiệu quả ghi nhớ SRS.
   final String exampleSentence;
+
+  /// Thời điểm từ được thêm vào — phục vụ audit/sort, không dùng cho SRS.
   final DateTime createdAt;
   const VocabularyTableData({
     required this.id,
@@ -251,7 +268,7 @@ class VocabularyTableData extends DataClass
     required this.definition,
     required this.language,
     required this.phonetic,
-    required this.partOfSpeech,
+    this.partOfSpeech,
     required this.exampleSentence,
     required this.createdAt,
   });
@@ -263,7 +280,9 @@ class VocabularyTableData extends DataClass
     map['definition'] = Variable<String>(definition);
     map['language'] = Variable<String>(language);
     map['phonetic'] = Variable<String>(phonetic);
-    map['part_of_speech'] = Variable<String>(partOfSpeech);
+    if (!nullToAbsent || partOfSpeech != null) {
+      map['part_of_speech'] = Variable<String>(partOfSpeech);
+    }
     map['example_sentence'] = Variable<String>(exampleSentence);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -276,7 +295,9 @@ class VocabularyTableData extends DataClass
       definition: Value(definition),
       language: Value(language),
       phonetic: Value(phonetic),
-      partOfSpeech: Value(partOfSpeech),
+      partOfSpeech: partOfSpeech == null && nullToAbsent
+          ? const Value.absent()
+          : Value(partOfSpeech),
       exampleSentence: Value(exampleSentence),
       createdAt: Value(createdAt),
     );
@@ -293,7 +314,7 @@ class VocabularyTableData extends DataClass
       definition: serializer.fromJson<String>(json['definition']),
       language: serializer.fromJson<String>(json['language']),
       phonetic: serializer.fromJson<String>(json['phonetic']),
-      partOfSpeech: serializer.fromJson<String>(json['partOfSpeech']),
+      partOfSpeech: serializer.fromJson<String?>(json['partOfSpeech']),
       exampleSentence: serializer.fromJson<String>(json['exampleSentence']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -307,7 +328,7 @@ class VocabularyTableData extends DataClass
       'definition': serializer.toJson<String>(definition),
       'language': serializer.toJson<String>(language),
       'phonetic': serializer.toJson<String>(phonetic),
-      'partOfSpeech': serializer.toJson<String>(partOfSpeech),
+      'partOfSpeech': serializer.toJson<String?>(partOfSpeech),
       'exampleSentence': serializer.toJson<String>(exampleSentence),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -319,7 +340,7 @@ class VocabularyTableData extends DataClass
     String? definition,
     String? language,
     String? phonetic,
-    String? partOfSpeech,
+    Value<String?> partOfSpeech = const Value.absent(),
     String? exampleSentence,
     DateTime? createdAt,
   }) => VocabularyTableData(
@@ -328,7 +349,7 @@ class VocabularyTableData extends DataClass
     definition: definition ?? this.definition,
     language: language ?? this.language,
     phonetic: phonetic ?? this.phonetic,
-    partOfSpeech: partOfSpeech ?? this.partOfSpeech,
+    partOfSpeech: partOfSpeech.present ? partOfSpeech.value : this.partOfSpeech,
     exampleSentence: exampleSentence ?? this.exampleSentence,
     createdAt: createdAt ?? this.createdAt,
   );
@@ -397,7 +418,7 @@ class VocabularyTableCompanion extends UpdateCompanion<VocabularyTableData> {
   final Value<String> definition;
   final Value<String> language;
   final Value<String> phonetic;
-  final Value<String> partOfSpeech;
+  final Value<String?> partOfSpeech;
   final Value<String> exampleSentence;
   final Value<DateTime> createdAt;
   const VocabularyTableCompanion({
@@ -416,14 +437,13 @@ class VocabularyTableCompanion extends UpdateCompanion<VocabularyTableData> {
     required String definition,
     required String language,
     required String phonetic,
-    required String partOfSpeech,
+    this.partOfSpeech = const Value.absent(),
     required String exampleSentence,
     required DateTime createdAt,
   }) : term = Value(term),
        definition = Value(definition),
        language = Value(language),
        phonetic = Value(phonetic),
-       partOfSpeech = Value(partOfSpeech),
        exampleSentence = Value(exampleSentence),
        createdAt = Value(createdAt);
   static Insertable<VocabularyTableData> custom({
@@ -454,7 +474,7 @@ class VocabularyTableCompanion extends UpdateCompanion<VocabularyTableData> {
     Value<String>? definition,
     Value<String>? language,
     Value<String>? phonetic,
-    Value<String>? partOfSpeech,
+    Value<String?>? partOfSpeech,
     Value<String>? exampleSentence,
     Value<DateTime>? createdAt,
   }) {
@@ -795,15 +815,39 @@ class $ProgressTableTable extends ProgressTable
 
 class ProgressTableData extends DataClass
     implements Insertable<ProgressTableData> {
+  /// Khóa chính, tự tăng.
   final int id;
+
+  /// FK → `VocabularyTable.id`. Xóa từ vựng sẽ xóa luôn dòng tiến độ này
+  /// (`CASCADE`) — không có soft-delete, mất lịch sử ôn tập của từ đó.
   final int vocabId;
+
+  /// Khoảng cách tới lần ôn tiếp theo, đơn vị NGÀY. Xem ADR-010 (SM-2).
   final int interval;
+
+  /// Hệ số dễ nhớ SM-2 — khởi tạo 2.5, sàn 1.3 (ADR-010).
   final double easeFactor;
+
+  /// Số lần trả lời đúng liên tiếp kể từ lần lapse gần nhất. Reset về 0
+  /// khi rating = Again.
   final int reps;
+
+  /// Tổng số lần trả lời sai (Again) trong suốt lịch sử của từ này —
+  /// không reset, chỉ tăng.
   final int lapses;
+
+  /// Mốc thời gian thẻ này đến hạn ôn lại tiếp theo.
   final DateTime nextReview;
+
+  /// Lần ôn gần nhất. `null` nghĩa là thẻ chưa từng được ôn (vẫn ở trạng
+  /// thái mới, dù đã có dòng progress).
   final DateTime? lastReview;
+
+  /// Thời điểm dòng tiến độ này được tạo lần đầu.
   final DateTime createdAt;
+
+  /// Thời điểm dòng tiến độ này được ghi đè lần gần nhất (mỗi lần
+  /// `recordAnswer`).
   final DateTime updatedAt;
   const ProgressTableData({
     required this.id,
@@ -1159,7 +1203,7 @@ typedef $$VocabularyTableTableCreateCompanionBuilder =
       required String definition,
       required String language,
       required String phonetic,
-      required String partOfSpeech,
+      Value<String?> partOfSpeech,
       required String exampleSentence,
       required DateTime createdAt,
     });
@@ -1170,7 +1214,7 @@ typedef $$VocabularyTableTableUpdateCompanionBuilder =
       Value<String> definition,
       Value<String> language,
       Value<String> phonetic,
-      Value<String> partOfSpeech,
+      Value<String?> partOfSpeech,
       Value<String> exampleSentence,
       Value<DateTime> createdAt,
     });
@@ -1432,7 +1476,7 @@ class $$VocabularyTableTableTableManager
                 Value<String> definition = const Value.absent(),
                 Value<String> language = const Value.absent(),
                 Value<String> phonetic = const Value.absent(),
-                Value<String> partOfSpeech = const Value.absent(),
+                Value<String?> partOfSpeech = const Value.absent(),
                 Value<String> exampleSentence = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => VocabularyTableCompanion(
@@ -1452,7 +1496,7 @@ class $$VocabularyTableTableTableManager
                 required String definition,
                 required String language,
                 required String phonetic,
-                required String partOfSpeech,
+                Value<String?> partOfSpeech = const Value.absent(),
                 required String exampleSentence,
                 required DateTime createdAt,
               }) => VocabularyTableCompanion.insert(
