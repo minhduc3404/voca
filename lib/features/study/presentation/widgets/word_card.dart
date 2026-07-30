@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 
 import '../../domain/study_card.dart';
 
-/// Hiển thị mặt trước (term + phiên âm + từ loại) / mặt sau (definition +
-/// câu ví dụ) của thẻ học, chạm để lật.
+/// Hiển thị mặt trước (term + phiên âm + từ loại + nút loa) / mặt sau
+/// (definition + câu ví dụ) của thẻ học, chạm để lật.
 class WordCard extends StatefulWidget {
-  const WordCard({required this.card, super.key});
+  const WordCard({required this.card, required this.onSpeak, super.key});
 
   final StudyCard card;
+
+  /// Gọi khi bấm nút loa — không phụ thuộc TTS trực tiếp, giống pattern
+  /// [ControlBar] (widget "dumb", caller quyết định hành vi thật).
+  final VoidCallback onSpeak;
 
   @override
   State<WordCard> createState() => _WordCardState();
@@ -36,7 +40,11 @@ class _WordCardState extends State<WordCard> {
           child: Center(
             child: _showDefinition
                 ? _CardBack(card: widget.card, textTheme: textTheme)
-                : _CardFront(card: widget.card, textTheme: textTheme),
+                : _CardFront(
+                    card: widget.card,
+                    textTheme: textTheme,
+                    onSpeak: widget.onSpeak,
+                  ),
           ),
         ),
       ),
@@ -45,10 +53,15 @@ class _WordCardState extends State<WordCard> {
 }
 
 class _CardFront extends StatelessWidget {
-  const _CardFront({required this.card, required this.textTheme});
+  const _CardFront({
+    required this.card,
+    required this.textTheme,
+    required this.onSpeak,
+  });
 
   final StudyCard card;
   final TextTheme textTheme;
+  final VoidCallback onSpeak;
 
   @override
   Widget build(BuildContext context) {
@@ -61,12 +74,21 @@ class _CardFront extends StatelessWidget {
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
-        Text(
-          card.partOfSpeech == null
-              ? card.phonetic
-              : '${card.phonetic} · ${card.partOfSpeech}',
-          style: textTheme.bodyMedium?.copyWith(color: Colors.grey),
-          textAlign: TextAlign.center,
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              card.partOfSpeech == null
+                  ? card.phonetic
+                  : '${card.phonetic} · ${card.partOfSpeech}',
+              style: textTheme.bodyMedium?.copyWith(color: Colors.grey),
+            ),
+            IconButton(
+              icon: const Icon(Icons.volume_up, size: 20),
+              tooltip: 'Nghe phát âm',
+              onPressed: onSpeak,
+            ),
+          ],
         ),
       ],
     );

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:voca_app/l10n/arb/app_localizations.dart';
 
+import '../application/providers.dart';
 import '../application/session_controller.dart';
 import '../domain/study_rating.dart';
 import 'widgets/control_bar.dart';
@@ -47,7 +48,12 @@ class _SessionBody extends ConsumerWidget {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          Expanded(child: WordCard(card: card)),
+          Expanded(
+            child: WordCard(
+              card: card,
+              onSpeak: () => ref.read(ttsServiceProvider).speak(card.term),
+            ),
+          ),
           const SizedBox(height: 16),
           ControlBar(
             onAgain: () => controller.submitAnswer(StudyRating.again),

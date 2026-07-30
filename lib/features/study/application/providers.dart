@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers.dart';
 import '../data/drift_progress_repository.dart';
+import '../data/tts_service.dart';
 import '../domain/progress_repository.dart';
 
 /// Điểm nối duy nhất giữa application và implementation cụ thể của
@@ -11,4 +12,8 @@ import '../domain/progress_repository.dart';
 final progressRepositoryProvider = Provider<ProgressRepository>((ref) {
   final db = ref.watch(appDatabaseProvider);
   return DriftProgressRepository(db);
+});
+
+final ttsServiceProvider = Provider<TtsService>((ref) {
+  return FlutterTtsService();
 });
