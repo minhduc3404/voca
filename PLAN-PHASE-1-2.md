@@ -53,9 +53,10 @@ VocaApp/
     │   ├── bootstrap/bootstrap.dart        NONE (đã có từ Phase 0)
     │   └── theme/app_theme.dart            NONE (đã có từ Phase 0)
     │
-    ├── core/
-    │   ├── constants.dart                NEW  (nếu có hằng số thật)
-    │   └── providers.dart                NEW  (placeholder hạ tầng)
+    ├── core/                              KHÔNG TẠO — chưa có hằng số/provider hạ tầng
+    │                                       thật để chứa (CLAUDE.md §11 "không thêm
+    │                                       file rỗng"); `core/providers.dart` dời
+    │                                       sang Phase 2 khi có `appDatabaseProvider` thật
     │
     └── features/
         └── study/
@@ -79,7 +80,7 @@ VocaApp/
                     └── control_bar.dart    NEW
 ```
 
-Tổng: **11 file NEW** (2 core + 4 domain + 1 data + 2 application + 3 presentation, `constants.dart` chỉ tạo nếu có hằng số thật) + **1 file EDIT** (`app/app.dart`, để nối UI đã scaffold sang `MemoScreen`). Không tạo lại `main.dart`/`bootstrap.dart`/`app_theme.dart`/`pubspec.yaml`/`analysis_options.yaml` — các file này đã đúng chuẩn từ Phase 0. Không có `core/db/`, `features/deck/`, `features/settings/`, barrel file.
+Tổng: **9 file NEW** (4 domain + 1 data + 2 application + 3 presentation, thêm 1 file `study_rating.dart` tách riêng khỏi `srs_scheduler.dart` để presentation import type mà không kéo theo thuật toán — xem bảng chi tiết) + **1 file EDIT** (`app/app.dart`, để nối UI đã scaffold sang `MemoScreen`). `core/constants.dart` và `core/providers.dart` **không tạo ở Phase 1** — chưa có nội dung thật, tạo trước sẽ vi phạm "không file rỗng"; `core/providers.dart` tạo NEW thật ở Phase 2 khi có `appDatabaseProvider`. Không tạo lại `main.dart`/`bootstrap.dart`/`app_theme.dart`/`pubspec.yaml`/`analysis_options.yaml` — các file này đã đúng chuẩn từ Phase 0. Không có `core/db/`, `features/deck/`, `features/settings/`, barrel file.
 
 ## Chi tiết từng file
 
@@ -101,10 +102,7 @@ Tổng: **11 file NEW** (2 core + 4 domain + 1 data + 2 application + 3 presenta
 
 ### `lib/core/`
 
-| # | File | Nội dung |
-|---|------|----------|
-| 5 | `constants.dart` | Hằng số dùng chung (chỉ tạo nếu có thật, không tạo file rỗng) |
-| 6 | `providers.dart` | Provider hạ tầng — ở Phase 1 chỉ là placeholder, sẽ có db/prefs thật ở Phase 2 |
+Không tạo ở Phase 1 — `constants.dart` chưa có hằng số thật, `providers.dart` chưa có provider hạ tầng thật để chứa. Tạo file rỗng chỉ để dự phòng vi phạm CLAUDE.md §11. `core/providers.dart` sẽ tạo NEW (không phải EDIT) ở Phase 2 khi có `appDatabaseProvider` thật.
 
 ### `lib/features/study/domain/` — Pure Dart
 
@@ -112,10 +110,11 @@ Tổng: **11 file NEW** (2 core + 4 domain + 1 data + 2 application + 3 presenta
 |---|------|-------|--------------|
 | 7 | `study_card.dart` | Model thẻ học: term, definition, language | `dart:core` |
 | 8 | `word_progress.dart` | Trạng thái SRS: interval, easeFactor, nextReview, reps, lapses | `dart:core` |
-| 9 | `srs_scheduler.dart` | Hàm thuần: `(currentProgress, answer, now) → newProgress` | `dart:core`, `study_card`, `word_progress` |
-| 10 | `progress_repository.dart` | Interface: `getDueCards()`, `recordAnswer()`, `getProgress()` | `dart:core`, `study_card`, `word_progress` |
+| 9 | `study_rating.dart` | `enum StudyRating { again, hard, good, easy }` — tách riêng khỏi `srs_scheduler.dart` để presentation import type mà không kéo theo thuật toán | `dart:core` |
+| 10 | `srs_scheduler.dart` | Hàm thuần: `(currentProgress, rating, now) → newProgress`, SM-2 theo ADR-010 | `dart:core`, `study_rating`, `word_progress` |
+| 11 | `progress_repository.dart` | Interface: `getDueCards(now)`, `getProgress(cardId)`, `recordAnswer(progress)` | `dart:core`, `study_card`, `word_progress` |
 
-**Tất cả 4 file domain cấm import:** `package:flutter/`, `package:flutter_riverpod/`, `package:drift/`, `package:shared_preferences/`.
+**Tất cả 5 file domain cấm import:** `package:flutter/`, `package:flutter_riverpod/`, `package:drift/`, `package:shared_preferences/`.
 
 ### `lib/features/study/data/`
 
@@ -136,9 +135,9 @@ Tổng: **11 file NEW** (2 core + 4 domain + 1 data + 2 application + 3 presenta
 
 | # | File | Mô tả | Import hợp lệ |
 |---|------|-------|--------------|
-| 14 | `memo_screen.dart` | Widget đọc `sessionControllerProvider`, hiển thị card + control bar, gọi `submitAnswer` | `flutter/material`, `flutter_riverpod`, `application/`, `widgets/` |
+| 14 | `memo_screen.dart` | Widget đọc `sessionControllerProvider`, hiển thị card + control bar, gọi `submitAnswer` | `flutter/material`, `flutter_riverpod`, `application/`, `widgets/`, `domain/study_rating.dart` (model, không phải logic), `l10n/` (dùng lại key `appTitle` có sẵn — không thêm key mới) |
 | 15a | `widgets/word_card.dart` | Widget hiển thị mặt trước/sau thẻ học | `flutter/material`, `domain/study_card.dart` |
-| 15b | `widgets/control_bar.dart` | Widget nút chọn rating (again/hard/good/easy) | `flutter/material` |
+| 15b | `widgets/control_bar.dart` | Widget nút chọn rating (again/hard/good/easy) — không phụ thuộc domain, phát callback thuần theo tên nút, memo_screen.dart map sang `StudyRating` | `flutter/material` |
 
 **Cấm import:** `core/db/`, `data/`, Drift table, `shared_preferences`, `domain/` (trừ model).
 
@@ -186,8 +185,7 @@ VocaApp/
     │   └── theme/app_theme.dart            NONE
     │
     ├── core/
-    │   ├── constants.dart                NONE
-    │   ├── providers.dart                EDIT (+appDatabaseProvider)
+    │   ├── providers.dart                NEW (Phase 1 chưa tạo — appDatabaseProvider)
     │   │
     │   └── db/                           ← MỚI
     │       ├── tables.dart               NEW
@@ -199,6 +197,7 @@ VocaApp/
             ├── domain/
             │   ├── study_card.dart        NONE
             │   ├── word_progress.dart     NONE
+            │   ├── study_rating.dart      NONE
             │   ├── srs_scheduler.dart     NONE
             │   └── progress_repository.dart NONE (interface giữ nguyên)
             │
@@ -219,13 +218,13 @@ VocaApp/
 
 | Status | Số file | Ghi chú |
 |--------|---------|---------|
-| NEW | 3 | `core/db/tables.dart`, `core/db/app_database.dart` (+ `.g.dart` generated), `data/drift_progress_repository.dart` |
-| EDIT | 2 | `core/providers.dart`, `application/providers.dart` |
+| NEW | 4 | `core/providers.dart` (Phase 1 chưa tạo — tạo mới ở đây, không phải EDIT), `core/db/tables.dart`, `core/db/app_database.dart` (+ `.g.dart` generated), `data/drift_progress_repository.dart` |
+| EDIT | 1 | `application/providers.dart` |
 | DELETE | 1 | `data/fake_progress_repository.dart` |
-| NONE | 15 | `main.dart`, `app/app.dart`, `app/bootstrap/bootstrap.dart`, `app/theme/app_theme.dart`, `pubspec.yaml`, `analysis_options.yaml`, `core/constants.dart`, toàn bộ `domain/` (4 file), `session_controller.dart`, toàn bộ `presentation/` (3 file) |
-| **Tổng** | **21** | (13 file Phase 1 tạo/sửa + 3 NEW + 2 EDIT + 1 DELETE Phase 2, cộng dồn trên nền Phase 0) |
+| NONE | 14 | `main.dart`, `app/app.dart`, `app/bootstrap/bootstrap.dart`, `app/theme/app_theme.dart`, `pubspec.yaml`, `analysis_options.yaml`, toàn bộ `domain/` (5 file), `session_controller.dart`, toàn bộ `presentation/` (3 file) |
+| **Tổng** | **20** | (10 file Phase 1 tạo/sửa + 4 NEW + 1 EDIT + 1 DELETE Phase 2, cộng dồn trên nền Phase 0) |
 
-**15/21 file không cần sửa** khi thay toàn bộ persistence layer — bằng chứng kiến trúc đúng. (pubspec.yaml không cần EDIT vì drift/drift_flutter đã có sẵn từ Phase 0.)
+**14/20 file không cần sửa** khi thay toàn bộ persistence layer — bằng chứng kiến trúc đúng. (pubspec.yaml không cần EDIT vì drift/drift_flutter đã có sẵn từ Phase 0.)
 
 ## Chi tiết file thay đổi
 
@@ -275,10 +274,11 @@ class AppDatabase extends $AppDatabase {
 }
 ```
 
-### EDIT — `core/providers.dart`
+### NEW — `core/providers.dart`
+
+Phase 1 không tạo file này (chưa có nội dung thật). Tạo mới ở Phase 2:
 
 ```dart
-// Thêm (giữ nguyên các provider khác nếu có)
 final appDatabaseProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase(/* drift_flutter setup */);
   ref.onDispose(() => db.close());
@@ -420,7 +420,7 @@ Chi tiết đầy đủ + rationale: xem ADR-010.
 - Provider injection + override cho test
 
 ### Chưa tồn tại (đúng ý đồ)
-- `core/db/` — sẽ tạo ở Phase 2
+- `lib/core/` — chưa tạo, kể cả `providers.dart`/`constants.dart`; sẽ tạo ở Phase 2 khi có nội dung thật (`appDatabaseProvider`)
 - `features/deck/`, `features/settings/` — chưa có code thật
 - `freezed`, `go_router`, `google_fonts` — không có trong pubspec.yaml
 - Lưu ý: `drift`/`drift_flutter`/`shared_preferences` **đã có sẵn** trong pubspec.yaml từ Phase 0, nhưng chưa được dùng ở đâu (chưa có `core/db/`, chưa có `DriftProgressRepository`) — dependency có mặt không đồng nghĩa persistence layer đã tồn tại.
@@ -432,15 +432,15 @@ Chi tiết đầy đủ + rationale: xem ADR-010.
 | File | Phase 1 | Phase 2 | Lý do |
 |------|---------|---------|-------|
 | `pubspec.yaml` | đã có drift + riverpod (từ Phase 0) | NONE | Dependency đã sẵn sàng trước cả Phase 1 |
-| `core/providers.dart` | placeholder | +appDatabaseProvider | Mở DB thật |
+| `core/providers.dart` | chưa tồn tại | NEW (+appDatabaseProvider) | Mở DB thật |
 | `core/db/tables.dart` | — | NEW | Schema |
 | `core/db/app_database.dart` | — | NEW | DB + migration |
 | `study/data/fake_progress_repository.dart` | Map in-memory | DELETE | Thay bằng Drift |
 | `study/data/drift_progress_repository.dart` | — | NEW | Query + mapper |
 | `study/application/providers.dart` | Fake repo | Drift repo | Chuyển implementation |
 
-### Không thay đổi (15 file)
-`main.dart`, `app/app.dart`, `app/bootstrap/bootstrap.dart`, `app/theme/app_theme.dart`, `pubspec.yaml`, `analysis_options.yaml`, `core/constants.dart`, toàn bộ `domain/` (4 file), `session_controller.dart`, toàn bộ `presentation/` (3 file).
+### Không thay đổi (14 file)
+`main.dart`, `app/app.dart`, `app/bootstrap/bootstrap.dart`, `app/theme/app_theme.dart`, `pubspec.yaml`, `analysis_options.yaml`, toàn bộ `domain/` (5 file), `session_controller.dart`, toàn bộ `presentation/` (3 file).
 
 ---
 

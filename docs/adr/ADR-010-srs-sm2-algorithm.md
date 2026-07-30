@@ -32,6 +32,8 @@ Thẻ đã học (`reps >= 1`):
 - `Good`: interval = `round(interval_cũ * easeFactor)`.
 - `Easy`: interval = `round(interval_cũ * easeFactor * 1.3)`.
 
+Trong 3 công thức trên, `easeFactor` là ease factor **trước khi điều chỉnh** ở mục "Ease factor" (tức giá trị đang lưu trong `WordProgress` hiện tại). Ease factor mới (sau điều chỉnh) chỉ được lưu lại để dùng cho lần ôn **kế tiếp**, không hồi tố vào interval vừa tính — đúng quy ước SM-2 gốc.
+
 ### Maximum interval
 
 Trần cứng `365` ngày — interval tính ra vượt trần thì cắt về 365.
