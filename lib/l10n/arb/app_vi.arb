@@ -1,0 +1,7 @@
+{
+  "@@locale": "vi",
+  "appTitle": "Voca",
+  "@appTitle": {
+    "description": "The application display name."
+  }
+}

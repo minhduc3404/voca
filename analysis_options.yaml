@@ -1,0 +1,47 @@
+# Import boundary enforcement — PLAN.md §5, §6.
+# Tool: import_lint (pub.dev/packages/import_lint), v2.0.0, requires Dart SDK >=3.10.0.
+# Add "import_lint: ^2.0.0" to dev_dependencies when pubspec.yaml is scaffolded (Phase 0).
+# Package name assumed: voca_app. Update `package:voca_app/...` below if the package name differs.
+#
+# NOTE: `flutter create` (Phase 0) will generate its own analysis_options.yaml
+# (usually `include: package:flutter_lints/flutter.yaml`). Merge that file's
+# content with the `plugins:`/`import_lint:` blocks below — do not let it
+# overwrite this config.
+
+include: package:flutter_lints/flutter.yaml
+
+plugins:
+  import_lint: ^2.0.0
+
+import_lint:
+  severity: "error"
+  rules:
+    # domain: PLAN.md §6.3 — no Flutter SDK, no Riverpod, no Drift, no shared_preferences.
+    domain_no_flutter:
+      target: "package:voca_app/**/domain/**/*.dart"
+      from: "package:flutter/**"
+      except: []
+    domain_no_riverpod:
+      target: "package:voca_app/**/domain/**/*.dart"
+      from: "package:flutter_riverpod/**"
+      except: []
+    domain_no_drift:
+      target: "package:voca_app/**/domain/**/*.dart"
+      from: "package:drift/**"
+      except: []
+    domain_no_shared_preferences:
+      target: "package:voca_app/**/domain/**/*.dart"
+      from: "package:shared_preferences/**"
+      except: []
+
+    # presentation: PLAN.md §6.1 — no direct data-layer import.
+    presentation_no_data:
+      target: "package:voca_app/**/presentation/**/*.dart"
+      from: "package:voca_app/**/data/**/*.dart"
+      except: []
+
+    # data: PLAN.md §6.4 — no presentation/widget import.
+    data_no_presentation:
+      target: "package:voca_app/**/data/**/*.dart"
+      from: "package:voca_app/**/presentation/**/*.dart"
+      except: []
