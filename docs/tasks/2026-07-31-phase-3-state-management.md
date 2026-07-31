@@ -1,6 +1,6 @@
 # Task Contract — Phase 3: State và luồng chính (Riverpod 3)
 
-Điền theo `docs/templates/task-contract.md` (PLAN.md §14.3). **NHÁP — chưa duyệt**, cần chốt lại phạm vi trước khi bắt đầu implement (xem phần "Cần quyết định trước khi duyệt" cuối file).
+Điền theo `docs/templates/task-contract.md` (PLAN.md §14.3). **NHÁP — đã chốt hoãn lại**, chưa implement (xem "Quyết định — 2026-07-31" cuối file).
 
 Theo PLAN.md §15, Phase 3 = "Chuyển luồng chính sang Riverpod 3 với `Notifier`/`AsyncNotifier`, chuẩn hóa error/loading state." Exit criteria gốc: "state management nhất quán, không còn style cũ lẫn lộn trong luồng đã chuyển."
 
@@ -51,8 +51,13 @@ Widget `AsyncStateView<T>` dùng lại được ở cả 3 chỗ hiện có; UI 
 
 ---
 
-## Cần quyết định trước khi duyệt task này
+## Quyết định — 2026-07-31
 
-1. **Có cần retry action trong error state không**, hay chỉ hiển thị thông báo lỗi tĩnh (như hiện tại)?
-2. **Tên/API của widget dùng chung** có ổn không, hay muốn thiết kế khác (vd: extension method trên `AsyncValue` thay vì widget riêng)?
-3. Có cần làm Phase 3 **ngay bây giờ**, hay ưu tiên Phase 4 (Localization) / Phase 5 (feature lõi) trước, vì Phase 3 hiện tại phạm vi thực tế khá nhỏ (audit cho thấy phần lớn đã đạt sẵn)?
+**Hoãn Phase 3, chưa implement.** Lý do: audit cho thấy phần cốt lõi (chuyển sang `Notifier`/`AsyncNotifier`) đã đạt sẵn từ Phase 1 — phạm vi còn lại (chuẩn hóa loading/error UI) là cải thiện nhỏ, không chặn phase nào khác, có thể làm sau khi có thêm feature thứ 2 để tránh thiết kế `AsyncStateView` non-generalized rồi phải sửa lại (two-feature rule, CLAUDE.md §6).
+
+Giữ nguyên câu hỏi mở cho lần quay lại task này:
+
+1. Có cần retry action trong error state không, hay chỉ hiển thị thông báo lỗi tĩnh (như hiện tại)?
+2. Tên/API của widget dùng chung có ổn không, hay muốn thiết kế khác (vd: extension method trên `AsyncValue` thay vì widget riêng)?
+
+**Task contract này giữ nguyên ở trạng thái nháp/chưa duyệt — không bắt đầu implement cho tới khi được yêu cầu lại.**
