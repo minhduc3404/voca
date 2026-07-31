@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "324979937842",
+    "project_id": "voca-370e1",
+    "storage_bucket": "voca-370e1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:324979937842:android:cb6429e7dac0b1eeb2a22b",
+        "android_client_info": {
+          "package_name": "com.voca.remember"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBNjiWhM_M9sW7wzcnLJXS4EgB3zAqWlCQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
