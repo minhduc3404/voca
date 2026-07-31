@@ -15,7 +15,9 @@ class App extends StatelessWidget {
       supportedLocales: AppLocalizations.supportedLocales,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
-      themeMode: ThemeMode.system,
+      // Mockup "Voca Memo" chỉ định 1 dark theme cố định (không có biến thể
+      // light) — không theo ThemeMode.system.
+      themeMode: ThemeMode.dark,
       home: const MemoScreen(),
     );
   }

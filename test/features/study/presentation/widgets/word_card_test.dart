@@ -35,7 +35,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.byIcon(Icons.volume_up));
+    await tester.tap(find.byKey(const Key('word-card-speak-button')));
     await tester.pump();
 
     expect(speakCount, 1);
