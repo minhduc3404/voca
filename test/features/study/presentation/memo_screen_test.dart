@@ -39,6 +39,15 @@ class _FakeTtsService implements TtsService {
   Future<void> speak(String text) async {
     speakCount++;
   }
+
+  @override
+  Future<List<TtsVoice>> getVoices() async => const [];
+
+  @override
+  Future<void> setVoice(TtsVoice voice) async {}
+
+  @override
+  Future<void> setSpeechRate(double rate) async {}
 }
 
 class _FakeWakelockService implements WakelockService {

@@ -8,6 +8,7 @@ import 'package:voca_app/l10n/arb/app_localizations.dart';
 import '../application/providers.dart';
 import '../application/session_controller.dart';
 import '../domain/study_rating.dart';
+import 'tts_settings_screen.dart';
 import 'widgets/remember_button.dart';
 import 'widgets/word_card.dart';
 
@@ -47,6 +48,16 @@ class MemoScreen extends ConsumerWidget {
               ? '${session.position} / ${session.total} thẻ'
               : AppLocalizations.of(context)!.appTitle,
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_voice),
+            tooltip: 'Cài đặt phát âm',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const TtsSettingsScreen()),
+            ),
+          ),
+        ],
         bottom: showProgress
             ? PreferredSize(
                 preferredSize: const Size.fromHeight(4),
