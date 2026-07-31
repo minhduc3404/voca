@@ -83,23 +83,42 @@ class _SessionBodyState extends ConsumerState<_SessionBody> {
   Timer? _firstSpeakTimer;
   Timer? _secondSpeakTimer;
   Timer? _autoAdvanceTimer;
+  bool? _wakelockEnabled;
+  // Không khai báo type tường minh (`WakelockService`) — presentation không
+  // được import `data/` trực tiếp (CLAUDE.md §2); type suy ra qua provider.
+  late final _wakelockService = ref.read(wakelockServiceProvider);
 
   @override
   void initState() {
     super.initState();
     _maybeSyncTimers();
+    _syncWakelock();
   }
 
   @override
   void didUpdateWidget(covariant _SessionBody oldWidget) {
     super.didUpdateWidget(oldWidget);
     _maybeSyncTimers();
+    _syncWakelock();
   }
 
   @override
   void dispose() {
     _cancelTimers();
+    if (_wakelockEnabled ?? false) {
+      unawaited(_wakelockService.disable());
+    }
     super.dispose();
+  }
+
+  /// Giữ màn hình sáng trong lúc còn thẻ để ôn — chế độ rảnh tay không có
+  /// thao tác chạm thường xuyên nên Android/iOS sẽ tự dim/tắt màn hình theo
+  /// timeout OS nếu không có wakelock. Tắt lại khi ôn xong.
+  void _syncWakelock() {
+    final shouldEnable = !widget.session.isCompleted;
+    if (_wakelockEnabled == shouldEnable) return;
+    _wakelockEnabled = shouldEnable;
+    unawaited(shouldEnable ? _wakelockService.enable() : _wakelockService.disable());
   }
 
   /// Bắt đầu lại bộ đếm cho thẻ hiện tại — chỉ khi thẻ thực sự đổi và

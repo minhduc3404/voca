@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:voca_app/features/study/application/providers.dart';
 import 'package:voca_app/features/study/data/tts_service.dart';
+import 'package:voca_app/features/study/data/wakelock_service.dart';
 import 'package:voca_app/features/study/domain/progress_repository.dart';
 import 'package:voca_app/features/study/domain/study_card.dart';
 import 'package:voca_app/features/study/domain/word_progress.dart';
@@ -40,6 +41,16 @@ class _FakeTtsService implements TtsService {
   }
 }
 
+class _FakeWakelockService implements WakelockService {
+  bool enabled = false;
+
+  @override
+  Future<void> enable() async => enabled = true;
+
+  @override
+  Future<void> disable() async => enabled = false;
+}
+
 List<StudyCard> _twoCards() => const [
   StudyCard(
     id: 1,
@@ -64,11 +75,15 @@ List<StudyCard> _twoCards() => const [
 Widget _wrap({
   required ProgressRepository repository,
   required TtsService tts,
+  WakelockService? wakelock,
 }) {
   return ProviderScope(
     overrides: [
       progressRepositoryProvider.overrideWithValue(repository),
       ttsServiceProvider.overrideWithValue(tts),
+      wakelockServiceProvider.overrideWithValue(
+        wakelock ?? _FakeWakelockService(),
+      ),
     ],
     child: const MaterialApp(
       localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -156,4 +171,34 @@ void main() {
     // Dọn timer còn lại (auto-advance ở giây 10) để test kết thúc sạch.
     await tester.pump(const Duration(seconds: 4));
   });
+
+  testWidgets(
+    'Wakelock bật khi còn thẻ, tắt khi ôn xong (tránh màn hình tự dim)',
+    (tester) async {
+      final now = DateTime(2026, 1, 15);
+      final repository = _InMemoryRepository(_twoCards(), now);
+      final tts = _FakeTtsService();
+      final wakelock = _FakeWakelockService();
+
+      await tester.pumpWidget(
+        _wrap(repository: repository, tts: tts, wakelock: wakelock),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(wakelock.enabled, isTrue);
+
+      await tester.tap(find.text('Đã nhớ'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 700));
+      expect(wakelock.enabled, isTrue); // vẫn còn thẻ "banana"
+
+      await tester.tap(find.text('Đã nhớ'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 700));
+
+      expect(find.text('Đã ôn hết thẻ đến hạn hôm nay'), findsOneWidget);
+      expect(wakelock.enabled, isFalse);
+    },
+  );
 }

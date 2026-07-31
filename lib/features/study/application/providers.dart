@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
 import '../data/drift_progress_repository.dart';
 import '../data/tts_service.dart';
+import '../data/wakelock_service.dart';
 import '../domain/progress_repository.dart';
 
 /// Điểm nối duy nhất giữa application và implementation cụ thể của
@@ -16,4 +17,8 @@ final progressRepositoryProvider = Provider<ProgressRepository>((ref) {
 
 final ttsServiceProvider = Provider<TtsService>((ref) {
   return FlutterTtsService();
+});
+
+final wakelockServiceProvider = Provider<WakelockService>((ref) {
+  return WakelockPlusService();
 });
