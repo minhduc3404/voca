@@ -26,7 +26,7 @@ class WordCard extends StatelessWidget {
             children: [
               Text(
                 card.term,
-                style: textTheme.headlineMedium,
+                style: textTheme.displayMedium,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
