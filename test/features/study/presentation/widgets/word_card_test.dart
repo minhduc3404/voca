@@ -23,7 +23,7 @@ void main() {
 
     expect(find.text('apple'), findsOneWidget);
     expect(find.text('quả táo'), findsOneWidget);
-    expect(find.text('She ate a red apple.'), findsOneWidget);
+    expect(find.text('"She ate a red apple."'), findsOneWidget);
   });
 
   testWidgets('bấm nút loa gọi onSpeak', (tester) async {
