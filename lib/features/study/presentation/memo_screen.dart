@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:voca_app/app/theme/app_icon.dart';
 import 'package:voca_app/app/theme/app_theme.dart';
+import 'package:voca_app/features/vocabulary/presentation/topic_list_screen.dart';
 import 'package:voca_app/l10n/arb/app_localizations.dart';
 
 import '../application/providers.dart';
@@ -56,6 +57,25 @@ class MemoScreen extends ConsumerWidget {
             ? _ProgressHeader(position: session.position, total: session.total)
             : Text(AppLocalizations.of(context)!.appTitle),
         actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: IconButton(
+              style: IconButton.styleFrom(
+                backgroundColor: AppColors.controlBg,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              // TODO(icon): thay bằng SVG Reicon duotone theo ADR-009 khi có
+              // asset — tạm dùng Material icon built-in cho đúng chức năng.
+              icon: Icon(Icons.menu_book_outlined, color: AppColors.controlIcon),
+              tooltip: 'Chủ đề từ vựng',
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const TopicListScreen()),
+              ),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: IconButton(

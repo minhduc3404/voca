@@ -1,6 +1,6 @@
 # Task Contract — Catalog từ vựng theo chủ đề (Firebase Cloud Storage)
 
-Điền theo `docs/templates/task-contract.md` (PLAN.md §14.3). **NHÁP — chờ Firebase project + config từ người dùng, chưa implement.**
+Điền theo `docs/templates/task-contract.md` (PLAN.md §14.3). **Đã implement — 2026-07-31** (xem "Hoàn tất" cuối file).
 
 ---
 
@@ -94,3 +94,28 @@ Người dùng duyệt danh sách chủ đề từ vựng (Du lịch, Ngành h�
 ```
 
 `words[].id` bắt buộc ổn định + duy nhất toàn catalog (không riêng từng file) — dùng làm `VocabularyTable.catalogId`.
+
+---
+
+## Hoàn tất — 2026-07-31
+
+**Thay đổi so với thiết kế gốc:**
+- Dùng `firebase_storage` SDK thật (không phải HTTP+token) — user đã publish Storage rule `allow read: if true;` cho toàn bucket, xác nhận qua fetch `topics.json`/`travel.json` không cần token.
+- File catalog thực tế nằm ở **root bucket** (`topics.json`, `travel.json`), không phải trong `catalog/` như ví dụ minh họa ban đầu — `FirebaseCatalogRepository` đọc đúng theo path thật.
+- Quy ước tên file chi tiết chủ đề: luôn `<topicId>.json` (không dùng field `"file"` trong `topics.json` để tra cứu) — đơn giản hơn, ít điểm hỏng hơn.
+- **`google-services.json`/`GoogleService-Info.plist`** đã chuyển từ `google-services/` (do user upload tạm) vào đúng vị trí chuẩn Flutter: `android/app/google-services.json`, `ios/Runner/GoogleService-Info.plist`. Đã wiring Gradle plugin `com.google.gms.google-services` (`android/settings.gradle.kts`, `android/app/build.gradle.kts`). `Firebase.initializeApp()` gọi trong `bootstrap.dart`, **bỏ qua trên web** (`kIsWeb`) vì project chưa đăng ký app Firebase cho Web — feature catalog tạm thời chỉ hoạt động Android/iOS.
+
+**Implement:**
+- `lib/features/vocabulary/` — feature mới đủ 4 lớp: `domain/` (`Topic`, `CatalogWord`, `DownloadedTopic`, `VocabularyCatalogRepository`, `TopicLibraryRepository`), `data/` (`FirebaseCatalogRepository` + hàm parse JSON thuần `parseTopicsJson`/`parseTopicWordsJson` tách riêng để test không cần SDK, `DriftTopicLibraryRepository`), `application/` (`providers.dart`, `TopicCatalogController` — `AsyncNotifier`), `presentation/` (`TopicListScreen`).
+- Schema v3: `VocabularyTable.catalogId` (nullable, unique), bảng mới `DownloadedTopicsTable`. **Bug thật phát hiện lúc viết migration**: SQLite không cho `ALTER TABLE ... ADD COLUMN ... UNIQUE` — sửa bằng cách thêm cột trơn rồi tạo `CREATE UNIQUE INDEX` riêng.
+- Entry point: icon "Chủ đề từ vựng" trên AppBar `MemoScreen` (Material icon tạm `Icons.menu_book_outlined` — **chưa** phải SVG Reicon duotone theo ADR-009, để làm sau khi có asset).
+- Import không đụng `study/domain/` — từ mới thêm vào `VocabularyTable` tự động được `study/` coi là "due ngay" vì chưa có `ProgressTable` row (hành vi sẵn có từ Phase 2), không cần `vocabulary/` biết gì về SRS.
+
+**Verify:**
+- `dart analyze` sạch, `flutter test` **51/51 pass** (10 test mới: parse JSON bằng dữ liệu THẬT fetch trực tiếp từ bucket production lúc code — không phải mock tự bịa; import lần đầu/update không trùng/giữ tiến độ SRS; controller build/download/lỗi; migration v2→v3 thật; widget test màn danh sách chủ đề).
+- Đã verify **thật** qua `WebFetch` trực tiếp vào bucket `voca-370e1.firebasestorage.app`: `topics.json` và `travel.json` (12 từ) đọc công khai thành công, đúng schema.
+
+**Chưa verify được:**
+- Build/chạy thật trên thiết bị Android/iOS (sandbox không có Android SDK/Xcode) — chỉ verify được qua `flutter test` (VM) + `dart analyze`. Wiring Gradle/Podfile đúng cú pháp nhưng chưa build thử thật.
+- Lời gọi `firebase_storage` SDK thật qua platform channel (đã verify logic parse bằng dữ liệu thật, nhưng chưa chạy được `FirebaseCatalogRepository.listTopics()` end-to-end trên thiết bị thật).
+- iOS: `GoogleService-Info.plist` đã đặt đúng thư mục `ios/Runner/` nhưng **chưa** được thêm vào `Runner.xcodeproj` như resource build (cần Xcode để làm đúng cách, hoặc build thử `pod install` để CocoaPods/Firebase pod tự nhận file — chưa verify được trong sandbox này).

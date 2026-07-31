@@ -6,7 +6,9 @@ import 'tables.dart';
 
 part 'app_database.g.dart';
 
-@DriftDatabase(tables: [VocabularyTable, ProgressTable])
+@DriftDatabase(
+  tables: [VocabularyTable, ProgressTable, DownloadedTopicsTable],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : _seedDemoData = true, super(_openConnection());
 
@@ -18,7 +20,7 @@ class AppDatabase extends _$AppDatabase {
   final bool _seedDemoData;
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -37,6 +39,23 @@ class AppDatabase extends _$AppDatabase {
         // nullable, không set default nên tự NULL cho dòng cũ, đúng ý
         // nghĩa "learningStep = null = review phase".
         await migrator.addColumn(progressTable, progressTable.learningStep);
+      }
+      if (from < 3) {
+        // Catalog từ vựng theo chủ đề (Firebase Storage) — xem task
+        // contract 2026-07-31-vocabulary-catalog-firebase.md. Dữ liệu cũ
+        // không đến từ catalog nào → catalogId tự NULL, đúng ý nghĩa.
+        //
+        // SQLite KHÔNG cho `ALTER TABLE ... ADD COLUMN ... UNIQUE` — phải
+        // thêm cột trơn rồi tạo unique index riêng (NULL không tính trùng
+        // trong unique index, đúng ý "chưa có catalogId").
+        await migrator.database.customStatement(
+          'ALTER TABLE vocabulary_table ADD COLUMN catalog_id TEXT NULL;',
+        );
+        await migrator.database.customStatement(
+          'CREATE UNIQUE INDEX vocabulary_table_catalog_id_idx '
+          'ON vocabulary_table (catalog_id);',
+        );
+        await migrator.createTable(downloadedTopicsTable);
       }
     },
   );

@@ -97,6 +97,18 @@ class $VocabularyTableTable extends VocabularyTable
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _catalogIdMeta = const VerificationMeta(
+    'catalogId',
+  );
+  @override
+  late final GeneratedColumn<String> catalogId = GeneratedColumn<String>(
+    'catalog_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -107,6 +119,7 @@ class $VocabularyTableTable extends VocabularyTable
     partOfSpeech,
     exampleSentence,
     createdAt,
+    catalogId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -183,6 +196,12 @@ class $VocabularyTableTable extends VocabularyTable
     } else if (isInserting) {
       context.missing(_createdAtMeta);
     }
+    if (data.containsKey('catalog_id')) {
+      context.handle(
+        _catalogIdMeta,
+        catalogId.isAcceptableOrUnknown(data['catalog_id']!, _catalogIdMeta),
+      );
+    }
     return context;
   }
 
@@ -224,6 +243,10 @@ class $VocabularyTableTable extends VocabularyTable
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      catalogId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}catalog_id'],
+      ),
     );
   }
 
@@ -262,6 +285,12 @@ class VocabularyTableData extends DataClass
 
   /// Thời điểm từ được thêm vào — phục vụ audit/sort, không dùng cho SRS.
   final DateTime createdAt;
+
+  /// ID ổn định của từ trong catalog remote (vd `"travel-001"`), `null`
+  /// nếu từ được nhập tay/seed cục bộ, không đến từ catalog. Dùng để
+  /// match lại đúng row khi đồng bộ lại một chủ đề đã tải — tránh tạo
+  /// trùng, giữ nguyên tiến độ SRS đã có. Thêm ở schema v3.
+  final String? catalogId;
   const VocabularyTableData({
     required this.id,
     required this.term,
@@ -271,6 +300,7 @@ class VocabularyTableData extends DataClass
     this.partOfSpeech,
     required this.exampleSentence,
     required this.createdAt,
+    this.catalogId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -285,6 +315,9 @@ class VocabularyTableData extends DataClass
     }
     map['example_sentence'] = Variable<String>(exampleSentence);
     map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || catalogId != null) {
+      map['catalog_id'] = Variable<String>(catalogId);
+    }
     return map;
   }
 
@@ -300,6 +333,9 @@ class VocabularyTableData extends DataClass
           : Value(partOfSpeech),
       exampleSentence: Value(exampleSentence),
       createdAt: Value(createdAt),
+      catalogId: catalogId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(catalogId),
     );
   }
 
@@ -317,6 +353,7 @@ class VocabularyTableData extends DataClass
       partOfSpeech: serializer.fromJson<String?>(json['partOfSpeech']),
       exampleSentence: serializer.fromJson<String>(json['exampleSentence']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      catalogId: serializer.fromJson<String?>(json['catalogId']),
     );
   }
   @override
@@ -331,6 +368,7 @@ class VocabularyTableData extends DataClass
       'partOfSpeech': serializer.toJson<String?>(partOfSpeech),
       'exampleSentence': serializer.toJson<String>(exampleSentence),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'catalogId': serializer.toJson<String?>(catalogId),
     };
   }
 
@@ -343,6 +381,7 @@ class VocabularyTableData extends DataClass
     Value<String?> partOfSpeech = const Value.absent(),
     String? exampleSentence,
     DateTime? createdAt,
+    Value<String?> catalogId = const Value.absent(),
   }) => VocabularyTableData(
     id: id ?? this.id,
     term: term ?? this.term,
@@ -352,6 +391,7 @@ class VocabularyTableData extends DataClass
     partOfSpeech: partOfSpeech.present ? partOfSpeech.value : this.partOfSpeech,
     exampleSentence: exampleSentence ?? this.exampleSentence,
     createdAt: createdAt ?? this.createdAt,
+    catalogId: catalogId.present ? catalogId.value : this.catalogId,
   );
   VocabularyTableData copyWithCompanion(VocabularyTableCompanion data) {
     return VocabularyTableData(
@@ -369,6 +409,7 @@ class VocabularyTableData extends DataClass
           ? data.exampleSentence.value
           : this.exampleSentence,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      catalogId: data.catalogId.present ? data.catalogId.value : this.catalogId,
     );
   }
 
@@ -382,7 +423,8 @@ class VocabularyTableData extends DataClass
           ..write('phonetic: $phonetic, ')
           ..write('partOfSpeech: $partOfSpeech, ')
           ..write('exampleSentence: $exampleSentence, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('catalogId: $catalogId')
           ..write(')'))
         .toString();
   }
@@ -397,6 +439,7 @@ class VocabularyTableData extends DataClass
     partOfSpeech,
     exampleSentence,
     createdAt,
+    catalogId,
   );
   @override
   bool operator ==(Object other) =>
@@ -409,7 +452,8 @@ class VocabularyTableData extends DataClass
           other.phonetic == this.phonetic &&
           other.partOfSpeech == this.partOfSpeech &&
           other.exampleSentence == this.exampleSentence &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.catalogId == this.catalogId);
 }
 
 class VocabularyTableCompanion extends UpdateCompanion<VocabularyTableData> {
@@ -421,6 +465,7 @@ class VocabularyTableCompanion extends UpdateCompanion<VocabularyTableData> {
   final Value<String?> partOfSpeech;
   final Value<String> exampleSentence;
   final Value<DateTime> createdAt;
+  final Value<String?> catalogId;
   const VocabularyTableCompanion({
     this.id = const Value.absent(),
     this.term = const Value.absent(),
@@ -430,6 +475,7 @@ class VocabularyTableCompanion extends UpdateCompanion<VocabularyTableData> {
     this.partOfSpeech = const Value.absent(),
     this.exampleSentence = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.catalogId = const Value.absent(),
   });
   VocabularyTableCompanion.insert({
     this.id = const Value.absent(),
@@ -440,6 +486,7 @@ class VocabularyTableCompanion extends UpdateCompanion<VocabularyTableData> {
     this.partOfSpeech = const Value.absent(),
     required String exampleSentence,
     required DateTime createdAt,
+    this.catalogId = const Value.absent(),
   }) : term = Value(term),
        definition = Value(definition),
        language = Value(language),
@@ -455,6 +502,7 @@ class VocabularyTableCompanion extends UpdateCompanion<VocabularyTableData> {
     Expression<String>? partOfSpeech,
     Expression<String>? exampleSentence,
     Expression<DateTime>? createdAt,
+    Expression<String>? catalogId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -465,6 +513,7 @@ class VocabularyTableCompanion extends UpdateCompanion<VocabularyTableData> {
       if (partOfSpeech != null) 'part_of_speech': partOfSpeech,
       if (exampleSentence != null) 'example_sentence': exampleSentence,
       if (createdAt != null) 'created_at': createdAt,
+      if (catalogId != null) 'catalog_id': catalogId,
     });
   }
 
@@ -477,6 +526,7 @@ class VocabularyTableCompanion extends UpdateCompanion<VocabularyTableData> {
     Value<String?>? partOfSpeech,
     Value<String>? exampleSentence,
     Value<DateTime>? createdAt,
+    Value<String?>? catalogId,
   }) {
     return VocabularyTableCompanion(
       id: id ?? this.id,
@@ -487,6 +537,7 @@ class VocabularyTableCompanion extends UpdateCompanion<VocabularyTableData> {
       partOfSpeech: partOfSpeech ?? this.partOfSpeech,
       exampleSentence: exampleSentence ?? this.exampleSentence,
       createdAt: createdAt ?? this.createdAt,
+      catalogId: catalogId ?? this.catalogId,
     );
   }
 
@@ -517,6 +568,9 @@ class VocabularyTableCompanion extends UpdateCompanion<VocabularyTableData> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (catalogId.present) {
+      map['catalog_id'] = Variable<String>(catalogId.value);
+    }
     return map;
   }
 
@@ -530,7 +584,8 @@ class VocabularyTableCompanion extends UpdateCompanion<VocabularyTableData> {
           ..write('phonetic: $phonetic, ')
           ..write('partOfSpeech: $partOfSpeech, ')
           ..write('exampleSentence: $exampleSentence, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('catalogId: $catalogId')
           ..write(')'))
         .toString();
   }
@@ -1227,6 +1282,300 @@ class ProgressTableCompanion extends UpdateCompanion<ProgressTableData> {
   }
 }
 
+class $DownloadedTopicsTableTable extends DownloadedTopicsTable
+    with TableInfo<$DownloadedTopicsTableTable, DownloadedTopicsTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $DownloadedTopicsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _topicIdMeta = const VerificationMeta(
+    'topicId',
+  );
+  @override
+  late final GeneratedColumn<String> topicId = GeneratedColumn<String>(
+    'topic_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _downloadedVersionMeta = const VerificationMeta(
+    'downloadedVersion',
+  );
+  @override
+  late final GeneratedColumn<int> downloadedVersion = GeneratedColumn<int>(
+    'downloaded_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _downloadedAtMeta = const VerificationMeta(
+    'downloadedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> downloadedAt = GeneratedColumn<DateTime>(
+    'downloaded_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    topicId,
+    downloadedVersion,
+    downloadedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'downloaded_topics_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DownloadedTopicsTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('topic_id')) {
+      context.handle(
+        _topicIdMeta,
+        topicId.isAcceptableOrUnknown(data['topic_id']!, _topicIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_topicIdMeta);
+    }
+    if (data.containsKey('downloaded_version')) {
+      context.handle(
+        _downloadedVersionMeta,
+        downloadedVersion.isAcceptableOrUnknown(
+          data['downloaded_version']!,
+          _downloadedVersionMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_downloadedVersionMeta);
+    }
+    if (data.containsKey('downloaded_at')) {
+      context.handle(
+        _downloadedAtMeta,
+        downloadedAt.isAcceptableOrUnknown(
+          data['downloaded_at']!,
+          _downloadedAtMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_downloadedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {topicId};
+  @override
+  DownloadedTopicsTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DownloadedTopicsTableData(
+      topicId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}topic_id'],
+      )!,
+      downloadedVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}downloaded_version'],
+      )!,
+      downloadedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}downloaded_at'],
+      )!,
+    );
+  }
+
+  @override
+  $DownloadedTopicsTableTable createAlias(String alias) {
+    return $DownloadedTopicsTableTable(attachedDatabase, alias);
+  }
+}
+
+class DownloadedTopicsTableData extends DataClass
+    implements Insertable<DownloadedTopicsTableData> {
+  /// ID chủ đề, khớp `Topic.id` trong catalog (vd `"travel"`).
+  final String topicId;
+
+  /// Version của chủ đề tại thời điểm tải — so với version hiện tại trên
+  /// remote để biết có cần đồng bộ lại không.
+  final int downloadedVersion;
+  final DateTime downloadedAt;
+  const DownloadedTopicsTableData({
+    required this.topicId,
+    required this.downloadedVersion,
+    required this.downloadedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['topic_id'] = Variable<String>(topicId);
+    map['downloaded_version'] = Variable<int>(downloadedVersion);
+    map['downloaded_at'] = Variable<DateTime>(downloadedAt);
+    return map;
+  }
+
+  DownloadedTopicsTableCompanion toCompanion(bool nullToAbsent) {
+    return DownloadedTopicsTableCompanion(
+      topicId: Value(topicId),
+      downloadedVersion: Value(downloadedVersion),
+      downloadedAt: Value(downloadedAt),
+    );
+  }
+
+  factory DownloadedTopicsTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DownloadedTopicsTableData(
+      topicId: serializer.fromJson<String>(json['topicId']),
+      downloadedVersion: serializer.fromJson<int>(json['downloadedVersion']),
+      downloadedAt: serializer.fromJson<DateTime>(json['downloadedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'topicId': serializer.toJson<String>(topicId),
+      'downloadedVersion': serializer.toJson<int>(downloadedVersion),
+      'downloadedAt': serializer.toJson<DateTime>(downloadedAt),
+    };
+  }
+
+  DownloadedTopicsTableData copyWith({
+    String? topicId,
+    int? downloadedVersion,
+    DateTime? downloadedAt,
+  }) => DownloadedTopicsTableData(
+    topicId: topicId ?? this.topicId,
+    downloadedVersion: downloadedVersion ?? this.downloadedVersion,
+    downloadedAt: downloadedAt ?? this.downloadedAt,
+  );
+  DownloadedTopicsTableData copyWithCompanion(
+    DownloadedTopicsTableCompanion data,
+  ) {
+    return DownloadedTopicsTableData(
+      topicId: data.topicId.present ? data.topicId.value : this.topicId,
+      downloadedVersion: data.downloadedVersion.present
+          ? data.downloadedVersion.value
+          : this.downloadedVersion,
+      downloadedAt: data.downloadedAt.present
+          ? data.downloadedAt.value
+          : this.downloadedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DownloadedTopicsTableData(')
+          ..write('topicId: $topicId, ')
+          ..write('downloadedVersion: $downloadedVersion, ')
+          ..write('downloadedAt: $downloadedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(topicId, downloadedVersion, downloadedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DownloadedTopicsTableData &&
+          other.topicId == this.topicId &&
+          other.downloadedVersion == this.downloadedVersion &&
+          other.downloadedAt == this.downloadedAt);
+}
+
+class DownloadedTopicsTableCompanion
+    extends UpdateCompanion<DownloadedTopicsTableData> {
+  final Value<String> topicId;
+  final Value<int> downloadedVersion;
+  final Value<DateTime> downloadedAt;
+  final Value<int> rowid;
+  const DownloadedTopicsTableCompanion({
+    this.topicId = const Value.absent(),
+    this.downloadedVersion = const Value.absent(),
+    this.downloadedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  DownloadedTopicsTableCompanion.insert({
+    required String topicId,
+    required int downloadedVersion,
+    required DateTime downloadedAt,
+    this.rowid = const Value.absent(),
+  }) : topicId = Value(topicId),
+       downloadedVersion = Value(downloadedVersion),
+       downloadedAt = Value(downloadedAt);
+  static Insertable<DownloadedTopicsTableData> custom({
+    Expression<String>? topicId,
+    Expression<int>? downloadedVersion,
+    Expression<DateTime>? downloadedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (topicId != null) 'topic_id': topicId,
+      if (downloadedVersion != null) 'downloaded_version': downloadedVersion,
+      if (downloadedAt != null) 'downloaded_at': downloadedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  DownloadedTopicsTableCompanion copyWith({
+    Value<String>? topicId,
+    Value<int>? downloadedVersion,
+    Value<DateTime>? downloadedAt,
+    Value<int>? rowid,
+  }) {
+    return DownloadedTopicsTableCompanion(
+      topicId: topicId ?? this.topicId,
+      downloadedVersion: downloadedVersion ?? this.downloadedVersion,
+      downloadedAt: downloadedAt ?? this.downloadedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (topicId.present) {
+      map['topic_id'] = Variable<String>(topicId.value);
+    }
+    if (downloadedVersion.present) {
+      map['downloaded_version'] = Variable<int>(downloadedVersion.value);
+    }
+    if (downloadedAt.present) {
+      map['downloaded_at'] = Variable<DateTime>(downloadedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DownloadedTopicsTableCompanion(')
+          ..write('topicId: $topicId, ')
+          ..write('downloadedVersion: $downloadedVersion, ')
+          ..write('downloadedAt: $downloadedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -1234,6 +1583,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this,
   );
   late final $ProgressTableTable progressTable = $ProgressTableTable(this);
+  late final $DownloadedTopicsTableTable downloadedTopicsTable =
+      $DownloadedTopicsTableTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1241,6 +1592,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     vocabularyTable,
     progressTable,
+    downloadedTopicsTable,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -1264,6 +1616,7 @@ typedef $$VocabularyTableTableCreateCompanionBuilder =
       Value<String?> partOfSpeech,
       required String exampleSentence,
       required DateTime createdAt,
+      Value<String?> catalogId,
     });
 typedef $$VocabularyTableTableUpdateCompanionBuilder =
     VocabularyTableCompanion Function({
@@ -1275,6 +1628,7 @@ typedef $$VocabularyTableTableUpdateCompanionBuilder =
       Value<String?> partOfSpeech,
       Value<String> exampleSentence,
       Value<DateTime> createdAt,
+      Value<String?> catalogId,
     });
 
 final class $$VocabularyTableTableReferences
@@ -1358,6 +1712,11 @@ class $$VocabularyTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get catalogId => $composableBuilder(
+    column: $table.catalogId,
+    builder: (column) => ColumnFilters(column),
+  );
+
   Expression<bool> progressTableRefs(
     Expression<bool> Function($$ProgressTableTableFilterComposer f) f,
   ) {
@@ -1432,6 +1791,11 @@ class $$VocabularyTableTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get catalogId => $composableBuilder(
+    column: $table.catalogId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$VocabularyTableTableAnnotationComposer
@@ -1472,6 +1836,9 @@ class $$VocabularyTableTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get catalogId =>
+      $composableBuilder(column: $table.catalogId, builder: (column) => column);
 
   Expression<T> progressTableRefs<T extends Object>(
     Expression<T> Function($$ProgressTableTableAnnotationComposer a) f,
@@ -1537,6 +1904,7 @@ class $$VocabularyTableTableTableManager
                 Value<String?> partOfSpeech = const Value.absent(),
                 Value<String> exampleSentence = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<String?> catalogId = const Value.absent(),
               }) => VocabularyTableCompanion(
                 id: id,
                 term: term,
@@ -1546,6 +1914,7 @@ class $$VocabularyTableTableTableManager
                 partOfSpeech: partOfSpeech,
                 exampleSentence: exampleSentence,
                 createdAt: createdAt,
+                catalogId: catalogId,
               ),
           createCompanionCallback:
               ({
@@ -1557,6 +1926,7 @@ class $$VocabularyTableTableTableManager
                 Value<String?> partOfSpeech = const Value.absent(),
                 required String exampleSentence,
                 required DateTime createdAt,
+                Value<String?> catalogId = const Value.absent(),
               }) => VocabularyTableCompanion.insert(
                 id: id,
                 term: term,
@@ -1566,6 +1936,7 @@ class $$VocabularyTableTableTableManager
                 partOfSpeech: partOfSpeech,
                 exampleSentence: exampleSentence,
                 createdAt: createdAt,
+                catalogId: catalogId,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -2064,6 +2435,191 @@ typedef $$ProgressTableTableProcessedTableManager =
       ProgressTableData,
       PrefetchHooks Function({bool vocabId})
     >;
+typedef $$DownloadedTopicsTableTableCreateCompanionBuilder =
+    DownloadedTopicsTableCompanion Function({
+      required String topicId,
+      required int downloadedVersion,
+      required DateTime downloadedAt,
+      Value<int> rowid,
+    });
+typedef $$DownloadedTopicsTableTableUpdateCompanionBuilder =
+    DownloadedTopicsTableCompanion Function({
+      Value<String> topicId,
+      Value<int> downloadedVersion,
+      Value<DateTime> downloadedAt,
+      Value<int> rowid,
+    });
+
+class $$DownloadedTopicsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $DownloadedTopicsTableTable> {
+  $$DownloadedTopicsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get topicId => $composableBuilder(
+    column: $table.topicId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get downloadedVersion => $composableBuilder(
+    column: $table.downloadedVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get downloadedAt => $composableBuilder(
+    column: $table.downloadedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$DownloadedTopicsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $DownloadedTopicsTableTable> {
+  $$DownloadedTopicsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get topicId => $composableBuilder(
+    column: $table.topicId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get downloadedVersion => $composableBuilder(
+    column: $table.downloadedVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get downloadedAt => $composableBuilder(
+    column: $table.downloadedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$DownloadedTopicsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $DownloadedTopicsTableTable> {
+  $$DownloadedTopicsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get topicId =>
+      $composableBuilder(column: $table.topicId, builder: (column) => column);
+
+  GeneratedColumn<int> get downloadedVersion => $composableBuilder(
+    column: $table.downloadedVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get downloadedAt => $composableBuilder(
+    column: $table.downloadedAt,
+    builder: (column) => column,
+  );
+}
+
+class $$DownloadedTopicsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $DownloadedTopicsTableTable,
+          DownloadedTopicsTableData,
+          $$DownloadedTopicsTableTableFilterComposer,
+          $$DownloadedTopicsTableTableOrderingComposer,
+          $$DownloadedTopicsTableTableAnnotationComposer,
+          $$DownloadedTopicsTableTableCreateCompanionBuilder,
+          $$DownloadedTopicsTableTableUpdateCompanionBuilder,
+          (
+            DownloadedTopicsTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $DownloadedTopicsTableTable,
+              DownloadedTopicsTableData
+            >,
+          ),
+          DownloadedTopicsTableData,
+          PrefetchHooks Function()
+        > {
+  $$DownloadedTopicsTableTableTableManager(
+    _$AppDatabase db,
+    $DownloadedTopicsTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$DownloadedTopicsTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$DownloadedTopicsTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$DownloadedTopicsTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> topicId = const Value.absent(),
+                Value<int> downloadedVersion = const Value.absent(),
+                Value<DateTime> downloadedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => DownloadedTopicsTableCompanion(
+                topicId: topicId,
+                downloadedVersion: downloadedVersion,
+                downloadedAt: downloadedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String topicId,
+                required int downloadedVersion,
+                required DateTime downloadedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => DownloadedTopicsTableCompanion.insert(
+                topicId: topicId,
+                downloadedVersion: downloadedVersion,
+                downloadedAt: downloadedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$DownloadedTopicsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $DownloadedTopicsTableTable,
+      DownloadedTopicsTableData,
+      $$DownloadedTopicsTableTableFilterComposer,
+      $$DownloadedTopicsTableTableOrderingComposer,
+      $$DownloadedTopicsTableTableAnnotationComposer,
+      $$DownloadedTopicsTableTableCreateCompanionBuilder,
+      $$DownloadedTopicsTableTableUpdateCompanionBuilder,
+      (
+        DownloadedTopicsTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $DownloadedTopicsTableTable,
+          DownloadedTopicsTableData
+        >,
+      ),
+      DownloadedTopicsTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -2072,4 +2628,6 @@ class $AppDatabaseManager {
       $$VocabularyTableTableTableManager(_db, _db.vocabularyTable);
   $$ProgressTableTableTableManager get progressTable =>
       $$ProgressTableTableTableManager(_db, _db.progressTable);
+  $$DownloadedTopicsTableTableTableManager get downloadedTopicsTable =>
+      $$DownloadedTopicsTableTableTableManager(_db, _db.downloadedTopicsTable);
 }

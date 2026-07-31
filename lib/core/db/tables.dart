@@ -32,6 +32,12 @@ class VocabularyTable extends Table {
 
   /// Thời điểm từ được thêm vào — phục vụ audit/sort, không dùng cho SRS.
   DateTimeColumn get createdAt => dateTime()();
+
+  /// ID ổn định của từ trong catalog remote (vd `"travel-001"`), `null`
+  /// nếu từ được nhập tay/seed cục bộ, không đến từ catalog. Dùng để
+  /// match lại đúng row khi đồng bộ lại một chủ đề đã tải — tránh tạo
+  /// trùng, giữ nguyên tiến độ SRS đã có. Thêm ở schema v3.
+  TextColumn get catalogId => text().nullable().unique()();
 }
 
 class ProgressTable extends Table {
@@ -81,4 +87,21 @@ class ProgressTable extends Table {
   List<Set<Column>> get uniqueKeys => [
     {vocabId},
   ];
+}
+
+/// Theo dõi chủ đề nào đã tải về máy, ở version nào — để phát hiện chủ
+/// đề có bản cập nhật trên catalog remote (Firebase Storage). Thêm ở
+/// schema v3.
+class DownloadedTopicsTable extends Table {
+  /// ID chủ đề, khớp `Topic.id` trong catalog (vd `"travel"`).
+  TextColumn get topicId => text()();
+
+  /// Version của chủ đề tại thời điểm tải — so với version hiện tại trên
+  /// remote để biết có cần đồng bộ lại không.
+  IntColumn get downloadedVersion => integer()();
+
+  DateTimeColumn get downloadedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {topicId};
 }

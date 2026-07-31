@@ -80,4 +80,66 @@ void main() {
       expect(progress.learningStep, isNull);
     },
   );
+
+  test(
+    'migration v2 → v3: thêm catalogId + downloadedTopicsTable, dữ liệu cũ đọc được nguyên vẹn',
+    () async {
+      final dir = await Directory.systemTemp.createTemp('voca_migration_test');
+      addTearDown(() => dir.delete(recursive: true));
+      final dbFile = File('${dir.path}/voca_v2.sqlite');
+
+      // 1. Dựng schema v2 thật (có learning_step, CHƯA có catalog_id/
+      //    downloaded_topics_table) bằng raw SQL.
+      final raw = sqlite3.sqlite3.open(dbFile.path);
+      raw.execute('''
+        CREATE TABLE vocabulary_table (
+          id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+          term TEXT NOT NULL,
+          definition TEXT NOT NULL,
+          language TEXT NOT NULL,
+          phonetic TEXT NOT NULL,
+          part_of_speech TEXT NULL,
+          example_sentence TEXT NOT NULL,
+          created_at INTEGER NOT NULL
+        );
+      ''');
+      raw.execute('''
+        CREATE TABLE progress_table (
+          id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+          vocab_id INTEGER NOT NULL REFERENCES vocabulary_table (id) ON DELETE CASCADE,
+          interval INTEGER NOT NULL,
+          ease_factor REAL NOT NULL,
+          reps INTEGER NOT NULL,
+          lapses INTEGER NOT NULL,
+          learning_step INTEGER NULL,
+          next_review INTEGER NOT NULL,
+          last_review INTEGER NULL,
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL,
+          UNIQUE(vocab_id)
+        );
+      ''');
+      raw.execute(
+        "INSERT INTO vocabulary_table "
+        "(term, definition, language, phonetic, part_of_speech, example_sentence, created_at) "
+        "VALUES ('legacy', 'từ cũ', 'en', '/ˈleɡ.ə.si/', 'noun', 'A legacy word.', 1737000000);",
+      );
+      raw.execute('PRAGMA user_version = 2;');
+      raw.close();
+
+      // 2. Mở LẠI cùng file bằng AppDatabase hiện tại (v3) — drift thấy
+      //    user_version = 2 < 3 nên tự chạy onUpgrade.
+      final db = AppDatabase.forTesting(NativeDatabase(dbFile));
+      addTearDown(db.close);
+
+      final vocab = await db.select(db.vocabularyTable).getSingle();
+      expect(vocab.term, 'legacy');
+      // Dữ liệu cũ không đến từ catalog nào → catalogId tự NULL.
+      expect(vocab.catalogId, isNull);
+
+      // Bảng mới đã tạo, query rỗng không lỗi.
+      final downloaded = await db.select(db.downloadedTopicsTable).get();
+      expect(downloaded, isEmpty);
+    },
+  );
 }
