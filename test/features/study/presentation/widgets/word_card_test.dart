@@ -14,7 +14,19 @@ void main() {
     exampleSentence: 'She ate a red apple.',
   );
 
-  testWidgets('bấm nút loa gọi onSpeak, không lật thẻ', (tester) async {
+  testWidgets('hiện đủ term + definition + example cùng lúc, không cần lật', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(home: WordCard(card: card, onSpeak: () {})),
+    );
+
+    expect(find.text('apple'), findsOneWidget);
+    expect(find.text('quả táo'), findsOneWidget);
+    expect(find.text('She ate a red apple.'), findsOneWidget);
+  });
+
+  testWidgets('bấm nút loa gọi onSpeak', (tester) async {
     var speakCount = 0;
 
     await tester.pumpWidget(
@@ -23,26 +35,9 @@ void main() {
       ),
     );
 
-    expect(find.text('apple'), findsOneWidget);
-
     await tester.tap(find.byIcon(Icons.volume_up));
     await tester.pump();
 
     expect(speakCount, 1);
-    // Bấm nút loa không được làm lật thẻ sang mặt sau.
-    expect(find.text('apple'), findsOneWidget);
-    expect(find.text('quả táo'), findsNothing);
-  });
-
-  testWidgets('bấm vào thẻ (ngoài nút loa) lật sang mặt sau', (tester) async {
-    await tester.pumpWidget(
-      MaterialApp(home: WordCard(card: card, onSpeak: () {})),
-    );
-
-    await tester.tap(find.text('apple'));
-    await tester.pump();
-
-    expect(find.text('quả táo'), findsOneWidget);
-    expect(find.text('She ate a red apple.'), findsOneWidget);
   });
 }

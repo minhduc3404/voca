@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -6,9 +8,16 @@ import 'package:voca_app/l10n/arb/app_localizations.dart';
 import '../application/providers.dart';
 import '../application/session_controller.dart';
 import '../domain/study_rating.dart';
-import '../domain/word_progress.dart';
-import 'widgets/control_bar.dart';
+import 'widgets/remember_button.dart';
 import 'widgets/word_card.dart';
+
+/// Chế độ rảnh tay: mỗi thẻ hiện tối đa 10s. TTS tự phát ở giây 2 và 6.
+/// Bấm "Đã nhớ" trong lúc đếm ngược = Good; hết giờ không bấm = tự động
+/// Again rồi chuyển thẻ tiếp theo. Không đổi domain/schema — chỉ là cách
+/// UI gọi `submitAnswer` (đã có sẵn từ trước).
+const _autoAdvanceDuration = Duration(seconds: 10);
+const _firstSpeakDelay = Duration(seconds: 2);
+const _secondSpeakDelay = Duration(seconds: 6);
 
 String _formatReviewDelay(Duration delay) {
   if (delay.inHours < 1) {
@@ -70,22 +79,65 @@ class _SessionBody extends ConsumerStatefulWidget {
 
 class _SessionBodyState extends ConsumerState<_SessionBody> {
   bool _showSaved = false;
+  int? _currentCardId;
+  Timer? _firstSpeakTimer;
+  Timer? _secondSpeakTimer;
+  Timer? _autoAdvanceTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _maybeSyncTimers();
+  }
+
+  @override
+  void didUpdateWidget(covariant _SessionBody oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _maybeSyncTimers();
+  }
+
+  @override
+  void dispose() {
+    _cancelTimers();
+    super.dispose();
+  }
+
+  /// Bắt đầu lại bộ đếm cho thẻ hiện tại — chỉ khi thẻ thực sự đổi và
+  /// không đang hiện màn "Đã lưu!" (tránh đếm ngược lúc thẻ chưa hiện ra).
+  void _maybeSyncTimers() {
+    if (_showSaved) return;
+    final card = widget.session.currentCard;
+    if (card == null || card.id == _currentCardId) return;
+
+    _currentCardId = card.id;
+    _cancelTimers();
+    _firstSpeakTimer = Timer(_firstSpeakDelay, () => _speak(card.term));
+    _secondSpeakTimer = Timer(_secondSpeakDelay, () => _speak(card.term));
+    _autoAdvanceTimer = Timer(
+      _autoAdvanceDuration,
+      () => _handleRating(StudyRating.again),
+    );
+  }
+
+  void _speak(String text) => ref.read(ttsServiceProvider).speak(text);
+
+  void _cancelTimers() {
+    _firstSpeakTimer?.cancel();
+    _secondSpeakTimer?.cancel();
+    _autoAdvanceTimer?.cancel();
+    _firstSpeakTimer = null;
+    _secondSpeakTimer = null;
+    _autoAdvanceTimer = null;
+  }
 
   Future<void> _handleRating(StudyRating rating) async {
+    _cancelTimers();
     setState(() => _showSaved = true);
     await ref.read(sessionControllerProvider.notifier).submitAnswer(rating);
     await Future<void>.delayed(const Duration(milliseconds: 600));
-    if (mounted) setState(() => _showSaved = false);
-  }
-
-  String? _labelFor(
-    Map<StudyRating, WordProgress> previews,
-    StudyRating rating,
-    DateTime now,
-  ) {
-    final outcome = previews[rating];
-    if (outcome == null) return null;
-    return _formatReviewDelay(outcome.nextReview.difference(now));
+    if (!mounted) return;
+    setState(() => _showSaved = false);
+    _maybeSyncTimers();
   }
 
   @override
@@ -107,11 +159,23 @@ class _SessionBodyState extends ConsumerState<_SessionBody> {
     final previews = ref
         .read(sessionControllerProvider.notifier)
         .previewOutcomes(now);
+    final goodOutcome = previews[StudyRating.good];
+    final goodLabel = goodOutcome == null
+        ? null
+        : _formatReviewDelay(goodOutcome.nextReview.difference(now));
 
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
+          TweenAnimationBuilder<double>(
+            key: ValueKey(card.id),
+            tween: Tween(begin: 1.0, end: 0.0),
+            duration: _autoAdvanceDuration,
+            builder: (context, value, child) =>
+                LinearProgressIndicator(value: value),
+          ),
+          const SizedBox(height: 12),
           Expanded(
             child: WordCard(
               card: card,
@@ -119,15 +183,9 @@ class _SessionBodyState extends ConsumerState<_SessionBody> {
             ),
           ),
           const SizedBox(height: 16),
-          ControlBar(
-            onAgain: () => _handleRating(StudyRating.again),
-            onHard: () => _handleRating(StudyRating.hard),
-            onGood: () => _handleRating(StudyRating.good),
-            onEasy: () => _handleRating(StudyRating.easy),
-            againLabel: _labelFor(previews, StudyRating.again, now),
-            hardLabel: _labelFor(previews, StudyRating.hard, now),
-            goodLabel: _labelFor(previews, StudyRating.good, now),
-            easyLabel: _labelFor(previews, StudyRating.easy, now),
+          RememberButton(
+            onPressed: () => _handleRating(StudyRating.good),
+            previewLabel: goodLabel,
           ),
         ],
       ),

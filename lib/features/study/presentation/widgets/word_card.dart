@@ -2,147 +2,68 @@ import 'package:flutter/material.dart';
 
 import '../../domain/study_card.dart';
 
-/// Hiển thị mặt trước (term + phiên âm + từ loại + nút loa) / mặt sau
-/// (definition + câu ví dụ) của thẻ học, chạm để lật.
-class WordCard extends StatefulWidget {
+/// Hiển thị toàn bộ nội dung thẻ trên MỘT mặt — chế độ rảnh tay, không cần
+/// chạm để lật: term, phiên âm, từ loại, nghĩa, câu ví dụ hiện cùng lúc.
+class WordCard extends StatelessWidget {
   const WordCard({required this.card, required this.onSpeak, super.key});
 
   final StudyCard card;
 
-  /// Gọi khi bấm nút loa — không phụ thuộc TTS trực tiếp, giống pattern
-  /// [ControlBar] (widget "dumb", caller quyết định hành vi thật).
+  /// Gọi khi bấm nút loa thủ công. `memo_screen.dart` còn tự động phát âm
+  /// theo thời gian (2s, 6s) — đây là để nghe lại theo yêu cầu riêng.
   final VoidCallback onSpeak;
-
-  @override
-  State<WordCard> createState() => _WordCardState();
-}
-
-class _WordCardState extends State<WordCard> {
-  bool _showDefinition = false;
-
-  @override
-  void didUpdateWidget(covariant WordCard oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.card.id != widget.card.id) {
-      setState(() => _showDefinition = false);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return GestureDetector(
-      onTap: () => setState(() => _showDefinition = !_showDefinition),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Stack(
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              if (!_showDefinition)
-                const Align(alignment: Alignment.topCenter, child: _FlipHint()),
-              Center(
-                child: _showDefinition
-                    ? _CardBack(card: widget.card, textTheme: textTheme)
-                    : _CardFront(
-                        card: widget.card,
-                        textTheme: textTheme,
-                        onSpeak: widget.onSpeak,
-                      ),
+              Text(
+                card.term,
+                style: textTheme.headlineMedium,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    card.partOfSpeech == null
+                        ? card.phonetic
+                        : '${card.phonetic} · ${card.partOfSpeech}',
+                    style: textTheme.bodyMedium?.copyWith(color: Colors.grey),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.volume_up, size: 20),
+                    tooltip: 'Nghe phát âm',
+                    onPressed: onSpeak,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Text(
+                card.definition,
+                style: textTheme.titleLarge,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                card.exampleSentence,
+                style: textTheme.bodyMedium?.copyWith(
+                  fontStyle: FontStyle.italic,
+                ),
+                textAlign: TextAlign.center,
               ),
             ],
           ),
         ),
       ),
-    );
-  }
-}
-
-class _FlipHint extends StatelessWidget {
-  const _FlipHint();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(Icons.sync_alt, size: 14, color: Colors.grey.shade600),
-        const SizedBox(width: 4),
-        Text(
-          'Chạm vào thẻ để lật',
-          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-        ),
-      ],
-    );
-  }
-}
-
-class _CardFront extends StatelessWidget {
-  const _CardFront({
-    required this.card,
-    required this.textTheme,
-    required this.onSpeak,
-  });
-
-  final StudyCard card;
-  final TextTheme textTheme;
-  final VoidCallback onSpeak;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          card.term,
-          style: textTheme.headlineMedium,
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              card.partOfSpeech == null
-                  ? card.phonetic
-                  : '${card.phonetic} · ${card.partOfSpeech}',
-              style: textTheme.bodyMedium?.copyWith(color: Colors.grey),
-            ),
-            IconButton(
-              icon: const Icon(Icons.volume_up, size: 20),
-              tooltip: 'Nghe phát âm',
-              onPressed: onSpeak,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _CardBack extends StatelessWidget {
-  const _CardBack({required this.card, required this.textTheme});
-
-  final StudyCard card;
-  final TextTheme textTheme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          card.definition,
-          style: textTheme.headlineMedium,
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 12),
-        Text(
-          card.exampleSentence,
-          style: textTheme.bodyMedium?.copyWith(fontStyle: FontStyle.italic),
-          textAlign: TextAlign.center,
-        ),
-      ],
     );
   }
 }
