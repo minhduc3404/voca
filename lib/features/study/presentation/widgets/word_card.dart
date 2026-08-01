@@ -194,10 +194,17 @@ class _AnimatedTermWordState extends State<_AnimatedTermWord> {
   @override
   void didUpdateWidget(covariant _AnimatedTermWord oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.text != widget.text || oldWidget.phonetic != widget.phonetic) {
+    final wordChanged =
+        oldWidget.text != widget.text || oldWidget.phonetic != widget.phonetic;
+    if (wordChanged) {
       _prepareChunks();
     }
-    if (widget.isActive && !oldWidget.isActive) {
+    // Đổi thẻ có thể khiến `isActive` giữ nguyên `true` xuyên suốt (vd từ
+    // đầu tiên của card mới cũng active ngay) — nếu chỉ bắt cạnh
+    // false→true thì cycle của từ mới sẽ không bao giờ khởi động, kẹt mãi
+    // ở âm tiết đầu (Timer cũ vẫn chạy theo lịch của từ cũ). Nên cứ có đổi
+    // từ trong lúc đang active là phải restart cycle.
+    if (widget.isActive && (wordChanged || !oldWidget.isActive)) {
       _startCycle();
     } else if (!widget.isActive && oldWidget.isActive) {
       _stopCycle();
@@ -234,10 +241,14 @@ class _AnimatedTermWordState extends State<_AnimatedTermWord> {
   }
 
   void _scheduleNextChunk() {
-    if (_chunks.length <= 1) return;
+    // Đã tới âm tiết cuối — dừng hẳn tại đây, không vòng lại âm tiết đầu.
+    // Trước đây dùng `% _chunks.length` nên hết âm tiết cuối lại nhảy về
+    // âm tiết đầu và lặp lại cả chu kỳ nếu `isActive` (event ở mức TỪ) vẫn
+    // còn true lâu hơn tổng thời lượng ước lượng của các âm tiết.
+    if (_chunks.length <= 1 || _activeChunk >= _chunks.length - 1) return;
     _timer = Timer(_chunkDurations[_activeChunk], () {
       if (!mounted || !widget.isActive) return;
-      setState(() => _activeChunk = (_activeChunk + 1) % _chunks.length);
+      setState(() => _activeChunk += 1);
       _scheduleNextChunk();
     });
   }
