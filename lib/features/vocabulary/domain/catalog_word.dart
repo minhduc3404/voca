@@ -1,3 +1,5 @@
+import '../../../core/lexicon/pronunciation_segment.dart';
+
 /// 1 từ trong catalog remote — chưa "thuộc về" bộ học local, chưa có
 /// tiến độ SRS. Khác `StudyCard` (domain của `study/`): cái đó là từ đã
 /// nhập vào `VocabularyTable`, cái này chỉ là nội dung đọc từ catalog.
@@ -9,6 +11,7 @@ class CatalogWord {
     required this.phonetic,
     required this.partOfSpeech,
     required this.exampleSentence,
+    this.pronunciationSegments = const [],
   });
 
   /// ID ổn định, duy nhất toàn catalog (vd `"travel-001"`) — dùng làm
@@ -24,4 +27,6 @@ class CatalogWord {
   final String? partOfSpeech;
 
   final String exampleSentence;
+
+  final List<PronunciationSegment> pronunciationSegments;
 }

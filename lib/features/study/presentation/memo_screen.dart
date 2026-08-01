@@ -10,7 +10,9 @@ import 'package:voca_app/l10n/arb/app_localizations.dart';
 
 import '../application/providers.dart';
 import '../application/session_controller.dart';
+import '../application/tts_highlight_controller.dart';
 import '../domain/study_rating.dart';
+import '../domain/study_card.dart';
 import 'tts_settings_screen.dart';
 import 'widgets/remember_button.dart';
 import 'widgets/word_card.dart';
@@ -68,7 +70,10 @@ class MemoScreen extends ConsumerWidget {
               ),
               // TODO(icon): thay bằng SVG Reicon duotone theo ADR-009 khi có
               // asset — tạm dùng Material icon built-in cho đúng chức năng.
-              icon: Icon(Icons.menu_book_outlined, color: AppColors.controlIcon),
+              icon: Icon(
+                Icons.menu_book_outlined,
+                color: AppColors.controlIcon,
+              ),
               tooltip: 'Chủ đề từ vựng',
               onPressed: () => Navigator.push(
                 context,
@@ -227,7 +232,6 @@ class _SessionBodyState extends ConsumerState<_SessionBody>
   bool _isPaused = false;
   bool _spokeFirst = false;
   bool _spokeSecond = false;
-  int? _speakingWordIndex;
 
   Timer? _speakTimer1;
   Timer? _speakTimer2;
@@ -236,28 +240,6 @@ class _SessionBodyState extends ConsumerState<_SessionBody>
   // Không khai báo type tường minh (`WakelockService`) — presentation không
   // được import `data/` trực tiếp (CLAUDE.md §2); type suy ra qua provider.
   late final _wakelockService = ref.read(wakelockServiceProvider);
-
-  // Tương tự — không khai báo type `TtsWordRange` tường minh, để tránh import
-  // `data/` vào presentation. Đổi `range` -> chỉ số từ đang đọc trong
-  // `card.term` (tách theo khoảng trắng), highlight cho `WordCard`.
-  late final _wordRangeSubscription = ref
-      .read(ttsServiceProvider)
-      .wordRangeStream
-      .listen((range) {
-        final card = widget.session.currentCard;
-        int? index;
-        if (card != null && range != null && range.text == card.term) {
-          final words = RegExp(r'\S+').allMatches(card.term).toList();
-          for (var i = 0; i < words.length; i++) {
-            if (range.start >= words[i].start && range.start < words[i].end) {
-              index = i;
-              break;
-            }
-          }
-        }
-        if (!mounted || index == _speakingWordIndex) return;
-        setState(() => _speakingWordIndex = index);
-      });
 
   late final AnimationController _progress;
   Duration _totalDuration = _autoAdvanceDuration;
@@ -272,9 +254,6 @@ class _SessionBodyState extends ConsumerState<_SessionBody>
   void initState() {
     super.initState();
     _progress = AnimationController(vsync: this, duration: _totalDuration);
-    // `.resume()` trên subscription chưa pause là no-op — chỉ để ép khởi
-    // tạo field `late final` này ngay từ đầu, không đợi lazy access.
-    _wordRangeSubscription.resume();
     _maybeSyncTimers();
     _syncWakelock();
   }
@@ -290,7 +269,6 @@ class _SessionBodyState extends ConsumerState<_SessionBody>
   void dispose() {
     _cancelTimers();
     _progress.dispose();
-    unawaited(_wordRangeSubscription.cancel());
     if (_wakelockEnabled ?? false) {
       unawaited(_wakelockService.disable());
     }
@@ -304,7 +282,9 @@ class _SessionBodyState extends ConsumerState<_SessionBody>
     final shouldEnable = !widget.session.isCompleted;
     if (_wakelockEnabled == shouldEnable) return;
     _wakelockEnabled = shouldEnable;
-    unawaited(shouldEnable ? _wakelockService.enable() : _wakelockService.disable());
+    unawaited(
+      shouldEnable ? _wakelockService.enable() : _wakelockService.disable(),
+    );
   }
 
   /// Bắt đầu lại bộ đếm cho thẻ hiện tại — chỉ khi thẻ thực sự đổi và
@@ -315,27 +295,26 @@ class _SessionBodyState extends ConsumerState<_SessionBody>
     if (card == null || card.id == _currentCardId) return;
 
     _currentCardId = card.id;
-    _startCard(card.term);
+    _startCard(card);
   }
 
-  void _startCard(String term) {
+  void _startCard(StudyCard card) {
     _cancelTimers();
     _spokeFirst = false;
     _spokeSecond = false;
     _isPaused = false;
-    _speakingWordIndex = null;
     _totalDuration = _segmentDuration;
     _progress
       ..duration = _totalDuration
       ..value = 0;
     _progress.forward();
-    _scheduleTimers(term);
+    _scheduleTimers(card);
   }
 
   /// (Re)lên lịch 3 timer còn lại dựa trên thời gian đã trôi qua
   /// (`_totalDuration * _progress.value`) — dùng cả lúc bắt đầu thẻ (value
   /// = 0) lẫn lúc resume sau khi tạm dừng/đổi tốc độ.
-  void _scheduleTimers(String term) {
+  void _scheduleTimers(StudyCard card) {
     _speakTimer1?.cancel();
     _speakTimer2?.cancel();
     _autoAdvanceTimer?.cancel();
@@ -347,7 +326,7 @@ class _SessionBodyState extends ConsumerState<_SessionBody>
       if (remaining > Duration.zero) {
         _speakTimer1 = Timer(remaining, () {
           _spokeFirst = true;
-          _speak(term);
+          _speak(card);
         });
       }
     }
@@ -356,7 +335,7 @@ class _SessionBodyState extends ConsumerState<_SessionBody>
       if (remaining > Duration.zero) {
         _speakTimer2 = Timer(remaining, () {
           _spokeSecond = true;
-          _speak(term);
+          _speak(card);
         });
       }
     }
@@ -369,7 +348,8 @@ class _SessionBodyState extends ConsumerState<_SessionBody>
     }
   }
 
-  void _speak(String text) => ref.read(ttsServiceProvider).speak(text);
+  void _speak(StudyCard card) =>
+      ref.read(ttsHighlightControllerProvider.notifier).speak(card);
 
   void _cancelTimers() {
     _speakTimer1?.cancel();
@@ -398,7 +378,7 @@ class _SessionBodyState extends ConsumerState<_SessionBody>
         1,
         duration: remaining > Duration.zero ? remaining : Duration.zero,
       );
-      _scheduleTimers(card.term);
+      _scheduleTimers(card);
     }
   }
 
@@ -431,7 +411,7 @@ class _SessionBodyState extends ConsumerState<_SessionBody>
         1,
         duration: remaining > Duration.zero ? remaining : Duration.zero,
       );
-      _scheduleTimers(card.term);
+      _scheduleTimers(card);
     }
 
     ScaffoldMessenger.of(context)
@@ -447,6 +427,7 @@ class _SessionBodyState extends ConsumerState<_SessionBody>
   Future<void> _handleRating(StudyRating rating) async {
     _cancelTimers();
     _progress.stop();
+    ref.read(ttsHighlightControllerProvider.notifier).clear();
     setState(() => _showSaved = true);
     await ref.read(sessionControllerProvider.notifier).submitAnswer(rating);
     await Future<void>.delayed(const Duration(milliseconds: 600));
@@ -458,11 +439,11 @@ class _SessionBodyState extends ConsumerState<_SessionBody>
   @override
   Widget build(BuildContext context) {
     final card = widget.session.currentCard;
+    final highlight = ref.watch(ttsHighlightControllerProvider);
 
     if (card == null) {
       return _CompletionView(
-        onReload: () =>
-            ref.read(sessionControllerProvider.notifier).reload(),
+        onReload: () => ref.read(sessionControllerProvider.notifier).reload(),
       );
     }
 
@@ -514,8 +495,10 @@ class _SessionBodyState extends ConsumerState<_SessionBody>
               child: WordCard(
                 key: ValueKey(card.id),
                 card: card,
-                onSpeak: () => ref.read(ttsServiceProvider).speak(card.term),
-                speakingWordIndex: _speakingWordIndex,
+                onSpeak: () => _speak(card),
+                activeWordStart: highlight.wordStart,
+                activeWordEnd: highlight.wordEnd,
+                activeSegmentPosition: highlight.activeSegmentPosition,
               ),
             ),
           ),
@@ -589,7 +572,9 @@ class _TransportButton extends StatelessWidget {
         icon: AppIcon(
           icon,
           size: 22,
-          color: enabled ? AppColors.controlIcon : AppColors.controlIconDisabled,
+          color: enabled
+              ? AppColors.controlIcon
+              : AppColors.controlIconDisabled,
         ),
         tooltip: tooltip,
         onPressed: enabled ? onPressed : null,
@@ -618,7 +603,10 @@ class _SavedTransition extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          Text('Cùng tiến lên nào 💪', style: TextStyle(color: AppColors.textFaint)),
+          Text(
+            'Cùng tiến lên nào 💪',
+            style: TextStyle(color: AppColors.textFaint),
+          ),
         ],
       ),
     );

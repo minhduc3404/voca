@@ -1,36 +1,34 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 
-import 'seed_data.dart';
 import 'tables.dart';
 
 part 'app_database.g.dart';
 
 @DriftDatabase(
-  tables: [VocabularyTable, ProgressTable, DownloadedTopicsTable],
+  tables: [
+    VocabularyTable,
+    ProgressTable,
+    DownloadedTopicsTable,
+    PronunciationSegmentsTable,
+    TtsWordTimingCacheTable,
+  ],
 )
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : _seedDemoData = true, super(_openConnection());
+  AppDatabase() : super(_openConnection());
 
   /// Dùng cho test — inject `NativeDatabase.memory()` hoặc executor khác
   /// thay vì mở file DB thật qua `drift_flutter`. Không seed demo data để
   /// giữ test hermetic.
-  AppDatabase.forTesting(super.executor) : _seedDemoData = false;
-
-  final bool _seedDemoData;
+  AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (migrator) async {
       await migrator.createAll();
-      // TẠM THỜI — seed data mẫu để app có nội dung ngay từ lần cài đầu
-      // tiên. Sẽ bỏ khi có feature nhập từ vựng thật (PLAN.md Phase 5).
-      if (_seedDemoData) {
-        await seedInitialVocabulary(this);
-      }
     },
     onUpgrade: (migrator, from, to) async {
       if (from < 2) {
@@ -56,6 +54,10 @@ class AppDatabase extends _$AppDatabase {
           'ON vocabulary_table (catalog_id);',
         );
         await migrator.createTable(downloadedTopicsTable);
+      }
+      if (from < 4) {
+        await migrator.createTable(pronunciationSegmentsTable);
+        await migrator.createTable(ttsWordTimingCacheTable);
       }
     },
   );

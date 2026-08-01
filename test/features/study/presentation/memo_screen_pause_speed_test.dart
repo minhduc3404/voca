@@ -40,6 +40,12 @@ class _FakeTtsService implements TtsService {
   int speakCount = 0;
 
   @override
+  TtsVoice? get selectedVoice => null;
+
+  @override
+  double get speechRate => 0.5;
+
+  @override
   Future<void> speak(String text) async {
     speakCount++;
   }
@@ -54,7 +60,10 @@ class _FakeTtsService implements TtsService {
   Future<void> setSpeechRate(double rate) async {}
 
   @override
-  Stream<TtsWordRange?> get wordRangeStream => const Stream.empty();
+  Stream<TtsPlaybackEvent> get playbackEvents => const Stream.empty();
+
+  @override
+  void dispose() {}
 }
 
 class _FakeWakelockService implements WakelockService {
@@ -86,7 +95,10 @@ List<StudyCard> _twoCards() => const [
   ),
 ];
 
-Widget _wrap({required ProgressRepository repository, required TtsService tts}) {
+Widget _wrap({
+  required ProgressRepository repository,
+  required TtsService tts,
+}) {
   return ProviderScope(
     overrides: [
       progressRepositoryProvider.overrideWithValue(repository),
