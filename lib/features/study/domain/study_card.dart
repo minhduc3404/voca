@@ -1,3 +1,5 @@
+import '../../../core/lexicon/pronunciation_segment.dart';
+
 class StudyCard {
   const StudyCard({
     required this.id,
@@ -7,6 +9,7 @@ class StudyCard {
     required this.phonetic,
     required this.exampleSentence,
     this.partOfSpeech,
+    this.pronunciationSegments = const [],
   });
 
   final int id;
@@ -29,4 +32,6 @@ class StudyCard {
   /// Từ loại (noun/verb/adj...). Có thể `null` nếu nguồn dữ liệu không xác
   /// định được — UI phải tự xử lý khi thiếu.
   final String? partOfSpeech;
+
+  final List<PronunciationSegment> pronunciationSegments;
 }

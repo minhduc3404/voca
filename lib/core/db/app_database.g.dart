@@ -1576,6 +1576,1115 @@ class DownloadedTopicsTableCompanion
   }
 }
 
+class $PronunciationSegmentsTableTable extends PronunciationSegmentsTable
+    with
+        TableInfo<
+          $PronunciationSegmentsTableTable,
+          PronunciationSegmentsTableData
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PronunciationSegmentsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _vocabIdMeta = const VerificationMeta(
+    'vocabId',
+  );
+  @override
+  late final GeneratedColumn<int> vocabId = GeneratedColumn<int>(
+    'vocab_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES vocabulary_table (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _positionMeta = const VerificationMeta(
+    'position',
+  );
+  @override
+  late final GeneratedColumn<int> position = GeneratedColumn<int>(
+    'position',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _startOffsetMeta = const VerificationMeta(
+    'startOffset',
+  );
+  @override
+  late final GeneratedColumn<int> startOffset = GeneratedColumn<int>(
+    'start_offset',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _endOffsetMeta = const VerificationMeta(
+    'endOffset',
+  );
+  @override
+  late final GeneratedColumn<int> endOffset = GeneratedColumn<int>(
+    'end_offset',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _segmentTextMeta = const VerificationMeta(
+    'segmentText',
+  );
+  @override
+  late final GeneratedColumn<String> segmentText = GeneratedColumn<String>(
+    'segment_text',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ipaMeta = const VerificationMeta('ipa');
+  @override
+  late final GeneratedColumn<String> ipa = GeneratedColumn<String>(
+    'ipa',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _stressMeta = const VerificationMeta('stress');
+  @override
+  late final GeneratedColumn<String> stress = GeneratedColumn<String>(
+    'stress',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _timingWeightMeta = const VerificationMeta(
+    'timingWeight',
+  );
+  @override
+  late final GeneratedColumn<double> timingWeight = GeneratedColumn<double>(
+    'timing_weight',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    vocabId,
+    position,
+    startOffset,
+    endOffset,
+    segmentText,
+    ipa,
+    stress,
+    timingWeight,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'pronunciation_segments_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PronunciationSegmentsTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('vocab_id')) {
+      context.handle(
+        _vocabIdMeta,
+        vocabId.isAcceptableOrUnknown(data['vocab_id']!, _vocabIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_vocabIdMeta);
+    }
+    if (data.containsKey('position')) {
+      context.handle(
+        _positionMeta,
+        position.isAcceptableOrUnknown(data['position']!, _positionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_positionMeta);
+    }
+    if (data.containsKey('start_offset')) {
+      context.handle(
+        _startOffsetMeta,
+        startOffset.isAcceptableOrUnknown(
+          data['start_offset']!,
+          _startOffsetMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_startOffsetMeta);
+    }
+    if (data.containsKey('end_offset')) {
+      context.handle(
+        _endOffsetMeta,
+        endOffset.isAcceptableOrUnknown(data['end_offset']!, _endOffsetMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_endOffsetMeta);
+    }
+    if (data.containsKey('segment_text')) {
+      context.handle(
+        _segmentTextMeta,
+        segmentText.isAcceptableOrUnknown(
+          data['segment_text']!,
+          _segmentTextMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_segmentTextMeta);
+    }
+    if (data.containsKey('ipa')) {
+      context.handle(
+        _ipaMeta,
+        ipa.isAcceptableOrUnknown(data['ipa']!, _ipaMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ipaMeta);
+    }
+    if (data.containsKey('stress')) {
+      context.handle(
+        _stressMeta,
+        stress.isAcceptableOrUnknown(data['stress']!, _stressMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_stressMeta);
+    }
+    if (data.containsKey('timing_weight')) {
+      context.handle(
+        _timingWeightMeta,
+        timingWeight.isAcceptableOrUnknown(
+          data['timing_weight']!,
+          _timingWeightMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_timingWeightMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {vocabId, position},
+  ];
+  @override
+  PronunciationSegmentsTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PronunciationSegmentsTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      vocabId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}vocab_id'],
+      )!,
+      position: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}position'],
+      )!,
+      startOffset: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}start_offset'],
+      )!,
+      endOffset: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}end_offset'],
+      )!,
+      segmentText: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}segment_text'],
+      )!,
+      ipa: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ipa'],
+      )!,
+      stress: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}stress'],
+      )!,
+      timingWeight: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}timing_weight'],
+      )!,
+    );
+  }
+
+  @override
+  $PronunciationSegmentsTableTable createAlias(String alias) {
+    return $PronunciationSegmentsTableTable(attachedDatabase, alias);
+  }
+}
+
+class PronunciationSegmentsTableData extends DataClass
+    implements Insertable<PronunciationSegmentsTableData> {
+  final int id;
+  final int vocabId;
+  final int position;
+  final int startOffset;
+  final int endOffset;
+  final String segmentText;
+  final String ipa;
+  final String stress;
+  final double timingWeight;
+  const PronunciationSegmentsTableData({
+    required this.id,
+    required this.vocabId,
+    required this.position,
+    required this.startOffset,
+    required this.endOffset,
+    required this.segmentText,
+    required this.ipa,
+    required this.stress,
+    required this.timingWeight,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['vocab_id'] = Variable<int>(vocabId);
+    map['position'] = Variable<int>(position);
+    map['start_offset'] = Variable<int>(startOffset);
+    map['end_offset'] = Variable<int>(endOffset);
+    map['segment_text'] = Variable<String>(segmentText);
+    map['ipa'] = Variable<String>(ipa);
+    map['stress'] = Variable<String>(stress);
+    map['timing_weight'] = Variable<double>(timingWeight);
+    return map;
+  }
+
+  PronunciationSegmentsTableCompanion toCompanion(bool nullToAbsent) {
+    return PronunciationSegmentsTableCompanion(
+      id: Value(id),
+      vocabId: Value(vocabId),
+      position: Value(position),
+      startOffset: Value(startOffset),
+      endOffset: Value(endOffset),
+      segmentText: Value(segmentText),
+      ipa: Value(ipa),
+      stress: Value(stress),
+      timingWeight: Value(timingWeight),
+    );
+  }
+
+  factory PronunciationSegmentsTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PronunciationSegmentsTableData(
+      id: serializer.fromJson<int>(json['id']),
+      vocabId: serializer.fromJson<int>(json['vocabId']),
+      position: serializer.fromJson<int>(json['position']),
+      startOffset: serializer.fromJson<int>(json['startOffset']),
+      endOffset: serializer.fromJson<int>(json['endOffset']),
+      segmentText: serializer.fromJson<String>(json['segmentText']),
+      ipa: serializer.fromJson<String>(json['ipa']),
+      stress: serializer.fromJson<String>(json['stress']),
+      timingWeight: serializer.fromJson<double>(json['timingWeight']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'vocabId': serializer.toJson<int>(vocabId),
+      'position': serializer.toJson<int>(position),
+      'startOffset': serializer.toJson<int>(startOffset),
+      'endOffset': serializer.toJson<int>(endOffset),
+      'segmentText': serializer.toJson<String>(segmentText),
+      'ipa': serializer.toJson<String>(ipa),
+      'stress': serializer.toJson<String>(stress),
+      'timingWeight': serializer.toJson<double>(timingWeight),
+    };
+  }
+
+  PronunciationSegmentsTableData copyWith({
+    int? id,
+    int? vocabId,
+    int? position,
+    int? startOffset,
+    int? endOffset,
+    String? segmentText,
+    String? ipa,
+    String? stress,
+    double? timingWeight,
+  }) => PronunciationSegmentsTableData(
+    id: id ?? this.id,
+    vocabId: vocabId ?? this.vocabId,
+    position: position ?? this.position,
+    startOffset: startOffset ?? this.startOffset,
+    endOffset: endOffset ?? this.endOffset,
+    segmentText: segmentText ?? this.segmentText,
+    ipa: ipa ?? this.ipa,
+    stress: stress ?? this.stress,
+    timingWeight: timingWeight ?? this.timingWeight,
+  );
+  PronunciationSegmentsTableData copyWithCompanion(
+    PronunciationSegmentsTableCompanion data,
+  ) {
+    return PronunciationSegmentsTableData(
+      id: data.id.present ? data.id.value : this.id,
+      vocabId: data.vocabId.present ? data.vocabId.value : this.vocabId,
+      position: data.position.present ? data.position.value : this.position,
+      startOffset: data.startOffset.present
+          ? data.startOffset.value
+          : this.startOffset,
+      endOffset: data.endOffset.present ? data.endOffset.value : this.endOffset,
+      segmentText: data.segmentText.present
+          ? data.segmentText.value
+          : this.segmentText,
+      ipa: data.ipa.present ? data.ipa.value : this.ipa,
+      stress: data.stress.present ? data.stress.value : this.stress,
+      timingWeight: data.timingWeight.present
+          ? data.timingWeight.value
+          : this.timingWeight,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PronunciationSegmentsTableData(')
+          ..write('id: $id, ')
+          ..write('vocabId: $vocabId, ')
+          ..write('position: $position, ')
+          ..write('startOffset: $startOffset, ')
+          ..write('endOffset: $endOffset, ')
+          ..write('segmentText: $segmentText, ')
+          ..write('ipa: $ipa, ')
+          ..write('stress: $stress, ')
+          ..write('timingWeight: $timingWeight')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    vocabId,
+    position,
+    startOffset,
+    endOffset,
+    segmentText,
+    ipa,
+    stress,
+    timingWeight,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PronunciationSegmentsTableData &&
+          other.id == this.id &&
+          other.vocabId == this.vocabId &&
+          other.position == this.position &&
+          other.startOffset == this.startOffset &&
+          other.endOffset == this.endOffset &&
+          other.segmentText == this.segmentText &&
+          other.ipa == this.ipa &&
+          other.stress == this.stress &&
+          other.timingWeight == this.timingWeight);
+}
+
+class PronunciationSegmentsTableCompanion
+    extends UpdateCompanion<PronunciationSegmentsTableData> {
+  final Value<int> id;
+  final Value<int> vocabId;
+  final Value<int> position;
+  final Value<int> startOffset;
+  final Value<int> endOffset;
+  final Value<String> segmentText;
+  final Value<String> ipa;
+  final Value<String> stress;
+  final Value<double> timingWeight;
+  const PronunciationSegmentsTableCompanion({
+    this.id = const Value.absent(),
+    this.vocabId = const Value.absent(),
+    this.position = const Value.absent(),
+    this.startOffset = const Value.absent(),
+    this.endOffset = const Value.absent(),
+    this.segmentText = const Value.absent(),
+    this.ipa = const Value.absent(),
+    this.stress = const Value.absent(),
+    this.timingWeight = const Value.absent(),
+  });
+  PronunciationSegmentsTableCompanion.insert({
+    this.id = const Value.absent(),
+    required int vocabId,
+    required int position,
+    required int startOffset,
+    required int endOffset,
+    required String segmentText,
+    required String ipa,
+    required String stress,
+    required double timingWeight,
+  }) : vocabId = Value(vocabId),
+       position = Value(position),
+       startOffset = Value(startOffset),
+       endOffset = Value(endOffset),
+       segmentText = Value(segmentText),
+       ipa = Value(ipa),
+       stress = Value(stress),
+       timingWeight = Value(timingWeight);
+  static Insertable<PronunciationSegmentsTableData> custom({
+    Expression<int>? id,
+    Expression<int>? vocabId,
+    Expression<int>? position,
+    Expression<int>? startOffset,
+    Expression<int>? endOffset,
+    Expression<String>? segmentText,
+    Expression<String>? ipa,
+    Expression<String>? stress,
+    Expression<double>? timingWeight,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (vocabId != null) 'vocab_id': vocabId,
+      if (position != null) 'position': position,
+      if (startOffset != null) 'start_offset': startOffset,
+      if (endOffset != null) 'end_offset': endOffset,
+      if (segmentText != null) 'segment_text': segmentText,
+      if (ipa != null) 'ipa': ipa,
+      if (stress != null) 'stress': stress,
+      if (timingWeight != null) 'timing_weight': timingWeight,
+    });
+  }
+
+  PronunciationSegmentsTableCompanion copyWith({
+    Value<int>? id,
+    Value<int>? vocabId,
+    Value<int>? position,
+    Value<int>? startOffset,
+    Value<int>? endOffset,
+    Value<String>? segmentText,
+    Value<String>? ipa,
+    Value<String>? stress,
+    Value<double>? timingWeight,
+  }) {
+    return PronunciationSegmentsTableCompanion(
+      id: id ?? this.id,
+      vocabId: vocabId ?? this.vocabId,
+      position: position ?? this.position,
+      startOffset: startOffset ?? this.startOffset,
+      endOffset: endOffset ?? this.endOffset,
+      segmentText: segmentText ?? this.segmentText,
+      ipa: ipa ?? this.ipa,
+      stress: stress ?? this.stress,
+      timingWeight: timingWeight ?? this.timingWeight,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (vocabId.present) {
+      map['vocab_id'] = Variable<int>(vocabId.value);
+    }
+    if (position.present) {
+      map['position'] = Variable<int>(position.value);
+    }
+    if (startOffset.present) {
+      map['start_offset'] = Variable<int>(startOffset.value);
+    }
+    if (endOffset.present) {
+      map['end_offset'] = Variable<int>(endOffset.value);
+    }
+    if (segmentText.present) {
+      map['segment_text'] = Variable<String>(segmentText.value);
+    }
+    if (ipa.present) {
+      map['ipa'] = Variable<String>(ipa.value);
+    }
+    if (stress.present) {
+      map['stress'] = Variable<String>(stress.value);
+    }
+    if (timingWeight.present) {
+      map['timing_weight'] = Variable<double>(timingWeight.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PronunciationSegmentsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('vocabId: $vocabId, ')
+          ..write('position: $position, ')
+          ..write('startOffset: $startOffset, ')
+          ..write('endOffset: $endOffset, ')
+          ..write('segmentText: $segmentText, ')
+          ..write('ipa: $ipa, ')
+          ..write('stress: $stress, ')
+          ..write('timingWeight: $timingWeight')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TtsWordTimingCacheTableTable extends TtsWordTimingCacheTable
+    with TableInfo<$TtsWordTimingCacheTableTable, TtsWordTimingCacheTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TtsWordTimingCacheTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _vocabIdMeta = const VerificationMeta(
+    'vocabId',
+  );
+  @override
+  late final GeneratedColumn<int> vocabId = GeneratedColumn<int>(
+    'vocab_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES vocabulary_table (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _wordStartOffsetMeta = const VerificationMeta(
+    'wordStartOffset',
+  );
+  @override
+  late final GeneratedColumn<int> wordStartOffset = GeneratedColumn<int>(
+    'word_start_offset',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _wordEndOffsetMeta = const VerificationMeta(
+    'wordEndOffset',
+  );
+  @override
+  late final GeneratedColumn<int> wordEndOffset = GeneratedColumn<int>(
+    'word_end_offset',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _voiceKeyMeta = const VerificationMeta(
+    'voiceKey',
+  );
+  @override
+  late final GeneratedColumn<String> voiceKey = GeneratedColumn<String>(
+    'voice_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _speechRateMeta = const VerificationMeta(
+    'speechRate',
+  );
+  @override
+  late final GeneratedColumn<double> speechRate = GeneratedColumn<double>(
+    'speech_rate',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _durationMsMeta = const VerificationMeta(
+    'durationMs',
+  );
+  @override
+  late final GeneratedColumn<int> durationMs = GeneratedColumn<int>(
+    'duration_ms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    vocabId,
+    wordStartOffset,
+    wordEndOffset,
+    voiceKey,
+    speechRate,
+    durationMs,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'tts_word_timing_cache_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TtsWordTimingCacheTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('vocab_id')) {
+      context.handle(
+        _vocabIdMeta,
+        vocabId.isAcceptableOrUnknown(data['vocab_id']!, _vocabIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_vocabIdMeta);
+    }
+    if (data.containsKey('word_start_offset')) {
+      context.handle(
+        _wordStartOffsetMeta,
+        wordStartOffset.isAcceptableOrUnknown(
+          data['word_start_offset']!,
+          _wordStartOffsetMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_wordStartOffsetMeta);
+    }
+    if (data.containsKey('word_end_offset')) {
+      context.handle(
+        _wordEndOffsetMeta,
+        wordEndOffset.isAcceptableOrUnknown(
+          data['word_end_offset']!,
+          _wordEndOffsetMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_wordEndOffsetMeta);
+    }
+    if (data.containsKey('voice_key')) {
+      context.handle(
+        _voiceKeyMeta,
+        voiceKey.isAcceptableOrUnknown(data['voice_key']!, _voiceKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_voiceKeyMeta);
+    }
+    if (data.containsKey('speech_rate')) {
+      context.handle(
+        _speechRateMeta,
+        speechRate.isAcceptableOrUnknown(data['speech_rate']!, _speechRateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_speechRateMeta);
+    }
+    if (data.containsKey('duration_ms')) {
+      context.handle(
+        _durationMsMeta,
+        durationMs.isAcceptableOrUnknown(data['duration_ms']!, _durationMsMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_durationMsMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {vocabId, wordStartOffset, wordEndOffset, voiceKey, speechRate},
+  ];
+  @override
+  TtsWordTimingCacheTableData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TtsWordTimingCacheTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      vocabId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}vocab_id'],
+      )!,
+      wordStartOffset: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}word_start_offset'],
+      )!,
+      wordEndOffset: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}word_end_offset'],
+      )!,
+      voiceKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}voice_key'],
+      )!,
+      speechRate: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}speech_rate'],
+      )!,
+      durationMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}duration_ms'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $TtsWordTimingCacheTableTable createAlias(String alias) {
+    return $TtsWordTimingCacheTableTable(attachedDatabase, alias);
+  }
+}
+
+class TtsWordTimingCacheTableData extends DataClass
+    implements Insertable<TtsWordTimingCacheTableData> {
+  final int id;
+  final int vocabId;
+  final int wordStartOffset;
+  final int wordEndOffset;
+  final String voiceKey;
+  final double speechRate;
+  final int durationMs;
+  final DateTime updatedAt;
+  const TtsWordTimingCacheTableData({
+    required this.id,
+    required this.vocabId,
+    required this.wordStartOffset,
+    required this.wordEndOffset,
+    required this.voiceKey,
+    required this.speechRate,
+    required this.durationMs,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['vocab_id'] = Variable<int>(vocabId);
+    map['word_start_offset'] = Variable<int>(wordStartOffset);
+    map['word_end_offset'] = Variable<int>(wordEndOffset);
+    map['voice_key'] = Variable<String>(voiceKey);
+    map['speech_rate'] = Variable<double>(speechRate);
+    map['duration_ms'] = Variable<int>(durationMs);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  TtsWordTimingCacheTableCompanion toCompanion(bool nullToAbsent) {
+    return TtsWordTimingCacheTableCompanion(
+      id: Value(id),
+      vocabId: Value(vocabId),
+      wordStartOffset: Value(wordStartOffset),
+      wordEndOffset: Value(wordEndOffset),
+      voiceKey: Value(voiceKey),
+      speechRate: Value(speechRate),
+      durationMs: Value(durationMs),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory TtsWordTimingCacheTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TtsWordTimingCacheTableData(
+      id: serializer.fromJson<int>(json['id']),
+      vocabId: serializer.fromJson<int>(json['vocabId']),
+      wordStartOffset: serializer.fromJson<int>(json['wordStartOffset']),
+      wordEndOffset: serializer.fromJson<int>(json['wordEndOffset']),
+      voiceKey: serializer.fromJson<String>(json['voiceKey']),
+      speechRate: serializer.fromJson<double>(json['speechRate']),
+      durationMs: serializer.fromJson<int>(json['durationMs']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'vocabId': serializer.toJson<int>(vocabId),
+      'wordStartOffset': serializer.toJson<int>(wordStartOffset),
+      'wordEndOffset': serializer.toJson<int>(wordEndOffset),
+      'voiceKey': serializer.toJson<String>(voiceKey),
+      'speechRate': serializer.toJson<double>(speechRate),
+      'durationMs': serializer.toJson<int>(durationMs),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  TtsWordTimingCacheTableData copyWith({
+    int? id,
+    int? vocabId,
+    int? wordStartOffset,
+    int? wordEndOffset,
+    String? voiceKey,
+    double? speechRate,
+    int? durationMs,
+    DateTime? updatedAt,
+  }) => TtsWordTimingCacheTableData(
+    id: id ?? this.id,
+    vocabId: vocabId ?? this.vocabId,
+    wordStartOffset: wordStartOffset ?? this.wordStartOffset,
+    wordEndOffset: wordEndOffset ?? this.wordEndOffset,
+    voiceKey: voiceKey ?? this.voiceKey,
+    speechRate: speechRate ?? this.speechRate,
+    durationMs: durationMs ?? this.durationMs,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  TtsWordTimingCacheTableData copyWithCompanion(
+    TtsWordTimingCacheTableCompanion data,
+  ) {
+    return TtsWordTimingCacheTableData(
+      id: data.id.present ? data.id.value : this.id,
+      vocabId: data.vocabId.present ? data.vocabId.value : this.vocabId,
+      wordStartOffset: data.wordStartOffset.present
+          ? data.wordStartOffset.value
+          : this.wordStartOffset,
+      wordEndOffset: data.wordEndOffset.present
+          ? data.wordEndOffset.value
+          : this.wordEndOffset,
+      voiceKey: data.voiceKey.present ? data.voiceKey.value : this.voiceKey,
+      speechRate: data.speechRate.present
+          ? data.speechRate.value
+          : this.speechRate,
+      durationMs: data.durationMs.present
+          ? data.durationMs.value
+          : this.durationMs,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TtsWordTimingCacheTableData(')
+          ..write('id: $id, ')
+          ..write('vocabId: $vocabId, ')
+          ..write('wordStartOffset: $wordStartOffset, ')
+          ..write('wordEndOffset: $wordEndOffset, ')
+          ..write('voiceKey: $voiceKey, ')
+          ..write('speechRate: $speechRate, ')
+          ..write('durationMs: $durationMs, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    vocabId,
+    wordStartOffset,
+    wordEndOffset,
+    voiceKey,
+    speechRate,
+    durationMs,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TtsWordTimingCacheTableData &&
+          other.id == this.id &&
+          other.vocabId == this.vocabId &&
+          other.wordStartOffset == this.wordStartOffset &&
+          other.wordEndOffset == this.wordEndOffset &&
+          other.voiceKey == this.voiceKey &&
+          other.speechRate == this.speechRate &&
+          other.durationMs == this.durationMs &&
+          other.updatedAt == this.updatedAt);
+}
+
+class TtsWordTimingCacheTableCompanion
+    extends UpdateCompanion<TtsWordTimingCacheTableData> {
+  final Value<int> id;
+  final Value<int> vocabId;
+  final Value<int> wordStartOffset;
+  final Value<int> wordEndOffset;
+  final Value<String> voiceKey;
+  final Value<double> speechRate;
+  final Value<int> durationMs;
+  final Value<DateTime> updatedAt;
+  const TtsWordTimingCacheTableCompanion({
+    this.id = const Value.absent(),
+    this.vocabId = const Value.absent(),
+    this.wordStartOffset = const Value.absent(),
+    this.wordEndOffset = const Value.absent(),
+    this.voiceKey = const Value.absent(),
+    this.speechRate = const Value.absent(),
+    this.durationMs = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  TtsWordTimingCacheTableCompanion.insert({
+    this.id = const Value.absent(),
+    required int vocabId,
+    required int wordStartOffset,
+    required int wordEndOffset,
+    required String voiceKey,
+    required double speechRate,
+    required int durationMs,
+    required DateTime updatedAt,
+  }) : vocabId = Value(vocabId),
+       wordStartOffset = Value(wordStartOffset),
+       wordEndOffset = Value(wordEndOffset),
+       voiceKey = Value(voiceKey),
+       speechRate = Value(speechRate),
+       durationMs = Value(durationMs),
+       updatedAt = Value(updatedAt);
+  static Insertable<TtsWordTimingCacheTableData> custom({
+    Expression<int>? id,
+    Expression<int>? vocabId,
+    Expression<int>? wordStartOffset,
+    Expression<int>? wordEndOffset,
+    Expression<String>? voiceKey,
+    Expression<double>? speechRate,
+    Expression<int>? durationMs,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (vocabId != null) 'vocab_id': vocabId,
+      if (wordStartOffset != null) 'word_start_offset': wordStartOffset,
+      if (wordEndOffset != null) 'word_end_offset': wordEndOffset,
+      if (voiceKey != null) 'voice_key': voiceKey,
+      if (speechRate != null) 'speech_rate': speechRate,
+      if (durationMs != null) 'duration_ms': durationMs,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  TtsWordTimingCacheTableCompanion copyWith({
+    Value<int>? id,
+    Value<int>? vocabId,
+    Value<int>? wordStartOffset,
+    Value<int>? wordEndOffset,
+    Value<String>? voiceKey,
+    Value<double>? speechRate,
+    Value<int>? durationMs,
+    Value<DateTime>? updatedAt,
+  }) {
+    return TtsWordTimingCacheTableCompanion(
+      id: id ?? this.id,
+      vocabId: vocabId ?? this.vocabId,
+      wordStartOffset: wordStartOffset ?? this.wordStartOffset,
+      wordEndOffset: wordEndOffset ?? this.wordEndOffset,
+      voiceKey: voiceKey ?? this.voiceKey,
+      speechRate: speechRate ?? this.speechRate,
+      durationMs: durationMs ?? this.durationMs,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (vocabId.present) {
+      map['vocab_id'] = Variable<int>(vocabId.value);
+    }
+    if (wordStartOffset.present) {
+      map['word_start_offset'] = Variable<int>(wordStartOffset.value);
+    }
+    if (wordEndOffset.present) {
+      map['word_end_offset'] = Variable<int>(wordEndOffset.value);
+    }
+    if (voiceKey.present) {
+      map['voice_key'] = Variable<String>(voiceKey.value);
+    }
+    if (speechRate.present) {
+      map['speech_rate'] = Variable<double>(speechRate.value);
+    }
+    if (durationMs.present) {
+      map['duration_ms'] = Variable<int>(durationMs.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TtsWordTimingCacheTableCompanion(')
+          ..write('id: $id, ')
+          ..write('vocabId: $vocabId, ')
+          ..write('wordStartOffset: $wordStartOffset, ')
+          ..write('wordEndOffset: $wordEndOffset, ')
+          ..write('voiceKey: $voiceKey, ')
+          ..write('speechRate: $speechRate, ')
+          ..write('durationMs: $durationMs, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -1585,6 +2694,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ProgressTableTable progressTable = $ProgressTableTable(this);
   late final $DownloadedTopicsTableTable downloadedTopicsTable =
       $DownloadedTopicsTableTable(this);
+  late final $PronunciationSegmentsTableTable pronunciationSegmentsTable =
+      $PronunciationSegmentsTableTable(this);
+  late final $TtsWordTimingCacheTableTable ttsWordTimingCacheTable =
+      $TtsWordTimingCacheTableTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1593,6 +2706,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     vocabularyTable,
     progressTable,
     downloadedTopicsTable,
+    pronunciationSegmentsTable,
+    ttsWordTimingCacheTable,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -1602,6 +2717,24 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('progress_table', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'vocabulary_table',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [
+        TableUpdate('pronunciation_segments_table', kind: UpdateKind.delete),
+      ],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'vocabulary_table',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [
+        TableUpdate('tts_word_timing_cache_table', kind: UpdateKind.delete),
+      ],
     ),
   ]);
 }
@@ -1657,6 +2790,58 @@ final class $$VocabularyTableTableReferences
     ).filter((f) => f.vocabId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_progressTableRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $PronunciationSegmentsTableTable,
+    List<PronunciationSegmentsTableData>
+  >
+  _pronunciationSegmentsTableRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.pronunciationSegmentsTable,
+        aliasName:
+            'vocabulary_table__id__pronunciation_segments_table__vocab_id',
+      );
+
+  $$PronunciationSegmentsTableTableProcessedTableManager
+  get pronunciationSegmentsTableRefs {
+    final manager = $$PronunciationSegmentsTableTableTableManager(
+      $_db,
+      $_db.pronunciationSegmentsTable,
+    ).filter((f) => f.vocabId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _pronunciationSegmentsTableRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $TtsWordTimingCacheTableTable,
+    List<TtsWordTimingCacheTableData>
+  >
+  _ttsWordTimingCacheTableRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.ttsWordTimingCacheTable,
+        aliasName:
+            'vocabulary_table__id__tts_word_timing_cache_table__vocab_id',
+      );
+
+  $$TtsWordTimingCacheTableTableProcessedTableManager
+  get ttsWordTimingCacheTableRefs {
+    final manager = $$TtsWordTimingCacheTableTableTableManager(
+      $_db,
+      $_db.ttsWordTimingCacheTable,
+    ).filter((f) => f.vocabId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _ttsWordTimingCacheTableRefsTable($_db),
+    );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -1739,6 +2924,59 @@ class $$VocabularyTableTableFilterComposer
                 $removeJoinBuilderFromRootComposer,
           ),
     );
+    return f(composer);
+  }
+
+  Expression<bool> pronunciationSegmentsTableRefs(
+    Expression<bool> Function($$PronunciationSegmentsTableTableFilterComposer f)
+    f,
+  ) {
+    final $$PronunciationSegmentsTableTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.pronunciationSegmentsTable,
+          getReferencedColumn: (t) => t.vocabId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$PronunciationSegmentsTableTableFilterComposer(
+                $db: $db,
+                $table: $db.pronunciationSegmentsTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<bool> ttsWordTimingCacheTableRefs(
+    Expression<bool> Function($$TtsWordTimingCacheTableTableFilterComposer f) f,
+  ) {
+    final $$TtsWordTimingCacheTableTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.ttsWordTimingCacheTable,
+          getReferencedColumn: (t) => t.vocabId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$TtsWordTimingCacheTableTableFilterComposer(
+                $db: $db,
+                $table: $db.ttsWordTimingCacheTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
     return f(composer);
   }
 }
@@ -1864,6 +3102,62 @@ class $$VocabularyTableTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> pronunciationSegmentsTableRefs<T extends Object>(
+    Expression<T> Function(
+      $$PronunciationSegmentsTableTableAnnotationComposer a,
+    )
+    f,
+  ) {
+    final $$PronunciationSegmentsTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.pronunciationSegmentsTable,
+          getReferencedColumn: (t) => t.vocabId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$PronunciationSegmentsTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.pronunciationSegmentsTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<T> ttsWordTimingCacheTableRefs<T extends Object>(
+    Expression<T> Function($$TtsWordTimingCacheTableTableAnnotationComposer a)
+    f,
+  ) {
+    final $$TtsWordTimingCacheTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.ttsWordTimingCacheTable,
+          getReferencedColumn: (t) => t.vocabId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$TtsWordTimingCacheTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.ttsWordTimingCacheTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$VocabularyTableTableTableManager
@@ -1879,7 +3173,11 @@ class $$VocabularyTableTableTableManager
           $$VocabularyTableTableUpdateCompanionBuilder,
           (VocabularyTableData, $$VocabularyTableTableReferences),
           VocabularyTableData,
-          PrefetchHooks Function({bool progressTableRefs})
+          PrefetchHooks Function({
+            bool progressTableRefs,
+            bool pronunciationSegmentsTableRefs,
+            bool ttsWordTimingCacheTableRefs,
+          })
         > {
   $$VocabularyTableTableTableManager(
     _$AppDatabase db,
@@ -1946,38 +3244,90 @@ class $$VocabularyTableTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({progressTableRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [
-                if (progressTableRefs) db.progressTable,
-              ],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (progressTableRefs)
-                    await $_getPrefetchedData<
-                      VocabularyTableData,
-                      $VocabularyTableTable,
-                      ProgressTableData
-                    >(
-                      currentTable: table,
-                      referencedTable: $$VocabularyTableTableReferences
-                          ._progressTableRefsTable(db),
-                      managerFromTypedResult: (p0) =>
-                          $$VocabularyTableTableReferences(
-                            db,
-                            table,
-                            p0,
-                          ).progressTableRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.vocabId == item.id),
-                      typedResults: items,
-                    ),
-                ];
+          prefetchHooksCallback:
+              ({
+                progressTableRefs = false,
+                pronunciationSegmentsTableRefs = false,
+                ttsWordTimingCacheTableRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (progressTableRefs) db.progressTable,
+                    if (pronunciationSegmentsTableRefs)
+                      db.pronunciationSegmentsTable,
+                    if (ttsWordTimingCacheTableRefs) db.ttsWordTimingCacheTable,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (progressTableRefs)
+                        await $_getPrefetchedData<
+                          VocabularyTableData,
+                          $VocabularyTableTable,
+                          ProgressTableData
+                        >(
+                          currentTable: table,
+                          referencedTable: $$VocabularyTableTableReferences
+                              ._progressTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$VocabularyTableTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).progressTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.vocabId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (pronunciationSegmentsTableRefs)
+                        await $_getPrefetchedData<
+                          VocabularyTableData,
+                          $VocabularyTableTable,
+                          PronunciationSegmentsTableData
+                        >(
+                          currentTable: table,
+                          referencedTable: $$VocabularyTableTableReferences
+                              ._pronunciationSegmentsTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$VocabularyTableTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).pronunciationSegmentsTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.vocabId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (ttsWordTimingCacheTableRefs)
+                        await $_getPrefetchedData<
+                          VocabularyTableData,
+                          $VocabularyTableTable,
+                          TtsWordTimingCacheTableData
+                        >(
+                          currentTable: table,
+                          referencedTable: $$VocabularyTableTableReferences
+                              ._ttsWordTimingCacheTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$VocabularyTableTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).ttsWordTimingCacheTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.vocabId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -1994,7 +3344,11 @@ typedef $$VocabularyTableTableProcessedTableManager =
       $$VocabularyTableTableUpdateCompanionBuilder,
       (VocabularyTableData, $$VocabularyTableTableReferences),
       VocabularyTableData,
-      PrefetchHooks Function({bool progressTableRefs})
+      PrefetchHooks Function({
+        bool progressTableRefs,
+        bool pronunciationSegmentsTableRefs,
+        bool ttsWordTimingCacheTableRefs,
+      })
     >;
 typedef $$ProgressTableTableCreateCompanionBuilder =
     ProgressTableCompanion Function({
@@ -2620,6 +3974,832 @@ typedef $$DownloadedTopicsTableTableProcessedTableManager =
       DownloadedTopicsTableData,
       PrefetchHooks Function()
     >;
+typedef $$PronunciationSegmentsTableTableCreateCompanionBuilder =
+    PronunciationSegmentsTableCompanion Function({
+      Value<int> id,
+      required int vocabId,
+      required int position,
+      required int startOffset,
+      required int endOffset,
+      required String segmentText,
+      required String ipa,
+      required String stress,
+      required double timingWeight,
+    });
+typedef $$PronunciationSegmentsTableTableUpdateCompanionBuilder =
+    PronunciationSegmentsTableCompanion Function({
+      Value<int> id,
+      Value<int> vocabId,
+      Value<int> position,
+      Value<int> startOffset,
+      Value<int> endOffset,
+      Value<String> segmentText,
+      Value<String> ipa,
+      Value<String> stress,
+      Value<double> timingWeight,
+    });
+
+final class $$PronunciationSegmentsTableTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $PronunciationSegmentsTableTable,
+          PronunciationSegmentsTableData
+        > {
+  $$PronunciationSegmentsTableTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $VocabularyTableTable _vocabIdTable(_$AppDatabase db) =>
+      db.vocabularyTable.createAlias(
+        'pronunciation_segments_table__vocab_id__vocabulary_table__id',
+      );
+
+  $$VocabularyTableTableProcessedTableManager get vocabId {
+    final $_column = $_itemColumn<int>('vocab_id')!;
+
+    final manager = $$VocabularyTableTableTableManager(
+      $_db,
+      $_db.vocabularyTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_vocabIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$PronunciationSegmentsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $PronunciationSegmentsTableTable> {
+  $$PronunciationSegmentsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get startOffset => $composableBuilder(
+    column: $table.startOffset,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get endOffset => $composableBuilder(
+    column: $table.endOffset,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get segmentText => $composableBuilder(
+    column: $table.segmentText,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get ipa => $composableBuilder(
+    column: $table.ipa,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get stress => $composableBuilder(
+    column: $table.stress,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get timingWeight => $composableBuilder(
+    column: $table.timingWeight,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$VocabularyTableTableFilterComposer get vocabId {
+    final $$VocabularyTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.vocabId,
+      referencedTable: $db.vocabularyTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VocabularyTableTableFilterComposer(
+            $db: $db,
+            $table: $db.vocabularyTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PronunciationSegmentsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $PronunciationSegmentsTableTable> {
+  $$PronunciationSegmentsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get startOffset => $composableBuilder(
+    column: $table.startOffset,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get endOffset => $composableBuilder(
+    column: $table.endOffset,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get segmentText => $composableBuilder(
+    column: $table.segmentText,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get ipa => $composableBuilder(
+    column: $table.ipa,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get stress => $composableBuilder(
+    column: $table.stress,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get timingWeight => $composableBuilder(
+    column: $table.timingWeight,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$VocabularyTableTableOrderingComposer get vocabId {
+    final $$VocabularyTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.vocabId,
+      referencedTable: $db.vocabularyTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VocabularyTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.vocabularyTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PronunciationSegmentsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PronunciationSegmentsTableTable> {
+  $$PronunciationSegmentsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => column);
+
+  GeneratedColumn<int> get startOffset => $composableBuilder(
+    column: $table.startOffset,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get endOffset =>
+      $composableBuilder(column: $table.endOffset, builder: (column) => column);
+
+  GeneratedColumn<String> get segmentText => $composableBuilder(
+    column: $table.segmentText,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get ipa =>
+      $composableBuilder(column: $table.ipa, builder: (column) => column);
+
+  GeneratedColumn<String> get stress =>
+      $composableBuilder(column: $table.stress, builder: (column) => column);
+
+  GeneratedColumn<double> get timingWeight => $composableBuilder(
+    column: $table.timingWeight,
+    builder: (column) => column,
+  );
+
+  $$VocabularyTableTableAnnotationComposer get vocabId {
+    final $$VocabularyTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.vocabId,
+      referencedTable: $db.vocabularyTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VocabularyTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.vocabularyTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PronunciationSegmentsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PronunciationSegmentsTableTable,
+          PronunciationSegmentsTableData,
+          $$PronunciationSegmentsTableTableFilterComposer,
+          $$PronunciationSegmentsTableTableOrderingComposer,
+          $$PronunciationSegmentsTableTableAnnotationComposer,
+          $$PronunciationSegmentsTableTableCreateCompanionBuilder,
+          $$PronunciationSegmentsTableTableUpdateCompanionBuilder,
+          (
+            PronunciationSegmentsTableData,
+            $$PronunciationSegmentsTableTableReferences,
+          ),
+          PronunciationSegmentsTableData,
+          PrefetchHooks Function({bool vocabId})
+        > {
+  $$PronunciationSegmentsTableTableTableManager(
+    _$AppDatabase db,
+    $PronunciationSegmentsTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PronunciationSegmentsTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$PronunciationSegmentsTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$PronunciationSegmentsTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> vocabId = const Value.absent(),
+                Value<int> position = const Value.absent(),
+                Value<int> startOffset = const Value.absent(),
+                Value<int> endOffset = const Value.absent(),
+                Value<String> segmentText = const Value.absent(),
+                Value<String> ipa = const Value.absent(),
+                Value<String> stress = const Value.absent(),
+                Value<double> timingWeight = const Value.absent(),
+              }) => PronunciationSegmentsTableCompanion(
+                id: id,
+                vocabId: vocabId,
+                position: position,
+                startOffset: startOffset,
+                endOffset: endOffset,
+                segmentText: segmentText,
+                ipa: ipa,
+                stress: stress,
+                timingWeight: timingWeight,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int vocabId,
+                required int position,
+                required int startOffset,
+                required int endOffset,
+                required String segmentText,
+                required String ipa,
+                required String stress,
+                required double timingWeight,
+              }) => PronunciationSegmentsTableCompanion.insert(
+                id: id,
+                vocabId: vocabId,
+                position: position,
+                startOffset: startOffset,
+                endOffset: endOffset,
+                segmentText: segmentText,
+                ipa: ipa,
+                stress: stress,
+                timingWeight: timingWeight,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$PronunciationSegmentsTableTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({vocabId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (vocabId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.vocabId,
+                                referencedTable:
+                                    $$PronunciationSegmentsTableTableReferences
+                                        ._vocabIdTable(db),
+                                referencedColumn:
+                                    $$PronunciationSegmentsTableTableReferences
+                                        ._vocabIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$PronunciationSegmentsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PronunciationSegmentsTableTable,
+      PronunciationSegmentsTableData,
+      $$PronunciationSegmentsTableTableFilterComposer,
+      $$PronunciationSegmentsTableTableOrderingComposer,
+      $$PronunciationSegmentsTableTableAnnotationComposer,
+      $$PronunciationSegmentsTableTableCreateCompanionBuilder,
+      $$PronunciationSegmentsTableTableUpdateCompanionBuilder,
+      (
+        PronunciationSegmentsTableData,
+        $$PronunciationSegmentsTableTableReferences,
+      ),
+      PronunciationSegmentsTableData,
+      PrefetchHooks Function({bool vocabId})
+    >;
+typedef $$TtsWordTimingCacheTableTableCreateCompanionBuilder =
+    TtsWordTimingCacheTableCompanion Function({
+      Value<int> id,
+      required int vocabId,
+      required int wordStartOffset,
+      required int wordEndOffset,
+      required String voiceKey,
+      required double speechRate,
+      required int durationMs,
+      required DateTime updatedAt,
+    });
+typedef $$TtsWordTimingCacheTableTableUpdateCompanionBuilder =
+    TtsWordTimingCacheTableCompanion Function({
+      Value<int> id,
+      Value<int> vocabId,
+      Value<int> wordStartOffset,
+      Value<int> wordEndOffset,
+      Value<String> voiceKey,
+      Value<double> speechRate,
+      Value<int> durationMs,
+      Value<DateTime> updatedAt,
+    });
+
+final class $$TtsWordTimingCacheTableTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $TtsWordTimingCacheTableTable,
+          TtsWordTimingCacheTableData
+        > {
+  $$TtsWordTimingCacheTableTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $VocabularyTableTable _vocabIdTable(_$AppDatabase db) =>
+      db.vocabularyTable.createAlias(
+        'tts_word_timing_cache_table__vocab_id__vocabulary_table__id',
+      );
+
+  $$VocabularyTableTableProcessedTableManager get vocabId {
+    final $_column = $_itemColumn<int>('vocab_id')!;
+
+    final manager = $$VocabularyTableTableTableManager(
+      $_db,
+      $_db.vocabularyTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_vocabIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$TtsWordTimingCacheTableTableFilterComposer
+    extends Composer<_$AppDatabase, $TtsWordTimingCacheTableTable> {
+  $$TtsWordTimingCacheTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get wordStartOffset => $composableBuilder(
+    column: $table.wordStartOffset,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get wordEndOffset => $composableBuilder(
+    column: $table.wordEndOffset,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get voiceKey => $composableBuilder(
+    column: $table.voiceKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get speechRate => $composableBuilder(
+    column: $table.speechRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get durationMs => $composableBuilder(
+    column: $table.durationMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$VocabularyTableTableFilterComposer get vocabId {
+    final $$VocabularyTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.vocabId,
+      referencedTable: $db.vocabularyTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VocabularyTableTableFilterComposer(
+            $db: $db,
+            $table: $db.vocabularyTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TtsWordTimingCacheTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $TtsWordTimingCacheTableTable> {
+  $$TtsWordTimingCacheTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get wordStartOffset => $composableBuilder(
+    column: $table.wordStartOffset,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get wordEndOffset => $composableBuilder(
+    column: $table.wordEndOffset,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get voiceKey => $composableBuilder(
+    column: $table.voiceKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get speechRate => $composableBuilder(
+    column: $table.speechRate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get durationMs => $composableBuilder(
+    column: $table.durationMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$VocabularyTableTableOrderingComposer get vocabId {
+    final $$VocabularyTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.vocabId,
+      referencedTable: $db.vocabularyTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VocabularyTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.vocabularyTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TtsWordTimingCacheTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TtsWordTimingCacheTableTable> {
+  $$TtsWordTimingCacheTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get wordStartOffset => $composableBuilder(
+    column: $table.wordStartOffset,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get wordEndOffset => $composableBuilder(
+    column: $table.wordEndOffset,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get voiceKey =>
+      $composableBuilder(column: $table.voiceKey, builder: (column) => column);
+
+  GeneratedColumn<double> get speechRate => $composableBuilder(
+    column: $table.speechRate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get durationMs => $composableBuilder(
+    column: $table.durationMs,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$VocabularyTableTableAnnotationComposer get vocabId {
+    final $$VocabularyTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.vocabId,
+      referencedTable: $db.vocabularyTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$VocabularyTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.vocabularyTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$TtsWordTimingCacheTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TtsWordTimingCacheTableTable,
+          TtsWordTimingCacheTableData,
+          $$TtsWordTimingCacheTableTableFilterComposer,
+          $$TtsWordTimingCacheTableTableOrderingComposer,
+          $$TtsWordTimingCacheTableTableAnnotationComposer,
+          $$TtsWordTimingCacheTableTableCreateCompanionBuilder,
+          $$TtsWordTimingCacheTableTableUpdateCompanionBuilder,
+          (
+            TtsWordTimingCacheTableData,
+            $$TtsWordTimingCacheTableTableReferences,
+          ),
+          TtsWordTimingCacheTableData,
+          PrefetchHooks Function({bool vocabId})
+        > {
+  $$TtsWordTimingCacheTableTableTableManager(
+    _$AppDatabase db,
+    $TtsWordTimingCacheTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TtsWordTimingCacheTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$TtsWordTimingCacheTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$TtsWordTimingCacheTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> vocabId = const Value.absent(),
+                Value<int> wordStartOffset = const Value.absent(),
+                Value<int> wordEndOffset = const Value.absent(),
+                Value<String> voiceKey = const Value.absent(),
+                Value<double> speechRate = const Value.absent(),
+                Value<int> durationMs = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => TtsWordTimingCacheTableCompanion(
+                id: id,
+                vocabId: vocabId,
+                wordStartOffset: wordStartOffset,
+                wordEndOffset: wordEndOffset,
+                voiceKey: voiceKey,
+                speechRate: speechRate,
+                durationMs: durationMs,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int vocabId,
+                required int wordStartOffset,
+                required int wordEndOffset,
+                required String voiceKey,
+                required double speechRate,
+                required int durationMs,
+                required DateTime updatedAt,
+              }) => TtsWordTimingCacheTableCompanion.insert(
+                id: id,
+                vocabId: vocabId,
+                wordStartOffset: wordStartOffset,
+                wordEndOffset: wordEndOffset,
+                voiceKey: voiceKey,
+                speechRate: speechRate,
+                durationMs: durationMs,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$TtsWordTimingCacheTableTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({vocabId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (vocabId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.vocabId,
+                                referencedTable:
+                                    $$TtsWordTimingCacheTableTableReferences
+                                        ._vocabIdTable(db),
+                                referencedColumn:
+                                    $$TtsWordTimingCacheTableTableReferences
+                                        ._vocabIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$TtsWordTimingCacheTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TtsWordTimingCacheTableTable,
+      TtsWordTimingCacheTableData,
+      $$TtsWordTimingCacheTableTableFilterComposer,
+      $$TtsWordTimingCacheTableTableOrderingComposer,
+      $$TtsWordTimingCacheTableTableAnnotationComposer,
+      $$TtsWordTimingCacheTableTableCreateCompanionBuilder,
+      $$TtsWordTimingCacheTableTableUpdateCompanionBuilder,
+      (TtsWordTimingCacheTableData, $$TtsWordTimingCacheTableTableReferences),
+      TtsWordTimingCacheTableData,
+      PrefetchHooks Function({bool vocabId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -2630,4 +4810,15 @@ class $AppDatabaseManager {
       $$ProgressTableTableTableManager(_db, _db.progressTable);
   $$DownloadedTopicsTableTableTableManager get downloadedTopicsTable =>
       $$DownloadedTopicsTableTableTableManager(_db, _db.downloadedTopicsTable);
+  $$PronunciationSegmentsTableTableTableManager
+  get pronunciationSegmentsTable =>
+      $$PronunciationSegmentsTableTableTableManager(
+        _db,
+        _db.pronunciationSegmentsTable,
+      );
+  $$TtsWordTimingCacheTableTableTableManager get ttsWordTimingCacheTable =>
+      $$TtsWordTimingCacheTableTableTableManager(
+        _db,
+        _db.ttsWordTimingCacheTable,
+      );
 }

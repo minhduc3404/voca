@@ -2,26 +2,30 @@ import 'package:flutter/material.dart';
 
 import 'package:voca_app/app/theme/app_icon.dart';
 import 'package:voca_app/app/theme/app_theme.dart';
+import 'package:voca_app/core/lexicon/pronunciation_segment.dart';
 
 import '../../domain/study_card.dart';
 
-/// Hiển thị toàn bộ nội dung thẻ trên MỘT mặt — chế độ rảnh tay, không cần
-/// chạm để lật: phiên âm, term, nghĩa, câu ví dụ hiện cùng lúc, theo layout
-/// mockup Claude Design "Voca Memo - Memo Screen" (phonetic mono nhỏ → term
-/// lớn đậm → nghĩa xanh → ví dụ in nghiêng mờ, căn giữa).
+/// Widget thuần: chỉ render range/segment state do application điều phối.
 class WordCard extends StatelessWidget {
-  const WordCard({required this.card, required this.onSpeak, super.key});
+  const WordCard({
+    required this.card,
+    required this.onSpeak,
+    this.activeWordStart,
+    this.activeWordEnd,
+    this.activeSegmentPosition,
+    super.key,
+  });
 
   final StudyCard card;
-
-  /// Gọi khi bấm nút loa thủ công. `memo_screen.dart` còn tự động phát âm
-  /// theo thời gian (2s, 6s) — đây là để nghe lại theo yêu cầu riêng.
   final VoidCallback onSpeak;
+  final int? activeWordStart;
+  final int? activeWordEnd;
+  final int? activeSegmentPosition;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 28),
       child: Column(
@@ -53,10 +57,13 @@ class WordCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          Text(
-            card.term,
+          _TermSegments(
+            term: card.term,
+            segments: card.pronunciationSegments,
+            activeWordStart: activeWordStart,
+            activeWordEnd: activeWordEnd,
+            activeSegmentPosition: activeSegmentPosition,
             style: textTheme.displaySmall,
-            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 22),
           Text(
@@ -79,6 +86,96 @@ class WordCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _TermSegments extends StatelessWidget {
+  const _TermSegments({
+    required this.term,
+    required this.segments,
+    required this.activeWordStart,
+    required this.activeWordEnd,
+    required this.activeSegmentPosition,
+    required this.style,
+  });
+
+  final String term;
+  final List<PronunciationSegment> segments;
+  final int? activeWordStart;
+  final int? activeWordEnd;
+  final int? activeSegmentPosition;
+  final TextStyle? style;
+
+  @override
+  Widget build(BuildContext context) {
+    if (activeWordStart == null || activeWordEnd == null) {
+      return Text(term, style: style, textAlign: TextAlign.center);
+    }
+
+    final boundaries = <int>{0, term.length, activeWordStart!, activeWordEnd!};
+    for (final segment in segments) {
+      boundaries
+        ..add(segment.start)
+        ..add(segment.end);
+    }
+    final sorted = boundaries.toList()..sort();
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        for (var index = 0; index < sorted.length - 1; index++)
+          _TermSpan(
+            key: Key('word-card-term-${sorted[index]}-${sorted[index + 1]}'),
+            text: term.substring(sorted[index], sorted[index + 1]),
+            isActive: _isActive(sorted[index], sorted[index + 1]),
+            style: style,
+          ),
+      ],
+    );
+  }
+
+  bool _isActive(int start, int end) {
+    PronunciationSegment? segment;
+    for (final candidate in segments) {
+      if (candidate.start == start && candidate.end == end) {
+        segment = candidate;
+        break;
+      }
+    }
+    if (activeSegmentPosition != null) {
+      return segment?.position == activeSegmentPosition;
+    }
+    return start < activeWordEnd! && end > activeWordStart!;
+  }
+}
+
+class _TermSpan extends StatelessWidget {
+  const _TermSpan({
+    required this.text,
+    required this.isActive,
+    required this.style,
+    super.key,
+  });
+
+  final String text;
+  final bool isActive;
+  final TextStyle? style;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedScale(
+      scale: isActive ? 1.08 : 1,
+      duration: const Duration(milliseconds: 160),
+      curve: Curves.easeOut,
+      child: AnimatedDefaultTextStyle(
+        duration: const Duration(milliseconds: 160),
+        curve: Curves.easeOut,
+        style: isActive
+            ? (style ?? const TextStyle()).copyWith(color: AppColors.accent)
+            : style ?? const TextStyle(),
+        child: Text(text),
       ),
     );
   }

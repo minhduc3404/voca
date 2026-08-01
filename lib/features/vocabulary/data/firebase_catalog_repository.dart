@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:firebase_storage/firebase_storage.dart';
 
+import '../../../core/lexicon/pronunciation_segment.dart';
 import '../domain/catalog_word.dart';
 import '../domain/topic.dart';
 import '../domain/vocabulary_catalog_repository.dart';
@@ -38,9 +39,61 @@ List<CatalogWord> parseTopicWordsJson(String raw) {
           phonetic: json['phonetic'] as String,
           partOfSpeech: json['partOfSpeech'] as String?,
           exampleSentence: json['exampleSentence'] as String,
+          pronunciationSegments: _parseSegments(
+            term: json['term'] as String,
+            raw: json['pronunciationSegments'],
+          ),
         ),
       )
       .toList();
+}
+
+List<PronunciationSegment> _parseSegments({
+  required String term,
+  required Object? raw,
+}) {
+  if (raw is! List) return const [];
+
+  try {
+    final segments = <PronunciationSegment>[
+      for (final (index, item) in raw.indexed)
+        _parseSegment(item as Map<String, dynamic>, index),
+    ];
+    final rangesAreOrdered = [
+      for (var index = 1; index < segments.length; index++)
+        segments[index - 1].end <= segments[index].start,
+    ].every((isOrdered) => isOrdered);
+    return rangesAreOrdered &&
+            segments.every((segment) => segment.isValidFor(term))
+        ? segments
+        : const [];
+  } on FormatException {
+    return const [];
+  } on TypeError {
+    return const [];
+  }
+}
+
+PronunciationSegment _parseSegment(Map<String, dynamic> json, int position) {
+  final stress = switch (json['stress']) {
+    'none' => PronunciationStress.none,
+    'secondary' => PronunciationStress.secondary,
+    'primary' => PronunciationStress.primary,
+    _ => throw const FormatException('Invalid pronunciation segment stress.'),
+  };
+  final timingWeight = json['timingWeight'];
+  if (timingWeight is! num) {
+    throw const FormatException('Invalid pronunciation segment timingWeight.');
+  }
+  return PronunciationSegment(
+    position: position,
+    start: json['start'] as int,
+    end: json['end'] as int,
+    text: json['text'] as String,
+    ipa: json['ipa'] as String,
+    stress: stress,
+    timingWeight: timingWeight.toDouble(),
+  );
 }
 
 /// Đọc catalog từ vựng từ Firebase Storage — `topics.json` (metadata nhẹ,

@@ -10,6 +10,12 @@ class _FakeTtsService implements TtsService {
   TtsVoice? lastVoice;
 
   @override
+  TtsVoice? get selectedVoice => lastVoice;
+
+  @override
+  double get speechRate => lastSpeechRate ?? 0.5;
+
+  @override
   Future<void> speak(String text) async {}
 
   @override
@@ -24,6 +30,12 @@ class _FakeTtsService implements TtsService {
   Future<void> setSpeechRate(double rate) async {
     lastSpeechRate = rate;
   }
+
+  @override
+  Stream<TtsPlaybackEvent> get playbackEvents => const Stream.empty();
+
+  @override
+  void dispose() {}
 }
 
 class _FakeTtsSettingsRepository implements TtsSettingsRepository {
@@ -61,9 +73,7 @@ void main() {
     );
     addTearDown(container.dispose);
 
-    final settings = await container.read(
-      ttsSettingsControllerProvider.future,
-    );
+    final settings = await container.read(ttsSettingsControllerProvider.future);
 
     expect(settings.speechRate, 0.8);
     expect(tts.lastSpeechRate, 0.8);
@@ -88,7 +98,10 @@ void main() {
 
     expect(tts.lastSpeechRate, 0.9);
     expect(repository.saveCount, 1);
-    expect(container.read(ttsSettingsControllerProvider).value?.speechRate, 0.9);
+    expect(
+      container.read(ttsSettingsControllerProvider).value?.speechRate,
+      0.9,
+    );
   });
 
   test('updateVoice() áp dụng ngay + lưu lại + cập nhật state', () async {

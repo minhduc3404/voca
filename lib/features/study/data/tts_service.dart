@@ -2,48 +2,56 @@ import 'dart:async';
 
 import 'package:flutter_tts/flutter_tts.dart';
 
-/// Một giọng đọc TTS cụ thể mà thiết bị hỗ trợ (vd giọng "en-US-x" khác
-/// "en-GB-y"). Chỉ giữ 2 field cần cho việc chọn/lưu — bản thân
-/// `flutter_tts` trả về nhiều field hơn (quality, gender, identifier trên
-/// iOS) nhưng app chưa cần dùng tới.
-class TtsVoice {
-  const TtsVoice({required this.name, required this.locale});
+import '../domain/tts_service.dart';
 
-  final String name;
-  final String locale;
-
-  @override
-  bool operator ==(Object other) =>
-      other is TtsVoice && other.name == name && other.locale == locale;
-
-  @override
-  int get hashCode => Object.hash(name, locale);
-}
-
-/// Phát âm text bằng text-to-speech. Interface tách riêng để test override
-/// được — plugin cần platform channel không có trong `flutter test`.
-abstract class TtsService {
-  Future<void> speak(String text);
-
-  /// Danh sách giọng tiếng Anh (`locale` bắt đầu bằng "en") thiết bị hỗ trợ.
-  /// Rỗng nếu thiết bị/nền tảng không trả được danh sách giọng.
-  Future<List<TtsVoice>> getVoices();
-
-  Future<void> setVoice(TtsVoice voice);
-
-  /// Tốc độ đọc theo thang của `flutter_tts` (0.0–1.0, mặc định ~0.5).
-  Future<void> setSpeechRate(double rate);
-}
+export '../domain/tts_service.dart';
 
 class FlutterTtsService implements TtsService {
   FlutterTtsService() : _tts = FlutterTts() {
     unawaited(_tts.setLanguage('en-US'));
+    _tts.setProgressHandler((text, start, end, word) {
+      _playbackEventController.add(
+        TtsPlaybackEvent.wordBoundary(
+          TtsWordRange(text: text, start: start, end: end),
+        ),
+      );
+    });
+    _tts.setCompletionHandler(
+      () => _playbackEventController.add(const TtsPlaybackEvent.completed()),
+    );
+    _tts.setCancelHandler(
+      () => _playbackEventController.add(const TtsPlaybackEvent.cancelled()),
+    );
+    _tts.setErrorHandler(
+      (message) => _playbackEventController.add(const TtsPlaybackEvent.error()),
+    );
   }
 
   final FlutterTts _tts;
+  final _playbackEventController =
+      StreamController<TtsPlaybackEvent>.broadcast();
+  TtsVoice? _selectedVoice;
+  double _speechRate = 0.5;
 
   @override
-  Future<void> speak(String text) => _tts.speak(text);
+  Stream<TtsPlaybackEvent> get playbackEvents =>
+      _playbackEventController.stream;
+
+  @override
+  TtsVoice? get selectedVoice => _selectedVoice;
+
+  @override
+  double get speechRate => _speechRate;
+
+  @override
+  Future<void> speak(String text) {
+    return _tts.speak(text);
+  }
+
+  @override
+  void dispose() {
+    unawaited(_playbackEventController.close());
+  }
 
   @override
   Future<List<TtsVoice>> getVoices() async {
@@ -52,19 +60,22 @@ class FlutterTtsService implements TtsService {
     return raw
         .whereType<Map>()
         .map(
-          (voice) => TtsVoice(
-            name: '${voice['name']}',
-            locale: '${voice['locale']}',
-          ),
+          (voice) =>
+              TtsVoice(name: '${voice['name']}', locale: '${voice['locale']}'),
         )
         .where((voice) => voice.locale.toLowerCase().startsWith('en'))
         .toList();
   }
 
   @override
-  Future<void> setVoice(TtsVoice voice) =>
-      _tts.setVoice({'name': voice.name, 'locale': voice.locale});
+  Future<void> setVoice(TtsVoice voice) async {
+    _selectedVoice = voice;
+    await _tts.setVoice({'name': voice.name, 'locale': voice.locale});
+  }
 
   @override
-  Future<void> setSpeechRate(double rate) => _tts.setSpeechRate(rate);
+  Future<void> setSpeechRate(double rate) async {
+    _speechRate = rate;
+    await _tts.setSpeechRate(rate);
+  }
 }

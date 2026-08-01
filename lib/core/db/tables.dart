@@ -105,3 +105,57 @@ class DownloadedTopicsTable extends Table {
   @override
   Set<Column> get primaryKey => {topicId};
 }
+
+/// Các segment phát âm do catalog biên soạn cho một vocabulary. Đây là dữ liệu
+/// nội dung offline, không phải timing do thiết bị đo được.
+class PronunciationSegmentsTable extends Table {
+  IntColumn get id => integer().autoIncrement()();
+
+  IntColumn get vocabId =>
+      integer().references(VocabularyTable, #id, onDelete: KeyAction.cascade)();
+
+  IntColumn get position => integer()();
+
+  IntColumn get startOffset => integer()();
+
+  IntColumn get endOffset => integer()();
+
+  TextColumn get segmentText => text()();
+
+  TextColumn get ipa => text()();
+
+  TextColumn get stress => text()();
+
+  RealColumn get timingWeight => real()();
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+    {vocabId, position},
+  ];
+}
+
+/// Cache duration quan sát được từ native word-boundary callback. Cache phân
+/// vùng theo giọng/rate vì cùng từ có nhịp khác nhau theo cấu hình thiết bị.
+class TtsWordTimingCacheTable extends Table {
+  IntColumn get id => integer().autoIncrement()();
+
+  IntColumn get vocabId =>
+      integer().references(VocabularyTable, #id, onDelete: KeyAction.cascade)();
+
+  IntColumn get wordStartOffset => integer()();
+
+  IntColumn get wordEndOffset => integer()();
+
+  TextColumn get voiceKey => text()();
+
+  RealColumn get speechRate => real()();
+
+  IntColumn get durationMs => integer()();
+
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+    {vocabId, wordStartOffset, wordEndOffset, voiceKey, speechRate},
+  ];
+}

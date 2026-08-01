@@ -36,6 +36,12 @@ class _FakeTtsService implements TtsService {
   int speakCount = 0;
 
   @override
+  TtsVoice? get selectedVoice => null;
+
+  @override
+  double get speechRate => 0.5;
+
+  @override
   Future<void> speak(String text) async {
     speakCount++;
   }
@@ -48,6 +54,12 @@ class _FakeTtsService implements TtsService {
 
   @override
   Future<void> setSpeechRate(double rate) async {}
+
+  @override
+  Stream<TtsPlaybackEvent> get playbackEvents => const Stream.empty();
+
+  @override
+  void dispose() {}
 }
 
 class _FakeWakelockService implements WakelockService {
@@ -103,35 +115,32 @@ Widget _wrap({
 }
 
 void main() {
-  testWidgets(
-    'Bấm "Đã nhớ" trong lúc đếm ngược → chuyển thẻ ngay (Good)',
-    (tester) async {
-      final now = DateTime(2026, 1, 15);
-      final repository = _InMemoryRepository(_twoCards(), now);
-      final tts = _FakeTtsService();
+  testWidgets('Bấm "Đã nhớ" trong lúc đếm ngược → chuyển thẻ ngay (Good)', (
+    tester,
+  ) async {
+    final now = DateTime(2026, 1, 15);
+    final repository = _InMemoryRepository(_twoCards(), now);
+    final tts = _FakeTtsService();
 
-      await tester.pumpWidget(
-        _wrap(repository: repository, tts: tts),
-      );
-      await tester.pump();
-      await tester.pump();
+    await tester.pumpWidget(_wrap(repository: repository, tts: tts));
+    await tester.pump();
+    await tester.pump();
 
-      expect(find.text('apple'), findsOneWidget);
+    expect(find.text('apple'), findsOneWidget);
 
-      await tester.tap(find.text('Đã nhớ'));
-      await tester.pump(); // setState(_showSaved = true)
-      expect(find.text('Đã lưu!'), findsOneWidget);
-      await tester.pump(const Duration(milliseconds: 700)); // qua transient
+    await tester.tap(find.text('Đã nhớ'));
+    await tester.pump(); // setState(_showSaved = true)
+    expect(find.text('Đã lưu!'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 700)); // qua transient
 
-      expect(find.text('banana'), findsOneWidget);
+    expect(find.text('banana'), findsOneWidget);
 
-      await tester.tap(find.text('Đã nhớ'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 700));
+    await tester.tap(find.text('Đã nhớ'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 700));
 
-      expect(find.text('Đã ôn hết thẻ đến hạn hôm nay'), findsOneWidget);
-    },
-  );
+    expect(find.text('Đã ôn hết thẻ đến hạn hôm nay'), findsOneWidget);
+  });
 
   testWidgets(
     'Hết 10s không bấm → tự động chuyển thẻ (Again), không cần thao tác',
@@ -140,9 +149,7 @@ void main() {
       final repository = _InMemoryRepository(_twoCards(), now);
       final tts = _FakeTtsService();
 
-      await tester.pumpWidget(
-        _wrap(repository: repository, tts: tts),
-      );
+      await tester.pumpWidget(_wrap(repository: repository, tts: tts));
       await tester.pump();
       await tester.pump();
 

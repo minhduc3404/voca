@@ -22,7 +22,11 @@ const _realTravelJson = '''
       "definition": "lịch trình",
       "phonetic": "/aɪˈtɪn.ə.rer.i/",
       "partOfSpeech": "noun",
-      "exampleSentence": "Our itinerary includes three cities in five days."
+      "exampleSentence": "Our itinerary includes three cities in five days.",
+      "pronunciationSegments": [
+        { "start": 0, "end": 1, "text": "i", "ipa": "aɪ", "stress": "none", "timingWeight": 1.0 },
+        { "start": 1, "end": 4, "text": "tin", "ipa": "tɪn", "stress": "primary", "timingWeight": 2.0 }
+      ]
     },
     {
       "id": "travel-002",
@@ -62,6 +66,9 @@ void main() {
       words[0].exampleSentence,
       'Our itinerary includes three cities in five days.',
     );
+    expect(words[0].pronunciationSegments, hasLength(2));
+    expect(words[0].pronunciationSegments[1].text, 'tin');
+    expect(words[0].pronunciationSegments[1].stress.name, 'primary');
   });
 
   test('parseTopicWordsJson xử lý được partOfSpeech null', () {
@@ -75,5 +82,19 @@ void main() {
     final words = parseTopicWordsJson(json);
 
     expect(words.single.partOfSpeech, isNull);
+  });
+
+  test('parseTopicWordsJson bỏ toàn bộ segment invalid của một word', () {
+    const json = '''
+    { "topicId": "t", "version": 1, "words": [
+      { "id": "t-1", "term": "pass", "definition": "x", "phonetic": "/pæs/",
+        "partOfSpeech": "noun", "exampleSentence": "x",
+        "pronunciationSegments": [
+          { "start": 0, "end": 2, "text": "wrong", "ipa": "pæ", "stress": "primary", "timingWeight": 2 }
+        ] }
+    ] }
+    ''';
+
+    expect(parseTopicWordsJson(json).single.pronunciationSegments, isEmpty);
   });
 }

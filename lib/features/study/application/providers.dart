@@ -2,10 +2,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers.dart';
 import '../data/drift_progress_repository.dart';
+import '../data/drift_tts_word_timing_cache_repository.dart';
 import '../data/tts_service.dart';
 import '../data/tts_settings_repository.dart';
 import '../data/wakelock_service.dart';
 import '../domain/progress_repository.dart';
+import '../domain/tts_word_timing_cache_repository.dart';
 
 /// Điểm nối duy nhất giữa application và implementation cụ thể của
 /// [ProgressRepository]. Chuyển từ `FakeProgressRepository` sang
@@ -17,8 +19,15 @@ final progressRepositoryProvider = Provider<ProgressRepository>((ref) {
 });
 
 final ttsServiceProvider = Provider<TtsService>((ref) {
-  return FlutterTtsService();
+  final service = FlutterTtsService();
+  ref.onDispose(service.dispose);
+  return service;
 });
+
+final ttsWordTimingCacheRepositoryProvider =
+    Provider<TtsWordTimingCacheRepository>((ref) {
+      return DriftTtsWordTimingCacheRepository(ref.watch(appDatabaseProvider));
+    });
 
 final wakelockServiceProvider = Provider<WakelockService>((ref) {
   return WakelockPlusService();

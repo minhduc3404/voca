@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../../../core/db/app_database.dart';
+import '../../../core/lexicon/pronunciation_segment.dart';
 import '../domain/progress_repository.dart';
 import '../domain/study_card.dart';
 import '../domain/word_progress.dart';
@@ -23,7 +24,7 @@ class DriftProgressRepository implements ProgressRepository {
       )..where((t) => t.vocabId.equals(vocab.id))).getSingleOrNull();
       final isDue = progress == null || !now.isBefore(progress.nextReview);
       if (isDue) {
-        dueCards.add(_toStudyCard(vocab));
+        dueCards.add(await _toStudyCard(vocab));
       }
     }
 
@@ -84,7 +85,12 @@ class DriftProgressRepository implements ProgressRepository {
     }
   }
 
-  StudyCard _toStudyCard(VocabularyTableData row) {
+  Future<StudyCard> _toStudyCard(VocabularyTableData row) async {
+    final segmentRows =
+        await (_db.select(_db.pronunciationSegmentsTable)
+              ..where((table) => table.vocabId.equals(row.id))
+              ..orderBy([(table) => OrderingTerm.asc(table.position)]))
+            .get();
     return StudyCard(
       id: row.id,
       term: row.term,
@@ -93,6 +99,18 @@ class DriftProgressRepository implements ProgressRepository {
       phonetic: row.phonetic,
       partOfSpeech: row.partOfSpeech,
       exampleSentence: row.exampleSentence,
+      pronunciationSegments: [
+        for (final segment in segmentRows)
+          PronunciationSegment(
+            position: segment.position,
+            start: segment.startOffset,
+            end: segment.endOffset,
+            text: segment.segmentText,
+            ipa: segment.ipa,
+            stress: PronunciationStress.values.byName(segment.stress),
+            timingWeight: segment.timingWeight,
+          ),
+      ],
     );
   }
 
