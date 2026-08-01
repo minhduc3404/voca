@@ -44,3 +44,18 @@ Thêm `TtsWordRange` + `wordRangeStream` (`data/tts_service.dart`, dùng `setPro
 - [x] Không đụng `domain/`/schema.
 - [x] `word_card.dart` không import riverpod/data.
 - [ ] **Chưa chạy được `flutter analyze`/`flutter test`** — môi trường sandbox không có Flutter SDK cài sẵn; cần verify lại trên máy có SDK trước khi merge.
+
+## Bổ sung — 2026-08-01: highlight theo âm tiết cho từ đơn
+
+**Mục tiêu bổ sung**: hiện tại app chỉ học single word (cụm từ nhiều từ là việc tương lai). Với 1 từ, highlight cả từ cùng lúc là chưa đủ chi tiết — cần nhấn lần lượt theo từng âm tiết bên trong từ, dựa trên trọng âm có sẵn trong `card.phonetic` (IPA, vd `/ɪˈfem.ər.əl/` — dấu `.` ngăn âm tiết, `ˈ`/`ˌ` là trọng âm chính/phụ). Không thêm field domain nào — `phonetic` đã tồn tại sẵn trong `StudyCard`.
+
+**Giới hạn đã biết (được chấp nhận có chủ đích)**: `flutter_tts` không có event ở mức âm tiết/phoneme trên bất kỳ platform nào — animation âm tiết là **ước lượng thời lượng hiển thị** (suy từ trọng âm IPA), chạy song song với event active thật ở mức từ, không đồng bộ tuyệt đối với audio thật. Việc tách chữ cái theo âm tiết cũng là xấp xỉ theo số ký tự chia đều (không có ánh xạ IPA↔chính tả chính xác).
+
+- **EDIT**: `lib/features/study/presentation/widgets/word_card.dart` — thêm `_parseSyllableWeights`/`_splitIntoChunks` (thuần string, không phụ thuộc gì mới), `_AnimatedTermWord` chuyển sang `StatefulWidget` chạy `Timer` cycle qua từng âm tiết khi active, chỉ áp dụng khi `term` là 1 từ đơn (`_termWords.length == 1`) — cụm từ nhiều từ giữ nguyên hành vi highlight cả từ như cũ.
+- **EDIT test**: `word_card_test.dart` — thêm test tách/cycle âm tiết cho "apple" (`/ˈæp.əl/` → "app"+"le") và test đảm bảo lúc không active vẫn hiện liền cả từ (không phá test cũ `find.text('apple')`).
+- Không đụng `data/`, `application/`, `domain/` — thay đổi gói gọn hoàn toàn trong 1 widget presentation, dùng field `phonetic` đã có sẵn.
+
+**Tiêu chí hoàn tất bổ sung**: từ active tách đúng số âm tiết theo dấu `.` trong `phonetic`; âm tiết mang `ˈ` giữ lâu hơn âm tiết thường; lúc không active hiện liền cả từ (không tách); cụm nhiều từ không bị ảnh hưởng.
+- [x] Không đụng `domain/`/`data/`/`application/` — chỉ sửa 1 widget presentation.
+- [x] `WordCard` vẫn không import riverpod/data.
+- [ ] **Chưa chạy được `flutter analyze`/`flutter test`** — cần verify trên máy có Flutter SDK trước khi merge.
