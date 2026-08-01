@@ -48,6 +48,9 @@ class _FakeTtsService implements TtsService {
 
   @override
   Future<void> setSpeechRate(double rate) async {}
+
+  @override
+  Stream<TtsWordRange?> get wordRangeStream => const Stream.empty();
 }
 
 class _FakeWakelockService implements WakelockService {

@@ -227,6 +227,7 @@ class _SessionBodyState extends ConsumerState<_SessionBody>
   bool _isPaused = false;
   bool _spokeFirst = false;
   bool _spokeSecond = false;
+  int? _speakingWordIndex;
 
   Timer? _speakTimer1;
   Timer? _speakTimer2;
@@ -235,6 +236,28 @@ class _SessionBodyState extends ConsumerState<_SessionBody>
   // Không khai báo type tường minh (`WakelockService`) — presentation không
   // được import `data/` trực tiếp (CLAUDE.md §2); type suy ra qua provider.
   late final _wakelockService = ref.read(wakelockServiceProvider);
+
+  // Tương tự — không khai báo type `TtsWordRange` tường minh, để tránh import
+  // `data/` vào presentation. Đổi `range` -> chỉ số từ đang đọc trong
+  // `card.term` (tách theo khoảng trắng), highlight cho `WordCard`.
+  late final _wordRangeSubscription = ref
+      .read(ttsServiceProvider)
+      .wordRangeStream
+      .listen((range) {
+        final card = widget.session.currentCard;
+        int? index;
+        if (card != null && range != null && range.text == card.term) {
+          final words = RegExp(r'\S+').allMatches(card.term).toList();
+          for (var i = 0; i < words.length; i++) {
+            if (range.start >= words[i].start && range.start < words[i].end) {
+              index = i;
+              break;
+            }
+          }
+        }
+        if (!mounted || index == _speakingWordIndex) return;
+        setState(() => _speakingWordIndex = index);
+      });
 
   late final AnimationController _progress;
   Duration _totalDuration = _autoAdvanceDuration;
@@ -249,6 +272,9 @@ class _SessionBodyState extends ConsumerState<_SessionBody>
   void initState() {
     super.initState();
     _progress = AnimationController(vsync: this, duration: _totalDuration);
+    // `.resume()` trên subscription chưa pause là no-op — chỉ để ép khởi
+    // tạo field `late final` này ngay từ đầu, không đợi lazy access.
+    _wordRangeSubscription.resume();
     _maybeSyncTimers();
     _syncWakelock();
   }
@@ -264,6 +290,7 @@ class _SessionBodyState extends ConsumerState<_SessionBody>
   void dispose() {
     _cancelTimers();
     _progress.dispose();
+    unawaited(_wordRangeSubscription.cancel());
     if (_wakelockEnabled ?? false) {
       unawaited(_wakelockService.disable());
     }
@@ -296,6 +323,7 @@ class _SessionBodyState extends ConsumerState<_SessionBody>
     _spokeFirst = false;
     _spokeSecond = false;
     _isPaused = false;
+    _speakingWordIndex = null;
     _totalDuration = _segmentDuration;
     _progress
       ..duration = _totalDuration
@@ -487,6 +515,7 @@ class _SessionBodyState extends ConsumerState<_SessionBody>
                 key: ValueKey(card.id),
                 card: card,
                 onSpeak: () => ref.read(ttsServiceProvider).speak(card.term),
+                speakingWordIndex: _speakingWordIndex,
               ),
             ),
           ),

@@ -20,6 +20,18 @@ class TtsVoice {
   int get hashCode => Object.hash(name, locale);
 }
 
+/// Vị trí từ đang được đọc tại một thời điểm, lấy trực tiếp từ word-boundary
+/// event của engine TTS (offset ký tự trong `text`) — không tính toán/ước
+/// lượng gì thêm. `text` dùng để đối chiếu đúng lượt `speak()` nào đang phát
+/// (tránh nhận nhầm boundary của lượt đọc trước còn sót lại).
+class TtsWordRange {
+  const TtsWordRange({required this.text, required this.start, required this.end});
+
+  final String text;
+  final int start;
+  final int end;
+}
+
 /// Phát âm text bằng text-to-speech. Interface tách riêng để test override
 /// được — plugin cần platform channel không có trong `flutter test`.
 abstract class TtsService {
@@ -33,17 +45,36 @@ abstract class TtsService {
 
   /// Tốc độ đọc theo thang của `flutter_tts` (0.0–1.0, mặc định ~0.5).
   Future<void> setSpeechRate(double rate);
+
+  /// Bắn ra mỗi khi engine báo tiến độ đọc theo từng từ (native word-boundary
+  /// event); `null` khi không có từ nào đang đọc (chưa bắt đầu, đã đọc xong,
+  /// bị huỷ, hoặc lỗi). Dùng để highlight từ đang đọc theo đúng điểm ngắt
+  /// (khoảng trắng) engine tự nhận diện — không cần lưu/tính timing riêng.
+  Stream<TtsWordRange?> get wordRangeStream;
 }
 
 class FlutterTtsService implements TtsService {
   FlutterTtsService() : _tts = FlutterTts() {
     unawaited(_tts.setLanguage('en-US'));
+    _tts.setProgressHandler((text, start, end, word) {
+      _wordRangeController.add(TtsWordRange(text: text, start: start, end: end));
+    });
+    _tts.setCompletionHandler(() => _wordRangeController.add(null));
+    _tts.setCancelHandler(() => _wordRangeController.add(null));
+    _tts.setErrorHandler((message) => _wordRangeController.add(null));
   }
 
   final FlutterTts _tts;
+  final _wordRangeController = StreamController<TtsWordRange?>.broadcast();
 
   @override
-  Future<void> speak(String text) => _tts.speak(text);
+  Stream<TtsWordRange?> get wordRangeStream => _wordRangeController.stream;
+
+  @override
+  Future<void> speak(String text) {
+    _wordRangeController.add(null);
+    return _tts.speak(text);
+  }
 
   @override
   Future<List<TtsVoice>> getVoices() async {

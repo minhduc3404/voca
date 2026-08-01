@@ -25,6 +25,9 @@ class _FakeTtsService implements TtsService {
   Future<void> setSpeechRate(double rate) async {
     lastSpeechRate = rate;
   }
+
+  @override
+  Stream<TtsWordRange?> get wordRangeStream => const Stream.empty();
 }
 
 class _FakeTtsSettingsRepository implements TtsSettingsRepository {
