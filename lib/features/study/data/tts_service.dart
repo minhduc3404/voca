@@ -8,6 +8,17 @@ export '../domain/tts_service.dart';
 
 class FlutterTtsService implements TtsService {
   FlutterTtsService() : _tts = FlutterTts() {
+    unawaited(_tts.setSharedInstance(true));
+    unawaited(
+      _tts.setIosAudioCategory(
+        IosTextToSpeechAudioCategory.playback,
+        [
+          IosTextToSpeechAudioCategoryOptions.mixWithOthers,
+          IosTextToSpeechAudioCategoryOptions.defaultToSpeaker,
+        ],
+        IosTextToSpeechAudioMode.voicePrompt,
+      ),
+    );
     unawaited(_tts.setLanguage('en-US'));
     _tts.setProgressHandler((text, start, end, word) {
       _playbackEventController.add(
