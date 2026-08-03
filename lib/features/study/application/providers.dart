@@ -6,12 +6,13 @@ import '../data/drift_study_log_repository.dart';
 import '../data/drift_study_stats_repository.dart';
 import '../data/drift_tts_word_timing_cache_repository.dart';
 import '../data/onboarding_flag_repository.dart';
-import '../data/tts_service.dart';
+import '../data/tts/factory_tts_service.dart';
 import '../data/tts_settings_repository.dart';
 import '../data/wakelock_service.dart';
 import '../domain/progress_repository.dart';
 import '../domain/study_log_repository.dart';
 import '../domain/study_stats_repository.dart';
+import '../domain/tts_service.dart';
 import '../domain/tts_word_timing_cache_repository.dart';
 
 /// Điểm nối duy nhất giữa application và implementation cụ thể của
@@ -41,7 +42,7 @@ final onboardingSeenProvider = FutureProvider<bool>((ref) {
 });
 
 final ttsServiceProvider = Provider<TtsService>((ref) {
-  final service = FlutterTtsService();
+  final service = FactoryTtsService().create();
   ref.onDispose(service.dispose);
   return service;
 });
