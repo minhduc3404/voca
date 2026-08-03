@@ -38,6 +38,12 @@ class VocabularyTable extends Table {
   /// match lại đúng row khi đồng bộ lại một chủ đề đã tải — tránh tạo
   /// trùng, giữ nguyên tiến độ SRS đã có. Thêm ở schema v3.
   TextColumn get catalogId => text().nullable().unique()();
+
+  /// ID chủ đề catalog mà từ này thuộc về (vd `"travel"`), `null` nếu từ
+  /// nhập tay/không đến từ catalog. Dùng cho màn "Hôm nay" hiển thị chủ đề
+  /// đang học. Backfill từ [catalogId] (cắt hậu tố `-<số>`) khi migrate v4→v5.
+  /// Thêm ở schema v5.
+  TextColumn get topicId => text().nullable()();
 }
 
 class ProgressTable extends Table {
@@ -102,6 +108,11 @@ class DownloadedTopicsTable extends Table {
 
   DateTimeColumn get downloadedAt => dateTime()();
 
+  /// Tên hiển thị của chủ đề tại thời điểm tải (vd `"Du lịch"`) — lưu lại
+  /// để màn "Hôm nay" hiển thị chủ đề đang học mà không cần đọc catalog
+  /// remote (offline). Thêm ở schema v5.
+  TextColumn get topicName => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {topicId};
 }
@@ -158,4 +169,26 @@ class TtsWordTimingCacheTable extends Table {
   List<Set<Column>> get uniqueKeys => [
     {vocabId, wordStartOffset, wordEndOffset, voiceKey, speechRate},
   ];
+}
+
+/// Ghi nhật ký ôn tập theo ngày — nguồn dữ liệu cho streak chuỗi ngày học.
+/// Mỗi ngày có ≥1 lượt trả lời (`reviewCount > 0`) là một ngày "đã học".
+/// Thêm ở schema v5.
+class StudyLogTable extends Table {
+  /// Ngày học, định dạng `'YYYY-MM-DD'` theo giờ local của thiết bị — khóa
+  /// chính, mỗi ngày đúng 1 dòng.
+  TextColumn get date => text()();
+
+  /// Tổng số lượt trả lời (recordAnswer) trong ngày.
+  IntColumn get reviewCount => integer()();
+
+  /// Số từ mới ôn lần đầu trong ngày (từ có `lastReview == null` trước khi
+  /// ghi nhận).
+  IntColumn get newCount => integer()();
+
+  /// Lần cập nhật cuối của dòng ngày này.
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {date};
 }

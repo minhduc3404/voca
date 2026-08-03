@@ -12,6 +12,7 @@ part 'app_database.g.dart';
     DownloadedTopicsTable,
     PronunciationSegmentsTable,
     TtsWordTimingCacheTable,
+    StudyLogTable,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -23,7 +24,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -59,8 +60,56 @@ class AppDatabase extends _$AppDatabase {
         await migrator.createTable(pronunciationSegmentsTable);
         await migrator.createTable(ttsWordTimingCacheTable);
       }
+      if (from < 5) {
+        // Màn "Hôm nay": chủ đề đang học + streak.
+        // - vocabulary_table.topic_id: nullable, backfill từ catalog_id
+        //   (cắt hậu tố `-<số>`). Từ nhập tay không có catalog_id → NULL.
+        // - downloaded_topics_table.topic_name: nullable, lưu tên hiển thị
+        //   để hiển thị offline.
+        // - study_log_table: mới, ghi nhật ký ôn theo ngày cho streak.
+        await migrator.addColumn(vocabularyTable, vocabularyTable.topicId);
+        await migrator.addColumn(
+          downloadedTopicsTable,
+          downloadedTopicsTable.topicName,
+        );
+        await migrator.createTable(studyLogTable);
+
+        // Backfill topic_id từ catalog_id bằng Dart (dễ test + đúng với mọi
+        // catalog id pattern). Rule: cắt hậu tố `-<số>` (vd `travel-001` →
+        // `travel`); giữ nguyên nếu không khớp pattern (vd `oxford3000`).
+        final rows = await migrator.database
+            .customSelect(
+              'SELECT id, catalog_id FROM vocabulary_table '
+              'WHERE catalog_id IS NOT NULL AND topic_id IS NULL',
+            )
+            .get();
+        final updates = <(int, String)>[];
+        for (final row in rows) {
+          final catalogId = row.readNullable<String>('catalog_id');
+          final topicId = catalogId == null
+              ? null
+              : _topicIdFromCatalogId(catalogId);
+          if (topicId != null) updates.add((row.read<int>('id'), topicId));
+        }
+        for (final (id, topicId) in updates) {
+          await migrator.database.customStatement(
+            'UPDATE vocabulary_table SET topic_id = ? WHERE id = ?',
+            [topicId, id],
+          );
+        }
+      }
     },
   );
+}
+
+/// `"travel-001"` → `"travel"`, `"oxford3000"` → `null` (không có hậu tố số
+/// tách bằng `-`). Rule dùng chung cho backfill v4→v5 và cho import mới.
+String? _topicIdFromCatalogId(String catalogId) {
+  final dashIndex = catalogId.lastIndexOf('-');
+  if (dashIndex <= 0 || dashIndex == catalogId.length - 1) return null;
+  final suffix = catalogId.substring(dashIndex + 1);
+  if (suffix.isEmpty || int.tryParse(suffix) == null) return null;
+  return catalogId.substring(0, dashIndex);
 }
 
 QueryExecutor _openConnection() {

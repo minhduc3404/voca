@@ -52,6 +52,7 @@ class DriftTopicLibraryRepository implements TopicLibraryRepository {
                       exampleSentence: word.exampleSentence,
                       createdAt: now,
                       catalogId: Value(word.id),
+                      topicId: Value(topic.id),
                     ),
                   )
             : existing.id;
@@ -67,6 +68,7 @@ class DriftTopicLibraryRepository implements TopicLibraryRepository {
               phonetic: Value(word.phonetic),
               partOfSpeech: Value(word.partOfSpeech),
               exampleSentence: Value(word.exampleSentence),
+              topicId: Value(topic.id),
             ),
           );
           if (existing.term != word.term) {
@@ -83,6 +85,7 @@ class DriftTopicLibraryRepository implements TopicLibraryRepository {
           .insertOnConflictUpdate(
             DownloadedTopicsTableCompanion.insert(
               topicId: topic.id,
+              topicName: Value(topic.name),
               downloadedVersion: topic.version,
               downloadedAt: now,
             ),

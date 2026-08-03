@@ -36,7 +36,7 @@ class DriftTtsWordTimingCacheRepository
     // Controller có thể ghi fire-and-forget khi các callback đến sát nhau.
     // Nối các lần ghi để select + insert/update không tranh chấp unique key.
     final write = _writeTail.then((_) => _saveAtomically(entry));
-    _writeTail = write.then<void>((_) {}, onError: (_, _) {});
+    _writeTail = write.then<void>((_) {}, onError: (Object _, Object __) {});
     return write;
   }
 

@@ -4,14 +4,21 @@ import '../../../core/db/app_database.dart';
 import '../../../core/lexicon/pronunciation_segment.dart';
 import '../domain/progress_repository.dart';
 import '../domain/study_card.dart';
+import '../domain/study_log_repository.dart';
 import '../domain/word_progress.dart';
+import 'drift_study_log_repository.dart';
 
 /// Implementation thật của [ProgressRepository] dùng Drift/SQLite — thay
 /// [FakeProgressRepository] ở Phase 2 (xem PLAN-PHASE-1-2.md).
 class DriftProgressRepository implements ProgressRepository {
-  DriftProgressRepository(this._db);
+  DriftProgressRepository(this._db, {StudyLogRepository? studyLog})
+    : _studyLog = studyLog ?? DriftStudyLogRepository(_db);
 
   final AppDatabase _db;
+
+  /// Ghi nhật ký ôn theo ngày (schema v5) — streak. Cùng transaction với
+  /// `recordAnswer` để không bao giờ lệch (có trả lời nhưng thiếu log).
+  final StudyLogRepository _studyLog;
 
   @override
   Future<List<StudyCard>> getDueCards(DateTime now) async {
@@ -46,43 +53,54 @@ class DriftProgressRepository implements ProgressRepository {
   @override
   Future<void> recordAnswer(WordProgress progress) async {
     final now = DateTime.now();
-    final existing = await (_db.select(
-      _db.progressTable,
-    )..where((t) => t.vocabId.equals(progress.cardId))).getSingleOrNull();
-
-    if (existing == null) {
-      await _db
-          .into(_db.progressTable)
-          .insert(
-            ProgressTableCompanion.insert(
-              vocabId: progress.cardId,
-              interval: progress.interval,
-              easeFactor: progress.easeFactor,
-              reps: progress.reps,
-              lapses: progress.lapses,
-              learningStep: Value(progress.learningStep),
-              nextReview: progress.nextReview,
-              lastReview: Value(progress.lastReview),
-              createdAt: now,
-              updatedAt: now,
-            ),
-          );
-    } else {
-      await (_db.update(
+    await _db.transaction(() async {
+      final existing = await (_db.select(
         _db.progressTable,
-      )..where((t) => t.vocabId.equals(progress.cardId))).write(
-        ProgressTableCompanion(
-          interval: Value(progress.interval),
-          easeFactor: Value(progress.easeFactor),
-          reps: Value(progress.reps),
-          lapses: Value(progress.lapses),
-          learningStep: Value(progress.learningStep),
-          nextReview: Value(progress.nextReview),
-          lastReview: Value(progress.lastReview),
-          updatedAt: Value(now),
-        ),
-      );
-    }
+      )..where((t) => t.vocabId.equals(progress.cardId))).getSingleOrNull();
+
+      // Từ mới = trước khi ghi nhận chưa có progress row, hoặc có row nhưng
+      // chưa từng ôn (lastReview == null). Xét từ `existing` (trạng thái DB
+      // TRƯỚC khi ghi), không phải từ `progress.lastReview` — giá trị sau khi
+      // scheduleNextReview luôn là now nên không dùng được.
+      final isNewWord = existing == null || existing.lastReview == null;
+
+      if (existing == null) {
+        await _db
+            .into(_db.progressTable)
+            .insert(
+              ProgressTableCompanion.insert(
+                vocabId: progress.cardId,
+                interval: progress.interval,
+                easeFactor: progress.easeFactor,
+                reps: progress.reps,
+                lapses: progress.lapses,
+                learningStep: Value(progress.learningStep),
+                nextReview: progress.nextReview,
+                lastReview: Value(progress.lastReview),
+                createdAt: now,
+                updatedAt: now,
+              ),
+            );
+      } else {
+        await (_db.update(
+          _db.progressTable,
+        )..where((t) => t.vocabId.equals(progress.cardId))).write(
+          ProgressTableCompanion(
+            interval: Value(progress.interval),
+            easeFactor: Value(progress.easeFactor),
+            reps: Value(progress.reps),
+            lapses: Value(progress.lapses),
+            learningStep: Value(progress.learningStep),
+            nextReview: Value(progress.nextReview),
+            lastReview: Value(progress.lastReview),
+            updatedAt: Value(now),
+          ),
+        );
+      }
+
+      // Ghi nhật ký ngày học (streak) trong cùng transaction.
+      await _studyLog.recordStudy(date: now, isNewWord: isNewWord);
+    });
   }
 
   Future<StudyCard> _toStudyCard(VocabularyTableData row) async {

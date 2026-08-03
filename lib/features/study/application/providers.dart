@@ -2,11 +2,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers.dart';
 import '../data/drift_progress_repository.dart';
+import '../data/drift_study_log_repository.dart';
+import '../data/drift_study_stats_repository.dart';
 import '../data/drift_tts_word_timing_cache_repository.dart';
+import '../data/onboarding_flag_repository.dart';
 import '../data/tts_service.dart';
 import '../data/tts_settings_repository.dart';
 import '../data/wakelock_service.dart';
 import '../domain/progress_repository.dart';
+import '../domain/study_log_repository.dart';
+import '../domain/study_stats_repository.dart';
 import '../domain/tts_word_timing_cache_repository.dart';
 
 /// Điểm nối duy nhất giữa application và implementation cụ thể của
@@ -16,6 +21,23 @@ import '../domain/tts_word_timing_cache_repository.dart';
 final progressRepositoryProvider = Provider<ProgressRepository>((ref) {
   final db = ref.watch(appDatabaseProvider);
   return DriftProgressRepository(db);
+});
+
+final studyLogRepositoryProvider = Provider<StudyLogRepository>((ref) {
+  return DriftStudyLogRepository(ref.watch(appDatabaseProvider));
+});
+
+final studyStatsRepositoryProvider = Provider<StudyStatsRepository>((ref) {
+  return DriftStudyStatsRepository(ref.watch(appDatabaseProvider));
+});
+
+final onboardingFlagRepositoryProvider = Provider<OnboardingFlagRepository>(
+  (ref) => OnboardingFlagRepository(),
+);
+
+/// Đã xem onboarding chưa — dùng cho màn đầu tiên (app.dart `_Root`).
+final onboardingSeenProvider = FutureProvider<bool>((ref) {
+  return ref.watch(onboardingFlagRepositoryProvider).hasSeenOnboarding();
 });
 
 final ttsServiceProvider = Provider<TtsService>((ref) {

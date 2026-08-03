@@ -109,6 +109,17 @@ class $VocabularyTableTable extends VocabularyTable
     requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
   );
+  static const VerificationMeta _topicIdMeta = const VerificationMeta(
+    'topicId',
+  );
+  @override
+  late final GeneratedColumn<String> topicId = GeneratedColumn<String>(
+    'topic_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -120,6 +131,7 @@ class $VocabularyTableTable extends VocabularyTable
     exampleSentence,
     createdAt,
     catalogId,
+    topicId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -202,6 +214,12 @@ class $VocabularyTableTable extends VocabularyTable
         catalogId.isAcceptableOrUnknown(data['catalog_id']!, _catalogIdMeta),
       );
     }
+    if (data.containsKey('topic_id')) {
+      context.handle(
+        _topicIdMeta,
+        topicId.isAcceptableOrUnknown(data['topic_id']!, _topicIdMeta),
+      );
+    }
     return context;
   }
 
@@ -247,6 +265,10 @@ class $VocabularyTableTable extends VocabularyTable
         DriftSqlType.string,
         data['${effectivePrefix}catalog_id'],
       ),
+      topicId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}topic_id'],
+      ),
     );
   }
 
@@ -291,6 +313,12 @@ class VocabularyTableData extends DataClass
   /// match lại đúng row khi đồng bộ lại một chủ đề đã tải — tránh tạo
   /// trùng, giữ nguyên tiến độ SRS đã có. Thêm ở schema v3.
   final String? catalogId;
+
+  /// ID chủ đề catalog mà từ này thuộc về (vd `"travel"`), `null` nếu từ
+  /// nhập tay/không đến từ catalog. Dùng cho màn "Hôm nay" hiển thị chủ đề
+  /// đang học. Backfill từ [catalogId] (cắt hậu tố `-<số>`) khi migrate v4→v5.
+  /// Thêm ở schema v5.
+  final String? topicId;
   const VocabularyTableData({
     required this.id,
     required this.term,
@@ -301,6 +329,7 @@ class VocabularyTableData extends DataClass
     required this.exampleSentence,
     required this.createdAt,
     this.catalogId,
+    this.topicId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -317,6 +346,9 @@ class VocabularyTableData extends DataClass
     map['created_at'] = Variable<DateTime>(createdAt);
     if (!nullToAbsent || catalogId != null) {
       map['catalog_id'] = Variable<String>(catalogId);
+    }
+    if (!nullToAbsent || topicId != null) {
+      map['topic_id'] = Variable<String>(topicId);
     }
     return map;
   }
@@ -336,6 +368,9 @@ class VocabularyTableData extends DataClass
       catalogId: catalogId == null && nullToAbsent
           ? const Value.absent()
           : Value(catalogId),
+      topicId: topicId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(topicId),
     );
   }
 
@@ -354,6 +389,7 @@ class VocabularyTableData extends DataClass
       exampleSentence: serializer.fromJson<String>(json['exampleSentence']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       catalogId: serializer.fromJson<String?>(json['catalogId']),
+      topicId: serializer.fromJson<String?>(json['topicId']),
     );
   }
   @override
@@ -369,6 +405,7 @@ class VocabularyTableData extends DataClass
       'exampleSentence': serializer.toJson<String>(exampleSentence),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'catalogId': serializer.toJson<String?>(catalogId),
+      'topicId': serializer.toJson<String?>(topicId),
     };
   }
 
@@ -382,6 +419,7 @@ class VocabularyTableData extends DataClass
     String? exampleSentence,
     DateTime? createdAt,
     Value<String?> catalogId = const Value.absent(),
+    Value<String?> topicId = const Value.absent(),
   }) => VocabularyTableData(
     id: id ?? this.id,
     term: term ?? this.term,
@@ -392,6 +430,7 @@ class VocabularyTableData extends DataClass
     exampleSentence: exampleSentence ?? this.exampleSentence,
     createdAt: createdAt ?? this.createdAt,
     catalogId: catalogId.present ? catalogId.value : this.catalogId,
+    topicId: topicId.present ? topicId.value : this.topicId,
   );
   VocabularyTableData copyWithCompanion(VocabularyTableCompanion data) {
     return VocabularyTableData(
@@ -410,6 +449,7 @@ class VocabularyTableData extends DataClass
           : this.exampleSentence,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       catalogId: data.catalogId.present ? data.catalogId.value : this.catalogId,
+      topicId: data.topicId.present ? data.topicId.value : this.topicId,
     );
   }
 
@@ -424,7 +464,8 @@ class VocabularyTableData extends DataClass
           ..write('partOfSpeech: $partOfSpeech, ')
           ..write('exampleSentence: $exampleSentence, ')
           ..write('createdAt: $createdAt, ')
-          ..write('catalogId: $catalogId')
+          ..write('catalogId: $catalogId, ')
+          ..write('topicId: $topicId')
           ..write(')'))
         .toString();
   }
@@ -440,6 +481,7 @@ class VocabularyTableData extends DataClass
     exampleSentence,
     createdAt,
     catalogId,
+    topicId,
   );
   @override
   bool operator ==(Object other) =>
@@ -453,7 +495,8 @@ class VocabularyTableData extends DataClass
           other.partOfSpeech == this.partOfSpeech &&
           other.exampleSentence == this.exampleSentence &&
           other.createdAt == this.createdAt &&
-          other.catalogId == this.catalogId);
+          other.catalogId == this.catalogId &&
+          other.topicId == this.topicId);
 }
 
 class VocabularyTableCompanion extends UpdateCompanion<VocabularyTableData> {
@@ -466,6 +509,7 @@ class VocabularyTableCompanion extends UpdateCompanion<VocabularyTableData> {
   final Value<String> exampleSentence;
   final Value<DateTime> createdAt;
   final Value<String?> catalogId;
+  final Value<String?> topicId;
   const VocabularyTableCompanion({
     this.id = const Value.absent(),
     this.term = const Value.absent(),
@@ -476,6 +520,7 @@ class VocabularyTableCompanion extends UpdateCompanion<VocabularyTableData> {
     this.exampleSentence = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.catalogId = const Value.absent(),
+    this.topicId = const Value.absent(),
   });
   VocabularyTableCompanion.insert({
     this.id = const Value.absent(),
@@ -487,6 +532,7 @@ class VocabularyTableCompanion extends UpdateCompanion<VocabularyTableData> {
     required String exampleSentence,
     required DateTime createdAt,
     this.catalogId = const Value.absent(),
+    this.topicId = const Value.absent(),
   }) : term = Value(term),
        definition = Value(definition),
        language = Value(language),
@@ -503,6 +549,7 @@ class VocabularyTableCompanion extends UpdateCompanion<VocabularyTableData> {
     Expression<String>? exampleSentence,
     Expression<DateTime>? createdAt,
     Expression<String>? catalogId,
+    Expression<String>? topicId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -514,6 +561,7 @@ class VocabularyTableCompanion extends UpdateCompanion<VocabularyTableData> {
       if (exampleSentence != null) 'example_sentence': exampleSentence,
       if (createdAt != null) 'created_at': createdAt,
       if (catalogId != null) 'catalog_id': catalogId,
+      if (topicId != null) 'topic_id': topicId,
     });
   }
 
@@ -527,6 +575,7 @@ class VocabularyTableCompanion extends UpdateCompanion<VocabularyTableData> {
     Value<String>? exampleSentence,
     Value<DateTime>? createdAt,
     Value<String?>? catalogId,
+    Value<String?>? topicId,
   }) {
     return VocabularyTableCompanion(
       id: id ?? this.id,
@@ -538,6 +587,7 @@ class VocabularyTableCompanion extends UpdateCompanion<VocabularyTableData> {
       exampleSentence: exampleSentence ?? this.exampleSentence,
       createdAt: createdAt ?? this.createdAt,
       catalogId: catalogId ?? this.catalogId,
+      topicId: topicId ?? this.topicId,
     );
   }
 
@@ -571,6 +621,9 @@ class VocabularyTableCompanion extends UpdateCompanion<VocabularyTableData> {
     if (catalogId.present) {
       map['catalog_id'] = Variable<String>(catalogId.value);
     }
+    if (topicId.present) {
+      map['topic_id'] = Variable<String>(topicId.value);
+    }
     return map;
   }
 
@@ -585,7 +638,8 @@ class VocabularyTableCompanion extends UpdateCompanion<VocabularyTableData> {
           ..write('partOfSpeech: $partOfSpeech, ')
           ..write('exampleSentence: $exampleSentence, ')
           ..write('createdAt: $createdAt, ')
-          ..write('catalogId: $catalogId')
+          ..write('catalogId: $catalogId, ')
+          ..write('topicId: $topicId')
           ..write(')'))
         .toString();
   }
@@ -1321,11 +1375,23 @@ class $DownloadedTopicsTableTable extends DownloadedTopicsTable
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _topicNameMeta = const VerificationMeta(
+    'topicName',
+  );
+  @override
+  late final GeneratedColumn<String> topicName = GeneratedColumn<String>(
+    'topic_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     topicId,
     downloadedVersion,
     downloadedAt,
+    topicName,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1369,6 +1435,12 @@ class $DownloadedTopicsTableTable extends DownloadedTopicsTable
     } else if (isInserting) {
       context.missing(_downloadedAtMeta);
     }
+    if (data.containsKey('topic_name')) {
+      context.handle(
+        _topicNameMeta,
+        topicName.isAcceptableOrUnknown(data['topic_name']!, _topicNameMeta),
+      );
+    }
     return context;
   }
 
@@ -1393,6 +1465,10 @@ class $DownloadedTopicsTableTable extends DownloadedTopicsTable
         DriftSqlType.dateTime,
         data['${effectivePrefix}downloaded_at'],
       )!,
+      topicName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}topic_name'],
+      ),
     );
   }
 
@@ -1411,10 +1487,16 @@ class DownloadedTopicsTableData extends DataClass
   /// remote để biết có cần đồng bộ lại không.
   final int downloadedVersion;
   final DateTime downloadedAt;
+
+  /// Tên hiển thị của chủ đề tại thời điểm tải (vd `"Du lịch"`) — lưu lại
+  /// để màn "Hôm nay" hiển thị chủ đề đang học mà không cần đọc catalog
+  /// remote (offline). Thêm ở schema v5.
+  final String? topicName;
   const DownloadedTopicsTableData({
     required this.topicId,
     required this.downloadedVersion,
     required this.downloadedAt,
+    this.topicName,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1422,6 +1504,9 @@ class DownloadedTopicsTableData extends DataClass
     map['topic_id'] = Variable<String>(topicId);
     map['downloaded_version'] = Variable<int>(downloadedVersion);
     map['downloaded_at'] = Variable<DateTime>(downloadedAt);
+    if (!nullToAbsent || topicName != null) {
+      map['topic_name'] = Variable<String>(topicName);
+    }
     return map;
   }
 
@@ -1430,6 +1515,9 @@ class DownloadedTopicsTableData extends DataClass
       topicId: Value(topicId),
       downloadedVersion: Value(downloadedVersion),
       downloadedAt: Value(downloadedAt),
+      topicName: topicName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(topicName),
     );
   }
 
@@ -1442,6 +1530,7 @@ class DownloadedTopicsTableData extends DataClass
       topicId: serializer.fromJson<String>(json['topicId']),
       downloadedVersion: serializer.fromJson<int>(json['downloadedVersion']),
       downloadedAt: serializer.fromJson<DateTime>(json['downloadedAt']),
+      topicName: serializer.fromJson<String?>(json['topicName']),
     );
   }
   @override
@@ -1451,6 +1540,7 @@ class DownloadedTopicsTableData extends DataClass
       'topicId': serializer.toJson<String>(topicId),
       'downloadedVersion': serializer.toJson<int>(downloadedVersion),
       'downloadedAt': serializer.toJson<DateTime>(downloadedAt),
+      'topicName': serializer.toJson<String?>(topicName),
     };
   }
 
@@ -1458,10 +1548,12 @@ class DownloadedTopicsTableData extends DataClass
     String? topicId,
     int? downloadedVersion,
     DateTime? downloadedAt,
+    Value<String?> topicName = const Value.absent(),
   }) => DownloadedTopicsTableData(
     topicId: topicId ?? this.topicId,
     downloadedVersion: downloadedVersion ?? this.downloadedVersion,
     downloadedAt: downloadedAt ?? this.downloadedAt,
+    topicName: topicName.present ? topicName.value : this.topicName,
   );
   DownloadedTopicsTableData copyWithCompanion(
     DownloadedTopicsTableCompanion data,
@@ -1474,6 +1566,7 @@ class DownloadedTopicsTableData extends DataClass
       downloadedAt: data.downloadedAt.present
           ? data.downloadedAt.value
           : this.downloadedAt,
+      topicName: data.topicName.present ? data.topicName.value : this.topicName,
     );
   }
 
@@ -1482,20 +1575,23 @@ class DownloadedTopicsTableData extends DataClass
     return (StringBuffer('DownloadedTopicsTableData(')
           ..write('topicId: $topicId, ')
           ..write('downloadedVersion: $downloadedVersion, ')
-          ..write('downloadedAt: $downloadedAt')
+          ..write('downloadedAt: $downloadedAt, ')
+          ..write('topicName: $topicName')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(topicId, downloadedVersion, downloadedAt);
+  int get hashCode =>
+      Object.hash(topicId, downloadedVersion, downloadedAt, topicName);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is DownloadedTopicsTableData &&
           other.topicId == this.topicId &&
           other.downloadedVersion == this.downloadedVersion &&
-          other.downloadedAt == this.downloadedAt);
+          other.downloadedAt == this.downloadedAt &&
+          other.topicName == this.topicName);
 }
 
 class DownloadedTopicsTableCompanion
@@ -1503,17 +1599,20 @@ class DownloadedTopicsTableCompanion
   final Value<String> topicId;
   final Value<int> downloadedVersion;
   final Value<DateTime> downloadedAt;
+  final Value<String?> topicName;
   final Value<int> rowid;
   const DownloadedTopicsTableCompanion({
     this.topicId = const Value.absent(),
     this.downloadedVersion = const Value.absent(),
     this.downloadedAt = const Value.absent(),
+    this.topicName = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   DownloadedTopicsTableCompanion.insert({
     required String topicId,
     required int downloadedVersion,
     required DateTime downloadedAt,
+    this.topicName = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : topicId = Value(topicId),
        downloadedVersion = Value(downloadedVersion),
@@ -1522,12 +1621,14 @@ class DownloadedTopicsTableCompanion
     Expression<String>? topicId,
     Expression<int>? downloadedVersion,
     Expression<DateTime>? downloadedAt,
+    Expression<String>? topicName,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (topicId != null) 'topic_id': topicId,
       if (downloadedVersion != null) 'downloaded_version': downloadedVersion,
       if (downloadedAt != null) 'downloaded_at': downloadedAt,
+      if (topicName != null) 'topic_name': topicName,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1536,12 +1637,14 @@ class DownloadedTopicsTableCompanion
     Value<String>? topicId,
     Value<int>? downloadedVersion,
     Value<DateTime>? downloadedAt,
+    Value<String?>? topicName,
     Value<int>? rowid,
   }) {
     return DownloadedTopicsTableCompanion(
       topicId: topicId ?? this.topicId,
       downloadedVersion: downloadedVersion ?? this.downloadedVersion,
       downloadedAt: downloadedAt ?? this.downloadedAt,
+      topicName: topicName ?? this.topicName,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1558,6 +1661,9 @@ class DownloadedTopicsTableCompanion
     if (downloadedAt.present) {
       map['downloaded_at'] = Variable<DateTime>(downloadedAt.value);
     }
+    if (topicName.present) {
+      map['topic_name'] = Variable<String>(topicName.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1570,6 +1676,7 @@ class DownloadedTopicsTableCompanion
           ..write('topicId: $topicId, ')
           ..write('downloadedVersion: $downloadedVersion, ')
           ..write('downloadedAt: $downloadedAt, ')
+          ..write('topicName: $topicName, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2685,6 +2792,339 @@ class TtsWordTimingCacheTableCompanion
   }
 }
 
+class $StudyLogTableTable extends StudyLogTable
+    with TableInfo<$StudyLogTableTable, StudyLogTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $StudyLogTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _dateMeta = const VerificationMeta('date');
+  @override
+  late final GeneratedColumn<String> date = GeneratedColumn<String>(
+    'date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _reviewCountMeta = const VerificationMeta(
+    'reviewCount',
+  );
+  @override
+  late final GeneratedColumn<int> reviewCount = GeneratedColumn<int>(
+    'review_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _newCountMeta = const VerificationMeta(
+    'newCount',
+  );
+  @override
+  late final GeneratedColumn<int> newCount = GeneratedColumn<int>(
+    'new_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    date,
+    reviewCount,
+    newCount,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'study_log_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<StudyLogTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('date')) {
+      context.handle(
+        _dateMeta,
+        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateMeta);
+    }
+    if (data.containsKey('review_count')) {
+      context.handle(
+        _reviewCountMeta,
+        reviewCount.isAcceptableOrUnknown(
+          data['review_count']!,
+          _reviewCountMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_reviewCountMeta);
+    }
+    if (data.containsKey('new_count')) {
+      context.handle(
+        _newCountMeta,
+        newCount.isAcceptableOrUnknown(data['new_count']!, _newCountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_newCountMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {date};
+  @override
+  StudyLogTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return StudyLogTableData(
+      date: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}date'],
+      )!,
+      reviewCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}review_count'],
+      )!,
+      newCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}new_count'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $StudyLogTableTable createAlias(String alias) {
+    return $StudyLogTableTable(attachedDatabase, alias);
+  }
+}
+
+class StudyLogTableData extends DataClass
+    implements Insertable<StudyLogTableData> {
+  /// Ngày học, định dạng `'YYYY-MM-DD'` theo giờ local của thiết bị — khóa
+  /// chính, mỗi ngày đúng 1 dòng.
+  final String date;
+
+  /// Tổng số lượt trả lời (recordAnswer) trong ngày.
+  final int reviewCount;
+
+  /// Số từ mới ôn lần đầu trong ngày (từ có `lastReview == null` trước khi
+  /// ghi nhận).
+  final int newCount;
+
+  /// Lần cập nhật cuối của dòng ngày này.
+  final DateTime updatedAt;
+  const StudyLogTableData({
+    required this.date,
+    required this.reviewCount,
+    required this.newCount,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['date'] = Variable<String>(date);
+    map['review_count'] = Variable<int>(reviewCount);
+    map['new_count'] = Variable<int>(newCount);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  StudyLogTableCompanion toCompanion(bool nullToAbsent) {
+    return StudyLogTableCompanion(
+      date: Value(date),
+      reviewCount: Value(reviewCount),
+      newCount: Value(newCount),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory StudyLogTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return StudyLogTableData(
+      date: serializer.fromJson<String>(json['date']),
+      reviewCount: serializer.fromJson<int>(json['reviewCount']),
+      newCount: serializer.fromJson<int>(json['newCount']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'date': serializer.toJson<String>(date),
+      'reviewCount': serializer.toJson<int>(reviewCount),
+      'newCount': serializer.toJson<int>(newCount),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  StudyLogTableData copyWith({
+    String? date,
+    int? reviewCount,
+    int? newCount,
+    DateTime? updatedAt,
+  }) => StudyLogTableData(
+    date: date ?? this.date,
+    reviewCount: reviewCount ?? this.reviewCount,
+    newCount: newCount ?? this.newCount,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  StudyLogTableData copyWithCompanion(StudyLogTableCompanion data) {
+    return StudyLogTableData(
+      date: data.date.present ? data.date.value : this.date,
+      reviewCount: data.reviewCount.present
+          ? data.reviewCount.value
+          : this.reviewCount,
+      newCount: data.newCount.present ? data.newCount.value : this.newCount,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StudyLogTableData(')
+          ..write('date: $date, ')
+          ..write('reviewCount: $reviewCount, ')
+          ..write('newCount: $newCount, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(date, reviewCount, newCount, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StudyLogTableData &&
+          other.date == this.date &&
+          other.reviewCount == this.reviewCount &&
+          other.newCount == this.newCount &&
+          other.updatedAt == this.updatedAt);
+}
+
+class StudyLogTableCompanion extends UpdateCompanion<StudyLogTableData> {
+  final Value<String> date;
+  final Value<int> reviewCount;
+  final Value<int> newCount;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const StudyLogTableCompanion({
+    this.date = const Value.absent(),
+    this.reviewCount = const Value.absent(),
+    this.newCount = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  StudyLogTableCompanion.insert({
+    required String date,
+    required int reviewCount,
+    required int newCount,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  }) : date = Value(date),
+       reviewCount = Value(reviewCount),
+       newCount = Value(newCount),
+       updatedAt = Value(updatedAt);
+  static Insertable<StudyLogTableData> custom({
+    Expression<String>? date,
+    Expression<int>? reviewCount,
+    Expression<int>? newCount,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (date != null) 'date': date,
+      if (reviewCount != null) 'review_count': reviewCount,
+      if (newCount != null) 'new_count': newCount,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  StudyLogTableCompanion copyWith({
+    Value<String>? date,
+    Value<int>? reviewCount,
+    Value<int>? newCount,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return StudyLogTableCompanion(
+      date: date ?? this.date,
+      reviewCount: reviewCount ?? this.reviewCount,
+      newCount: newCount ?? this.newCount,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (date.present) {
+      map['date'] = Variable<String>(date.value);
+    }
+    if (reviewCount.present) {
+      map['review_count'] = Variable<int>(reviewCount.value);
+    }
+    if (newCount.present) {
+      map['new_count'] = Variable<int>(newCount.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StudyLogTableCompanion(')
+          ..write('date: $date, ')
+          ..write('reviewCount: $reviewCount, ')
+          ..write('newCount: $newCount, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2698,6 +3138,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $PronunciationSegmentsTableTable(this);
   late final $TtsWordTimingCacheTableTable ttsWordTimingCacheTable =
       $TtsWordTimingCacheTableTable(this);
+  late final $StudyLogTableTable studyLogTable = $StudyLogTableTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2708,6 +3149,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     downloadedTopicsTable,
     pronunciationSegmentsTable,
     ttsWordTimingCacheTable,
+    studyLogTable,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -2750,6 +3192,7 @@ typedef $$VocabularyTableTableCreateCompanionBuilder =
       required String exampleSentence,
       required DateTime createdAt,
       Value<String?> catalogId,
+      Value<String?> topicId,
     });
 typedef $$VocabularyTableTableUpdateCompanionBuilder =
     VocabularyTableCompanion Function({
@@ -2762,6 +3205,7 @@ typedef $$VocabularyTableTableUpdateCompanionBuilder =
       Value<String> exampleSentence,
       Value<DateTime> createdAt,
       Value<String?> catalogId,
+      Value<String?> topicId,
     });
 
 final class $$VocabularyTableTableReferences
@@ -2902,6 +3346,11 @@ class $$VocabularyTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get topicId => $composableBuilder(
+    column: $table.topicId,
+    builder: (column) => ColumnFilters(column),
+  );
+
   Expression<bool> progressTableRefs(
     Expression<bool> Function($$ProgressTableTableFilterComposer f) f,
   ) {
@@ -3034,6 +3483,11 @@ class $$VocabularyTableTableOrderingComposer
     column: $table.catalogId,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get topicId => $composableBuilder(
+    column: $table.topicId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$VocabularyTableTableAnnotationComposer
@@ -3077,6 +3531,9 @@ class $$VocabularyTableTableAnnotationComposer
 
   GeneratedColumn<String> get catalogId =>
       $composableBuilder(column: $table.catalogId, builder: (column) => column);
+
+  GeneratedColumn<String> get topicId =>
+      $composableBuilder(column: $table.topicId, builder: (column) => column);
 
   Expression<T> progressTableRefs<T extends Object>(
     Expression<T> Function($$ProgressTableTableAnnotationComposer a) f,
@@ -3203,6 +3660,7 @@ class $$VocabularyTableTableTableManager
                 Value<String> exampleSentence = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<String?> catalogId = const Value.absent(),
+                Value<String?> topicId = const Value.absent(),
               }) => VocabularyTableCompanion(
                 id: id,
                 term: term,
@@ -3213,6 +3671,7 @@ class $$VocabularyTableTableTableManager
                 exampleSentence: exampleSentence,
                 createdAt: createdAt,
                 catalogId: catalogId,
+                topicId: topicId,
               ),
           createCompanionCallback:
               ({
@@ -3225,6 +3684,7 @@ class $$VocabularyTableTableTableManager
                 required String exampleSentence,
                 required DateTime createdAt,
                 Value<String?> catalogId = const Value.absent(),
+                Value<String?> topicId = const Value.absent(),
               }) => VocabularyTableCompanion.insert(
                 id: id,
                 term: term,
@@ -3235,6 +3695,7 @@ class $$VocabularyTableTableTableManager
                 exampleSentence: exampleSentence,
                 createdAt: createdAt,
                 catalogId: catalogId,
+                topicId: topicId,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -3794,6 +4255,7 @@ typedef $$DownloadedTopicsTableTableCreateCompanionBuilder =
       required String topicId,
       required int downloadedVersion,
       required DateTime downloadedAt,
+      Value<String?> topicName,
       Value<int> rowid,
     });
 typedef $$DownloadedTopicsTableTableUpdateCompanionBuilder =
@@ -3801,6 +4263,7 @@ typedef $$DownloadedTopicsTableTableUpdateCompanionBuilder =
       Value<String> topicId,
       Value<int> downloadedVersion,
       Value<DateTime> downloadedAt,
+      Value<String?> topicName,
       Value<int> rowid,
     });
 
@@ -3825,6 +4288,11 @@ class $$DownloadedTopicsTableTableFilterComposer
 
   ColumnFilters<DateTime> get downloadedAt => $composableBuilder(
     column: $table.downloadedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get topicName => $composableBuilder(
+    column: $table.topicName,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -3852,6 +4320,11 @@ class $$DownloadedTopicsTableTableOrderingComposer
     column: $table.downloadedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get topicName => $composableBuilder(
+    column: $table.topicName,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$DownloadedTopicsTableTableAnnotationComposer
@@ -3875,6 +4348,9 @@ class $$DownloadedTopicsTableTableAnnotationComposer
     column: $table.downloadedAt,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get topicName =>
+      $composableBuilder(column: $table.topicName, builder: (column) => column);
 }
 
 class $$DownloadedTopicsTableTableTableManager
@@ -3926,11 +4402,13 @@ class $$DownloadedTopicsTableTableTableManager
                 Value<String> topicId = const Value.absent(),
                 Value<int> downloadedVersion = const Value.absent(),
                 Value<DateTime> downloadedAt = const Value.absent(),
+                Value<String?> topicName = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => DownloadedTopicsTableCompanion(
                 topicId: topicId,
                 downloadedVersion: downloadedVersion,
                 downloadedAt: downloadedAt,
+                topicName: topicName,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -3938,11 +4416,13 @@ class $$DownloadedTopicsTableTableTableManager
                 required String topicId,
                 required int downloadedVersion,
                 required DateTime downloadedAt,
+                Value<String?> topicName = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => DownloadedTopicsTableCompanion.insert(
                 topicId: topicId,
                 downloadedVersion: downloadedVersion,
                 downloadedAt: downloadedAt,
+                topicName: topicName,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -4800,6 +5280,193 @@ typedef $$TtsWordTimingCacheTableTableProcessedTableManager =
       TtsWordTimingCacheTableData,
       PrefetchHooks Function({bool vocabId})
     >;
+typedef $$StudyLogTableTableCreateCompanionBuilder =
+    StudyLogTableCompanion Function({
+      required String date,
+      required int reviewCount,
+      required int newCount,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$StudyLogTableTableUpdateCompanionBuilder =
+    StudyLogTableCompanion Function({
+      Value<String> date,
+      Value<int> reviewCount,
+      Value<int> newCount,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$StudyLogTableTableFilterComposer
+    extends Composer<_$AppDatabase, $StudyLogTableTable> {
+  $$StudyLogTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get reviewCount => $composableBuilder(
+    column: $table.reviewCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get newCount => $composableBuilder(
+    column: $table.newCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$StudyLogTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $StudyLogTableTable> {
+  $$StudyLogTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get reviewCount => $composableBuilder(
+    column: $table.reviewCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get newCount => $composableBuilder(
+    column: $table.newCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$StudyLogTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $StudyLogTableTable> {
+  $$StudyLogTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<int> get reviewCount => $composableBuilder(
+    column: $table.reviewCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get newCount =>
+      $composableBuilder(column: $table.newCount, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$StudyLogTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $StudyLogTableTable,
+          StudyLogTableData,
+          $$StudyLogTableTableFilterComposer,
+          $$StudyLogTableTableOrderingComposer,
+          $$StudyLogTableTableAnnotationComposer,
+          $$StudyLogTableTableCreateCompanionBuilder,
+          $$StudyLogTableTableUpdateCompanionBuilder,
+          (
+            StudyLogTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $StudyLogTableTable,
+              StudyLogTableData
+            >,
+          ),
+          StudyLogTableData,
+          PrefetchHooks Function()
+        > {
+  $$StudyLogTableTableTableManager(_$AppDatabase db, $StudyLogTableTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$StudyLogTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$StudyLogTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$StudyLogTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> date = const Value.absent(),
+                Value<int> reviewCount = const Value.absent(),
+                Value<int> newCount = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => StudyLogTableCompanion(
+                date: date,
+                reviewCount: reviewCount,
+                newCount: newCount,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String date,
+                required int reviewCount,
+                required int newCount,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => StudyLogTableCompanion.insert(
+                date: date,
+                reviewCount: reviewCount,
+                newCount: newCount,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$StudyLogTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $StudyLogTableTable,
+      StudyLogTableData,
+      $$StudyLogTableTableFilterComposer,
+      $$StudyLogTableTableOrderingComposer,
+      $$StudyLogTableTableAnnotationComposer,
+      $$StudyLogTableTableCreateCompanionBuilder,
+      $$StudyLogTableTableUpdateCompanionBuilder,
+      (
+        StudyLogTableData,
+        BaseReferences<_$AppDatabase, $StudyLogTableTable, StudyLogTableData>,
+      ),
+      StudyLogTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -4821,4 +5488,6 @@ class $AppDatabaseManager {
         _db,
         _db.ttsWordTimingCacheTable,
       );
+  $$StudyLogTableTableTableManager get studyLogTable =>
+      $$StudyLogTableTableTableManager(_db, _db.studyLogTable);
 }
