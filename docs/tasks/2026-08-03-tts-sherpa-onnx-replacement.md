@@ -1,6 +1,6 @@
 # Task Contract — Thay flutter_tts bằng sherpa_onnx (offline TTS + word timing precompute)
 
-Trạng thái: **đề xuất — chờ duyệt**. Analysis: `docs/analysis/sherpa-onnx-replacement.md` (chưa tạo; bổ sung trước khi merge phase này).
+Trạng thái: **đề xuất — chờ duyệt**. Analysis: `docs/analysis/sherpa-onnx-replacement.md`.
 
 Quyết định đã chốt với người dùng (2026-08-03):
 1. Word timing: **silence detection trên samples + cache** (không dùng heuristics ký tự, không dùng ASR alignment).

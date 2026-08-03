@@ -49,7 +49,21 @@ void main() {
 
   setUp(() {
     tmpDir = Directory.systemTemp.createTempSync('tts_model_test');
-    spec = ttsModels.first;
+    // Bỏ sha256 thật của catalog (dùng để verify file tar.bz2 thật) — test
+    // dựng archive giả nên không khớp checksum đó; test riêng "checksum sai"
+    // ở dưới verify path checksum-mismatch bằng spec tự tạo.
+    final real = ttsModels.first;
+    spec = TtsModelSpec(
+      id: real.id,
+      displayName: real.displayName,
+      language: real.language,
+      firebasePath: real.firebasePath,
+      archivePath: real.archivePath,
+      modelRelPath: real.modelRelPath,
+      tokensRelPath: real.tokensRelPath,
+      lexiconRelPath: real.lexiconRelPath,
+      license: real.license,
+    );
   });
 
   tearDown(() {

@@ -67,6 +67,8 @@ const ttsModels = <TtsModelSpec>[
     modelRelPath: 'vits-vctk.int8.onnx',
     tokensRelPath: 'tokens.txt',
     lexiconRelPath: 'lexicon.txt',
+    sha256:
+        '4f0a02db66914b3760b144cebc004e65dd4d1aeef43379f2b058849e74002490',
     license: 'VCTK — CC BY 4.0 (voices), MIT (code)',
   ),
 ];
