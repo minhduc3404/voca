@@ -10,6 +10,9 @@ import 'package:voca_app/features/study/domain/tts_service.dart';
 import 'package:voca_app/features/study/domain/tts_word_timing_cache_repository.dart';
 
 class _FakeTtsService implements TtsService {
+  @override
+  Future<void> warmUp() async {}
+
   final controller = StreamController<TtsPlaybackEvent>.broadcast(sync: true);
 
   @override

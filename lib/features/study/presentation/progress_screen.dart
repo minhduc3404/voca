@@ -3,12 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:voca_app/app/theme/app_icon.dart';
 import 'package:voca_app/app/theme/app_theme.dart';
+import 'package:voca_app/core/widgets/async_state_view.dart';
 
 import '../application/today_summary_controller.dart';
 import '../domain/study_stats.dart';
 import '../domain/study_stats_repository.dart';
 import 'memo_screen.dart';
-import 'widgets/async_state_view.dart';
 
 /// Màn "Tiến độ học" — streak + summary + chủ đề đang học.
 /// Dữ liệu từ [todaySummaryControllerProvider] (streak nghiêm: chỉ tính

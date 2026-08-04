@@ -6,6 +6,9 @@ import 'package:voca_app/features/study/data/tts_service.dart';
 import 'package:voca_app/features/study/data/tts_settings_repository.dart';
 
 class _FakeTtsService implements TtsService {
+  @override
+  Future<void> warmUp() async {}
+
   double? lastSpeechRate;
   TtsVoice? lastVoice;
 

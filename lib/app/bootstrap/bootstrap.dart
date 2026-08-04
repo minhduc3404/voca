@@ -5,6 +5,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:voca_app/app/app.dart';
+import 'package:voca_app/features/study/application/providers.dart';
 
 Future<void> bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,5 +24,14 @@ Future<void> bootstrap() async {
     ),
   );
 
-  runApp(const ProviderScope(child: App()));
+  // Container tường minh để kích hoạt tải trước model TTS ngay khi mở app
+  // (không chờ tới lượt phát đầu tiên mới tải 35MB).
+  final container = ProviderContainer();
+  // Đọc provider để bắt đầu tải nền; lỗi được giữ trong AsyncValue, không
+  // ném ra ngoài làm crash bootstrap.
+  container.read(ttsModelWarmupProvider);
+
+  runApp(
+    UncontrolledProviderScope(container: container, child: const App()),
+  );
 }

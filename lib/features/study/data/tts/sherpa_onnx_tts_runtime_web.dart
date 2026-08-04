@@ -8,6 +8,9 @@ import 'tts_models.dart';
 /// kéo theo native lib.
 class NoopSherpaOnnxRuntime implements SherpaOnnxRuntime {
   @override
+  Future<void> warmUp() async {}
+
+  @override
   Future<SherpaTtsResult> generate(
     String text, {
     required double speed,

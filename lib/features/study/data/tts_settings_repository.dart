@@ -5,7 +5,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 class TtsSettings {
   const TtsSettings({required this.speechRate, this.voiceName, this.voiceLocale});
 
-  static const defaultSpeechRate = 0.5;
+  // sherpa-onnx: 1.0 = tốc độ chuẩn (xem SherpaOnnxTtsService). Range hợp lệ
+  // trên UI: 0.5 (chậm) → 2.0 (nhanh).
+  static const defaultSpeechRate = 1.0;
 
   /// Mặc định: tốc độ trung bình, dùng giọng mặc định của hệ thống (chưa
   /// chọn giọng cụ thể).

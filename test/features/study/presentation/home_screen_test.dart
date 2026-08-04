@@ -54,6 +54,9 @@ class _EmptyProgressRepository implements ProgressRepository {
 
 class _FakeTtsService implements TtsService {
   @override
+  Future<void> warmUp() async {}
+
+  @override
   TtsVoice? get selectedVoice => null;
 
   @override

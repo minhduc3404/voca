@@ -1,17 +1,20 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
-import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 
 import '../../domain/tts_service.dart';
 import 'sherpa_onnx_tts_runtime.dart';
+import 'sherpa_tts_isolate.dart';
 import 'tts_model_manager.dart';
 import 'tts_models.dart';
 import 'tts_silence_segmenter.dart';
 
-/// Runtime mobile (Android/iOS/desktop): init native bindings, khởi tạo
-/// `OfflineTts`, generate audio từ model, tách word ranges bằng silence
-/// detection. Impl này được chọn qua conditional import trong
-/// `sherpa_onnx_tts_runtime_factory.dart` — web dùng bản no-op.
+/// Runtime mobile (Android/iOS/desktop): tải model, dựng engine sherpa-onnx
+/// trong một isolate nền ([SherpaTtsIsolate]) và tách word ranges bằng silence
+/// detection. Synth chạy off-main-thread nên không treo UI. Impl này được chọn
+/// qua conditional import trong `sherpa_onnx_tts_runtime_factory.dart` — web
+/// dùng bản no-op.
 class NativeSherpaOnnxRuntime implements SherpaOnnxRuntime {
   NativeSherpaOnnxRuntime({
     required this.modelManager,
@@ -25,15 +28,43 @@ class NativeSherpaOnnxRuntime implements SherpaOnnxRuntime {
   final TtsSilenceSegmenter segmenter;
   final TtsTextTokenizer tokenizer;
 
-  sherpa_onnx.OfflineTts? _tts;
+  SherpaTtsIsolate? _isolate;
 
-  /// Khởi tạo engine lần đầu (chậm: load model ONNX). Gọi `initBindings()`
-  /// một lần duy nhất tại đây (thay vì constructor) — tránh load native lib
-  /// khi chỉ tạo service (test/unit, web fallback).
-  Future<void> _ensureEngine() async {
-    if (_tts != null) return;
-    sherpa_onnx.initBindings();
-    final result = await modelManager.ensureModel(modelSpec);
+  /// Future init đang chạy — dedupe các lời gọi đồng thời (`warmUp()` lúc mở
+  /// app + `speak()` đầu tiên). Không có nó, nhiều lời gọi sẽ cùng tải model
+  /// vào một file tạm và xoá đè lên nhau (PathNotFoundException khi verify).
+  Future<void>? _engineInit;
+
+  @override
+  Future<void> warmUp() => _ensureEngine();
+
+  /// Đảm bảo model + isolate engine sẵn sàng, chỉ chạy init MỘT lần dù bị gọi
+  /// đồng thời. Init lỗi thì xoá future để lần sau thử lại (vd mất mạng).
+  Future<void> _ensureEngine() {
+    if (_isolate?.isReady ?? false) return Future<void>.value();
+    final existing = _engineInit;
+    if (existing != null) return existing;
+    final future = _initEngine();
+    _engineInit = future;
+    unawaited(future.catchError((Object _) => _engineInit = null));
+    return future;
+  }
+
+  Future<void> _initEngine() async {
+    if (kDebugMode) debugPrint('_ensureEngine: ensureModel (download)...');
+    final result = await modelManager.ensureModel(
+      modelSpec,
+      progress: kDebugMode
+          ? (d, t) {
+              if (t <= 0 || d == t || d % (1 << 21) < (1 << 16)) {
+                debugPrint('_ensureEngine: download $d/$t');
+              }
+            }
+          : null,
+    );
+    if (kDebugMode) {
+      debugPrint('_ensureEngine: model ready at ${result.modelDir.path}');
+    }
 
     final modelPath = p.join(result.modelDir.path, modelSpec.modelRelPath);
     final tokensPath = p.join(result.modelDir.path, modelSpec.tokensRelPath);
@@ -41,25 +72,24 @@ class NativeSherpaOnnxRuntime implements SherpaOnnxRuntime {
         ? ''
         : p.join(result.modelDir.path, modelSpec.lexiconRelPath);
 
-    final vits = sherpa_onnx.OfflineTtsVitsModelConfig(
+    // `lexicon` và `dataDir` loại trừ nhau trong sherpa-onnx: `dataDir` trỏ
+    // tới thư mục eSpeak-NG (phontab, phondata...) cho model phonemize bằng
+    // espeak; `lexicon` cho model dùng từ điển sẵn. vits-vctk dùng lexicon và
+    // KHÔNG có espeak-ng-data — đặt `dataDir` không rỗng khiến sherpa đi tìm
+    // `phontab` → validate fail. Chỉ set `dataDir` khi model không có lexicon.
+    final hasLexicon = lexiconPath.isNotEmpty;
+
+    if (kDebugMode) debugPrint('_ensureEngine: spawning isolate engine...');
+    final isolate = SherpaTtsIsolate();
+    await isolate.start(
       model: modelPath,
       tokens: tokensPath,
       lexicon: lexiconPath,
-      dataDir: result.modelDir.path,
+      dataDir: hasLexicon ? '' : result.modelDir.path,
+      numThreads: 4,
     );
-
-    final modelConfig = sherpa_onnx.OfflineTtsModelConfig(
-      vits: vits,
-      numThreads: 2,
-      debug: false,
-    );
-
-    final config = sherpa_onnx.OfflineTtsConfig(
-      model: modelConfig,
-      maxNumSenetences: 1,
-    );
-
-    _tts = sherpa_onnx.OfflineTts(config);
+    _isolate = isolate;
+    if (kDebugMode) debugPrint('_ensureEngine: isolate engine ready');
   }
 
   @override
@@ -68,19 +98,16 @@ class NativeSherpaOnnxRuntime implements SherpaOnnxRuntime {
     required double speed,
   }) async {
     await _ensureEngine();
-    final tts = _tts!;
+    if (kDebugMode) debugPrint('generate: isolate.generate("$text")...');
+    final audio = await _isolate!.generate(text, speed);
+    if (kDebugMode) {
+      debugPrint(
+        'SherpaOnnxRuntime.generate: samples=${audio.samples.length} '
+        'sampleRate=${audio.sampleRate}',
+      );
+    }
 
-    // Generation đồng bộ, blocking — chạy trong isolate để không treo UI
-    // (model nhỏ + text ngắn nên thường < 1s, nhưng vẫn an toàn).
-    final audio = await compute(
-      (args) {
-        final (text, speed) = args;
-        return tts.generate(text: text, speed: speed);
-      },
-      (text, speed),
-    );
-
-    // Tokenize text → map word index sang UTF-16 offset.
+    // Tokenize + segment ở main (rất nhẹ so với synth).
     final tokens = tokenizer.tokenize(text);
     final detected = segmenter.segment(
       audio.samples,
@@ -106,8 +133,8 @@ class NativeSherpaOnnxRuntime implements SherpaOnnxRuntime {
 
   @override
   void dispose() {
-    _tts?.free();
-    _tts = null;
+    _isolate?.dispose();
+    _isolate = null;
   }
 }
 

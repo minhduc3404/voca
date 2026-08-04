@@ -21,6 +21,10 @@ class SherpaTtsResult {
 /// Khởi tạo engine + generate (mobile-only). Impl tách file để web dùng
 /// conditional import tránh `dart:ffi`/`dart:io` (sherpa_onnx không hỗ trợ web).
 abstract class SherpaOnnxRuntime {
+  /// Tải model + dựng engine trước (isolate nền) mà không synth — gọi lúc
+  /// mở app để lượt `speak()` đầu không phải chờ. Idempotent.
+  Future<void> warmUp();
+
   Future<SherpaTtsResult> generate(String text, {required double speed});
   void dispose();
 }

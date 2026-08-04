@@ -37,6 +37,12 @@ class TtsModelManager {
   /// Thư mục gốc chứa các model (thường là app support dir). Inject để test.
   final Directory? _baseDir;
 
+  /// Các lần `ensureModel` đang chạy (key = spec.id) — gộp lời gọi đồng thời
+  /// để chỉ tải + giải nén MỘT lần. Không có nó, warm-up lúc mở app và
+  /// `speak()` đầu tiên cùng tải vào một file tạm rồi xoá đè lên nhau
+  /// (PathNotFoundException khi verify checksum).
+  final Map<String, Future<TtsModelLoadResult>> _inFlight = {};
+
   /// Thư mục gốc chứa các model.
   Future<Directory> get _root async {
     final base = _baseDir;
@@ -50,6 +56,23 @@ class TtsModelManager {
   /// [progress] nhận (downloadedBytes, totalBytes) — dùng cho UI tải model
   /// (Phase B settings). Phase A có thể bỏ qua.
   Future<TtsModelLoadResult> ensureModel(
+    TtsModelSpec spec, {
+    void Function(int downloadedBytes, int totalBytes)? progress,
+  }) {
+    // Gộp lời gọi trùng: nếu model này đang tải, trả về cùng future đó thay
+    // vì mở thêm một lượt tải/giải nén song song.
+    return _inFlight.putIfAbsent(
+      spec.id,
+      () => _ensureModelImpl(spec, progress: progress)
+          .whenComplete(() {
+            // Không `=> _inFlight.remove(...)`: remove trả về chính future
+            // đang chờ → whenComplete await nó → deadlock. Trả về void.
+            _inFlight.remove(spec.id);
+          }),
+    );
+  }
+
+  Future<TtsModelLoadResult> _ensureModelImpl(
     TtsModelSpec spec, {
     void Function(int downloadedBytes, int totalBytes)? progress,
   }) async {

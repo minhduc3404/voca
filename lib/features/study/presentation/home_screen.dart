@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:voca_app/app/theme/app_icon.dart';
 import 'package:voca_app/app/theme/app_theme.dart';
+import 'package:voca_app/core/widgets/async_state_view.dart';
+import 'package:voca_app/features/conversation/presentation/conversation_screen.dart';
 import 'package:voca_app/features/vocabulary/application/topic_catalog_controller.dart';
 import 'package:voca_app/features/vocabulary/domain/topic.dart';
 import 'package:voca_app/features/vocabulary/presentation/topic_list_screen.dart';
 
 import 'memo_screen.dart';
-import 'widgets/async_state_view.dart';
+import 'tts_test_screen.dart';
 
 /// Màn Khám phá (TRANG CHỦ theo wireframe) — topic browser:
 /// lời chào + "Tiếp tục học" + grid chủ đề từ catalog.
@@ -29,6 +31,16 @@ class HomeScreen extends ConsumerWidget {
             fontWeight: FontWeight.w800,
           ),
         ),
+        actions: [
+          IconButton(
+            tooltip: 'TTS Test',
+            icon: const Icon(Icons.record_voice_over_outlined),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const TtsTestScreen()),
+            ),
+          ),
+        ],
       ),
       body: catalogAsync.when(
         loading: () => const AsyncStateView(
@@ -90,10 +102,36 @@ class _HomeBody extends ConsumerWidget {
 
         const SizedBox(height: 24),
 
+        // Danh mục nội dung — hiện có Từ vựng (topic grid) và Giao tiếp
+        // (conversation, mock danh mục — script list ở MVP).
         Row(
           children: [
             Text(
-              'Danh mục chủ đề',
+              'Danh mục',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const Spacer(),
+          ],
+        ),
+
+        const SizedBox(height: 4),
+
+        // Danh mục Giao tiếp — mock danh mục, catalogs (Firebase) sau này.
+        _ConversationCard(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ConversationScreen()),
+          ),
+        ),
+
+        const SizedBox(height: 20),
+
+        Row(
+          children: [
+            Text(
+              'Chủ đề từ vựng',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -162,6 +200,64 @@ class _HomeBody extends ConsumerWidget {
         SnackBar(content: Text('Tải chủ đề thất bại: $error')),
       );
     }
+  }
+}
+
+/// Card danh mục "Giao tiếp" — mock danh mục ở MVP (không cần catalog),
+/// catalogs (script từ Firebase) bổ sung sau.
+class _ConversationCard extends StatelessWidget {
+  const _ConversationCard({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.controlBg,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.accent.withValues(alpha: .18),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: AppIcon('chat', size: 22, color: AppColors.accent),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Giao tiếp',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Luyện hội thoại theo kịch bản',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textFaint,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              AppIcon('skip-next', size: 20, color: AppColors.textFaint),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

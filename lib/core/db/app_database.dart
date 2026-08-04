@@ -13,6 +13,7 @@ part 'app_database.g.dart';
     PronunciationSegmentsTable,
     TtsWordTimingCacheTable,
     StudyLogTable,
+    TtsAudioCacheTable,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -24,7 +25,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -97,6 +98,11 @@ class AppDatabase extends _$AppDatabase {
             [topicId, id],
           );
         }
+      }
+      if (from < 6) {
+        // Cache audio TTS bền vững trên disk — xem
+        // `DriftTtsAudioCacheRepository`. Bảng mới, không đụng dữ liệu cũ.
+        await migrator.createTable(ttsAudioCacheTable);
       }
     },
   );

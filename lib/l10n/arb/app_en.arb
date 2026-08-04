@@ -1,4 +1,64 @@
 {
   "@@locale": "en",
-  "appTitle": "Voca"
+  "appTitle": "Voca",
+  "conversationCategoryTitle": "Speaking",
+  "conversationCategorySubtitle": "Practice scripted conversations",
+  "conversationScreenTitle": "Speaking Practice",
+  "conversationLoadError": "Could not load scripts: {error}",
+  "@conversationLoadError": {
+    "description": "Error message when script list fails to load.",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "retry": "Retry",
+  "minutesUnit": "{minutes} min",
+  "@minutesUnit": {
+    "description": "Estimated duration of a script.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "warmupTitle": "Quick vocab review",
+  "warmupSubtitle": "These words will appear in the conversation:",
+  "startButton": "Start",
+  "chooseAnswerLabel": "Choose your answer:",
+  "listenAgainTooltip": "Listen again",
+  "showMeaningTooltip": "Show meaning",
+  "closeDialog": "Close",
+  "continueButton": "Continue",
+  "exitSessionTitle": "Leave this practice?",
+  "exitSessionMessage": "Conversation progress won't be saved.",
+  "stayButton": "Stay",
+  "exitButton": "Leave",
+  "sessionCompleteTitle": "Practice complete!",
+  "sessionUsedWordsCount": "You used {count} new words.",
+  "@sessionUsedWordsCount": {
+    "description": "How many target words were used in the session.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "viewResultButton": "View results",
+  "summaryScreenTitle": "Practice results",
+  "summaryCompletedTitle": "Completed!",
+  "summaryUsedWordsDetail": "You used {used} of {total} new words in the conversation.",
+  "@summaryUsedWordsDetail": {
+    "description": "Summary detail: used words out of total target vocab.",
+    "placeholders": {
+      "used": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "doneButton": "Done"
 }

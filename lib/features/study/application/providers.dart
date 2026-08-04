@@ -4,14 +4,17 @@ import '../../../core/providers.dart';
 import '../data/drift_progress_repository.dart';
 import '../data/drift_study_log_repository.dart';
 import '../data/drift_study_stats_repository.dart';
+import '../data/drift_tts_audio_cache_repository.dart';
 import '../data/drift_tts_word_timing_cache_repository.dart';
 import '../data/onboarding_flag_repository.dart';
 import '../data/tts/factory_tts_service.dart';
+import '../data/tts/tts_model_manager.dart';
 import '../data/tts_settings_repository.dart';
 import '../data/wakelock_service.dart';
 import '../domain/progress_repository.dart';
 import '../domain/study_log_repository.dart';
 import '../domain/study_stats_repository.dart';
+import '../domain/tts_audio_cache_repository.dart';
 import '../domain/tts_service.dart';
 import '../domain/tts_word_timing_cache_repository.dart';
 
@@ -41,10 +44,36 @@ final onboardingSeenProvider = FutureProvider<bool>((ref) {
   return ref.watch(onboardingFlagRepositoryProvider).hasSeenOnboarding();
 });
 
+/// Quản lý tải/giải nén model TTS. Singleton dùng chung giữa warm-up lúc mở
+/// app ([ttsModelWarmupProvider]) và [ttsServiceProvider] — chung một
+/// instance để cơ chế gộp lời gọi trong `ensureModel` chỉ tải MỘT lần.
+final ttsModelManagerProvider = Provider<TtsModelManager>((ref) {
+  return TtsModelManager();
+});
+
+/// Cache audio TTS đã synth, bền vững qua kill app — xem
+/// `DriftTtsAudioCacheRepository`.
+final ttsAudioCacheRepositoryProvider = Provider<TtsAudioCacheRepository>((
+  ref,
+) {
+  return DriftTtsAudioCacheRepository(ref.watch(appDatabaseProvider));
+});
+
 final ttsServiceProvider = Provider<TtsService>((ref) {
-  final service = FactoryTtsService().create();
+  final service = FactoryTtsService(
+    modelManager: ref.watch(ttsModelManagerProvider),
+    audioCache: ref.watch(ttsAudioCacheRepositoryProvider),
+  ).create();
   ref.onDispose(service.dispose);
   return service;
+});
+
+/// Chuẩn bị TTS ngay khi mở app (đọc provider này lúc bootstrap để kích
+/// hoạt): tải model + dựng engine trong isolate nền, để lượt `speak()` đầu
+/// không phải chờ. Nền, không chặn UI; lỗi được giữ trong AsyncValue —
+/// lần `speak()` sau sẽ thử lại qua cùng `warmUp`/`ensureModel`.
+final ttsModelWarmupProvider = FutureProvider<void>((ref) async {
+  await ref.watch(ttsServiceProvider).warmUp();
 });
 
 final ttsWordTimingCacheRepositoryProvider =

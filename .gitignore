@@ -58,3 +58,4 @@ lib/l10n/arb/app_localizations_*.dart
 .reasonix
 vits-vctk.tar.bz2
 vits-vctk-int8.tar.bz2
+.home_tmp

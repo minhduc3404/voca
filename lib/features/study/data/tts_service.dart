@@ -55,6 +55,11 @@ class FlutterTtsService implements TtsService {
   double get speechRate => _speechRate;
 
   @override
+  Future<void> warmUp() async {
+    // flutter_tts dùng engine hệ điều hành, không cần chuẩn bị trước.
+  }
+
+  @override
   Future<void> speak(String text) {
     return _tts.speak(text);
   }

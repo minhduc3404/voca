@@ -29,11 +29,11 @@ class TtsSettingsScreen extends ConsumerWidget {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             Slider(
-              value: settings.speechRate,
-              min: 0.25,
-              max: 1.0,
-              divisions: 15,
-              label: settings.speechRate.toStringAsFixed(2),
+              value: settings.speechRate.clamp(0.5, 2.0),
+              min: 0.5,
+              max: 2.0,
+              divisions: 30,
+              label: '${settings.speechRate.toStringAsFixed(2)}×',
               onChanged: (value) => ref
                   .read(ttsSettingsControllerProvider.notifier)
                   .updateSpeechRate(value),

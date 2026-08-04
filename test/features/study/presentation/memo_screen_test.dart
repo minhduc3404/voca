@@ -33,6 +33,9 @@ class _InMemoryRepository implements ProgressRepository {
 }
 
 class _FakeTtsService implements TtsService {
+  @override
+  Future<void> warmUp() async {}
+
   int speakCount = 0;
 
   @override

@@ -3125,6 +3125,531 @@ class StudyLogTableCompanion extends UpdateCompanion<StudyLogTableData> {
   }
 }
 
+class $TtsAudioCacheTableTable extends TtsAudioCacheTable
+    with TableInfo<$TtsAudioCacheTableTable, TtsAudioCacheTableData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TtsAudioCacheTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _cacheKeyMeta = const VerificationMeta(
+    'cacheKey',
+  );
+  @override
+  late final GeneratedColumn<String> cacheKey = GeneratedColumn<String>(
+    'cache_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _filePathMeta = const VerificationMeta(
+    'filePath',
+  );
+  @override
+  late final GeneratedColumn<String> filePath = GeneratedColumn<String>(
+    'file_path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sampleRateMeta = const VerificationMeta(
+    'sampleRate',
+  );
+  @override
+  late final GeneratedColumn<int> sampleRate = GeneratedColumn<int>(
+    'sample_rate',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _wordRangesJsonMeta = const VerificationMeta(
+    'wordRangesJson',
+  );
+  @override
+  late final GeneratedColumn<String> wordRangesJson = GeneratedColumn<String>(
+    'word_ranges_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _byteSizeMeta = const VerificationMeta(
+    'byteSize',
+  );
+  @override
+  late final GeneratedColumn<int> byteSize = GeneratedColumn<int>(
+    'byte_size',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastUsedAtMeta = const VerificationMeta(
+    'lastUsedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastUsedAt = GeneratedColumn<DateTime>(
+    'last_used_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    cacheKey,
+    filePath,
+    sampleRate,
+    wordRangesJson,
+    byteSize,
+    createdAt,
+    lastUsedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'tts_audio_cache_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<TtsAudioCacheTableData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('cache_key')) {
+      context.handle(
+        _cacheKeyMeta,
+        cacheKey.isAcceptableOrUnknown(data['cache_key']!, _cacheKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_cacheKeyMeta);
+    }
+    if (data.containsKey('file_path')) {
+      context.handle(
+        _filePathMeta,
+        filePath.isAcceptableOrUnknown(data['file_path']!, _filePathMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_filePathMeta);
+    }
+    if (data.containsKey('sample_rate')) {
+      context.handle(
+        _sampleRateMeta,
+        sampleRate.isAcceptableOrUnknown(data['sample_rate']!, _sampleRateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sampleRateMeta);
+    }
+    if (data.containsKey('word_ranges_json')) {
+      context.handle(
+        _wordRangesJsonMeta,
+        wordRangesJson.isAcceptableOrUnknown(
+          data['word_ranges_json']!,
+          _wordRangesJsonMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_wordRangesJsonMeta);
+    }
+    if (data.containsKey('byte_size')) {
+      context.handle(
+        _byteSizeMeta,
+        byteSize.isAcceptableOrUnknown(data['byte_size']!, _byteSizeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_byteSizeMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('last_used_at')) {
+      context.handle(
+        _lastUsedAtMeta,
+        lastUsedAt.isAcceptableOrUnknown(
+          data['last_used_at']!,
+          _lastUsedAtMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_lastUsedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  TtsAudioCacheTableData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TtsAudioCacheTableData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      cacheKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cache_key'],
+      )!,
+      filePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}file_path'],
+      )!,
+      sampleRate: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sample_rate'],
+      )!,
+      wordRangesJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}word_ranges_json'],
+      )!,
+      byteSize: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}byte_size'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      lastUsedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_used_at'],
+      )!,
+    );
+  }
+
+  @override
+  $TtsAudioCacheTableTable createAlias(String alias) {
+    return $TtsAudioCacheTableTable(attachedDatabase, alias);
+  }
+}
+
+class TtsAudioCacheTableData extends DataClass
+    implements Insertable<TtsAudioCacheTableData> {
+  final int id;
+
+  /// `modelId|voiceKey|speed|normalizedText` — đổi model/giọng/tốc độ tự
+  /// vô hiệu cache cũ (key không khớp, không đọc nhầm audio cũ).
+  final String cacheKey;
+  final String filePath;
+  final int sampleRate;
+
+  /// JSON của `List<TtsWordRange>` — không tách bảng con chỉ cho vài dòng
+  /// nhỏ, gắn liền vòng đời với dòng cache audio này.
+  final String wordRangesJson;
+  final int byteSize;
+  final DateTime createdAt;
+
+  /// Cập nhật mỗi lần cache hit — nguồn cho LRU eviction (increment sau).
+  final DateTime lastUsedAt;
+  const TtsAudioCacheTableData({
+    required this.id,
+    required this.cacheKey,
+    required this.filePath,
+    required this.sampleRate,
+    required this.wordRangesJson,
+    required this.byteSize,
+    required this.createdAt,
+    required this.lastUsedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['cache_key'] = Variable<String>(cacheKey);
+    map['file_path'] = Variable<String>(filePath);
+    map['sample_rate'] = Variable<int>(sampleRate);
+    map['word_ranges_json'] = Variable<String>(wordRangesJson);
+    map['byte_size'] = Variable<int>(byteSize);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['last_used_at'] = Variable<DateTime>(lastUsedAt);
+    return map;
+  }
+
+  TtsAudioCacheTableCompanion toCompanion(bool nullToAbsent) {
+    return TtsAudioCacheTableCompanion(
+      id: Value(id),
+      cacheKey: Value(cacheKey),
+      filePath: Value(filePath),
+      sampleRate: Value(sampleRate),
+      wordRangesJson: Value(wordRangesJson),
+      byteSize: Value(byteSize),
+      createdAt: Value(createdAt),
+      lastUsedAt: Value(lastUsedAt),
+    );
+  }
+
+  factory TtsAudioCacheTableData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TtsAudioCacheTableData(
+      id: serializer.fromJson<int>(json['id']),
+      cacheKey: serializer.fromJson<String>(json['cacheKey']),
+      filePath: serializer.fromJson<String>(json['filePath']),
+      sampleRate: serializer.fromJson<int>(json['sampleRate']),
+      wordRangesJson: serializer.fromJson<String>(json['wordRangesJson']),
+      byteSize: serializer.fromJson<int>(json['byteSize']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      lastUsedAt: serializer.fromJson<DateTime>(json['lastUsedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'cacheKey': serializer.toJson<String>(cacheKey),
+      'filePath': serializer.toJson<String>(filePath),
+      'sampleRate': serializer.toJson<int>(sampleRate),
+      'wordRangesJson': serializer.toJson<String>(wordRangesJson),
+      'byteSize': serializer.toJson<int>(byteSize),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'lastUsedAt': serializer.toJson<DateTime>(lastUsedAt),
+    };
+  }
+
+  TtsAudioCacheTableData copyWith({
+    int? id,
+    String? cacheKey,
+    String? filePath,
+    int? sampleRate,
+    String? wordRangesJson,
+    int? byteSize,
+    DateTime? createdAt,
+    DateTime? lastUsedAt,
+  }) => TtsAudioCacheTableData(
+    id: id ?? this.id,
+    cacheKey: cacheKey ?? this.cacheKey,
+    filePath: filePath ?? this.filePath,
+    sampleRate: sampleRate ?? this.sampleRate,
+    wordRangesJson: wordRangesJson ?? this.wordRangesJson,
+    byteSize: byteSize ?? this.byteSize,
+    createdAt: createdAt ?? this.createdAt,
+    lastUsedAt: lastUsedAt ?? this.lastUsedAt,
+  );
+  TtsAudioCacheTableData copyWithCompanion(TtsAudioCacheTableCompanion data) {
+    return TtsAudioCacheTableData(
+      id: data.id.present ? data.id.value : this.id,
+      cacheKey: data.cacheKey.present ? data.cacheKey.value : this.cacheKey,
+      filePath: data.filePath.present ? data.filePath.value : this.filePath,
+      sampleRate: data.sampleRate.present
+          ? data.sampleRate.value
+          : this.sampleRate,
+      wordRangesJson: data.wordRangesJson.present
+          ? data.wordRangesJson.value
+          : this.wordRangesJson,
+      byteSize: data.byteSize.present ? data.byteSize.value : this.byteSize,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      lastUsedAt: data.lastUsedAt.present
+          ? data.lastUsedAt.value
+          : this.lastUsedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TtsAudioCacheTableData(')
+          ..write('id: $id, ')
+          ..write('cacheKey: $cacheKey, ')
+          ..write('filePath: $filePath, ')
+          ..write('sampleRate: $sampleRate, ')
+          ..write('wordRangesJson: $wordRangesJson, ')
+          ..write('byteSize: $byteSize, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('lastUsedAt: $lastUsedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    cacheKey,
+    filePath,
+    sampleRate,
+    wordRangesJson,
+    byteSize,
+    createdAt,
+    lastUsedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TtsAudioCacheTableData &&
+          other.id == this.id &&
+          other.cacheKey == this.cacheKey &&
+          other.filePath == this.filePath &&
+          other.sampleRate == this.sampleRate &&
+          other.wordRangesJson == this.wordRangesJson &&
+          other.byteSize == this.byteSize &&
+          other.createdAt == this.createdAt &&
+          other.lastUsedAt == this.lastUsedAt);
+}
+
+class TtsAudioCacheTableCompanion
+    extends UpdateCompanion<TtsAudioCacheTableData> {
+  final Value<int> id;
+  final Value<String> cacheKey;
+  final Value<String> filePath;
+  final Value<int> sampleRate;
+  final Value<String> wordRangesJson;
+  final Value<int> byteSize;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> lastUsedAt;
+  const TtsAudioCacheTableCompanion({
+    this.id = const Value.absent(),
+    this.cacheKey = const Value.absent(),
+    this.filePath = const Value.absent(),
+    this.sampleRate = const Value.absent(),
+    this.wordRangesJson = const Value.absent(),
+    this.byteSize = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.lastUsedAt = const Value.absent(),
+  });
+  TtsAudioCacheTableCompanion.insert({
+    this.id = const Value.absent(),
+    required String cacheKey,
+    required String filePath,
+    required int sampleRate,
+    required String wordRangesJson,
+    required int byteSize,
+    required DateTime createdAt,
+    required DateTime lastUsedAt,
+  }) : cacheKey = Value(cacheKey),
+       filePath = Value(filePath),
+       sampleRate = Value(sampleRate),
+       wordRangesJson = Value(wordRangesJson),
+       byteSize = Value(byteSize),
+       createdAt = Value(createdAt),
+       lastUsedAt = Value(lastUsedAt);
+  static Insertable<TtsAudioCacheTableData> custom({
+    Expression<int>? id,
+    Expression<String>? cacheKey,
+    Expression<String>? filePath,
+    Expression<int>? sampleRate,
+    Expression<String>? wordRangesJson,
+    Expression<int>? byteSize,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? lastUsedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (cacheKey != null) 'cache_key': cacheKey,
+      if (filePath != null) 'file_path': filePath,
+      if (sampleRate != null) 'sample_rate': sampleRate,
+      if (wordRangesJson != null) 'word_ranges_json': wordRangesJson,
+      if (byteSize != null) 'byte_size': byteSize,
+      if (createdAt != null) 'created_at': createdAt,
+      if (lastUsedAt != null) 'last_used_at': lastUsedAt,
+    });
+  }
+
+  TtsAudioCacheTableCompanion copyWith({
+    Value<int>? id,
+    Value<String>? cacheKey,
+    Value<String>? filePath,
+    Value<int>? sampleRate,
+    Value<String>? wordRangesJson,
+    Value<int>? byteSize,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? lastUsedAt,
+  }) {
+    return TtsAudioCacheTableCompanion(
+      id: id ?? this.id,
+      cacheKey: cacheKey ?? this.cacheKey,
+      filePath: filePath ?? this.filePath,
+      sampleRate: sampleRate ?? this.sampleRate,
+      wordRangesJson: wordRangesJson ?? this.wordRangesJson,
+      byteSize: byteSize ?? this.byteSize,
+      createdAt: createdAt ?? this.createdAt,
+      lastUsedAt: lastUsedAt ?? this.lastUsedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (cacheKey.present) {
+      map['cache_key'] = Variable<String>(cacheKey.value);
+    }
+    if (filePath.present) {
+      map['file_path'] = Variable<String>(filePath.value);
+    }
+    if (sampleRate.present) {
+      map['sample_rate'] = Variable<int>(sampleRate.value);
+    }
+    if (wordRangesJson.present) {
+      map['word_ranges_json'] = Variable<String>(wordRangesJson.value);
+    }
+    if (byteSize.present) {
+      map['byte_size'] = Variable<int>(byteSize.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (lastUsedAt.present) {
+      map['last_used_at'] = Variable<DateTime>(lastUsedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TtsAudioCacheTableCompanion(')
+          ..write('id: $id, ')
+          ..write('cacheKey: $cacheKey, ')
+          ..write('filePath: $filePath, ')
+          ..write('sampleRate: $sampleRate, ')
+          ..write('wordRangesJson: $wordRangesJson, ')
+          ..write('byteSize: $byteSize, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('lastUsedAt: $lastUsedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -3139,6 +3664,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $TtsWordTimingCacheTableTable ttsWordTimingCacheTable =
       $TtsWordTimingCacheTableTable(this);
   late final $StudyLogTableTable studyLogTable = $StudyLogTableTable(this);
+  late final $TtsAudioCacheTableTable ttsAudioCacheTable =
+      $TtsAudioCacheTableTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3150,6 +3677,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     pronunciationSegmentsTable,
     ttsWordTimingCacheTable,
     studyLogTable,
+    ttsAudioCacheTable,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -5467,6 +5995,276 @@ typedef $$StudyLogTableTableProcessedTableManager =
       StudyLogTableData,
       PrefetchHooks Function()
     >;
+typedef $$TtsAudioCacheTableTableCreateCompanionBuilder =
+    TtsAudioCacheTableCompanion Function({
+      Value<int> id,
+      required String cacheKey,
+      required String filePath,
+      required int sampleRate,
+      required String wordRangesJson,
+      required int byteSize,
+      required DateTime createdAt,
+      required DateTime lastUsedAt,
+    });
+typedef $$TtsAudioCacheTableTableUpdateCompanionBuilder =
+    TtsAudioCacheTableCompanion Function({
+      Value<int> id,
+      Value<String> cacheKey,
+      Value<String> filePath,
+      Value<int> sampleRate,
+      Value<String> wordRangesJson,
+      Value<int> byteSize,
+      Value<DateTime> createdAt,
+      Value<DateTime> lastUsedAt,
+    });
+
+class $$TtsAudioCacheTableTableFilterComposer
+    extends Composer<_$AppDatabase, $TtsAudioCacheTableTable> {
+  $$TtsAudioCacheTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cacheKey => $composableBuilder(
+    column: $table.cacheKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get filePath => $composableBuilder(
+    column: $table.filePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sampleRate => $composableBuilder(
+    column: $table.sampleRate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get wordRangesJson => $composableBuilder(
+    column: $table.wordRangesJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get byteSize => $composableBuilder(
+    column: $table.byteSize,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastUsedAt => $composableBuilder(
+    column: $table.lastUsedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$TtsAudioCacheTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $TtsAudioCacheTableTable> {
+  $$TtsAudioCacheTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cacheKey => $composableBuilder(
+    column: $table.cacheKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get filePath => $composableBuilder(
+    column: $table.filePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sampleRate => $composableBuilder(
+    column: $table.sampleRate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get wordRangesJson => $composableBuilder(
+    column: $table.wordRangesJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get byteSize => $composableBuilder(
+    column: $table.byteSize,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastUsedAt => $composableBuilder(
+    column: $table.lastUsedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$TtsAudioCacheTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TtsAudioCacheTableTable> {
+  $$TtsAudioCacheTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get cacheKey =>
+      $composableBuilder(column: $table.cacheKey, builder: (column) => column);
+
+  GeneratedColumn<String> get filePath =>
+      $composableBuilder(column: $table.filePath, builder: (column) => column);
+
+  GeneratedColumn<int> get sampleRate => $composableBuilder(
+    column: $table.sampleRate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get wordRangesJson => $composableBuilder(
+    column: $table.wordRangesJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get byteSize =>
+      $composableBuilder(column: $table.byteSize, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastUsedAt => $composableBuilder(
+    column: $table.lastUsedAt,
+    builder: (column) => column,
+  );
+}
+
+class $$TtsAudioCacheTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $TtsAudioCacheTableTable,
+          TtsAudioCacheTableData,
+          $$TtsAudioCacheTableTableFilterComposer,
+          $$TtsAudioCacheTableTableOrderingComposer,
+          $$TtsAudioCacheTableTableAnnotationComposer,
+          $$TtsAudioCacheTableTableCreateCompanionBuilder,
+          $$TtsAudioCacheTableTableUpdateCompanionBuilder,
+          (
+            TtsAudioCacheTableData,
+            BaseReferences<
+              _$AppDatabase,
+              $TtsAudioCacheTableTable,
+              TtsAudioCacheTableData
+            >,
+          ),
+          TtsAudioCacheTableData,
+          PrefetchHooks Function()
+        > {
+  $$TtsAudioCacheTableTableTableManager(
+    _$AppDatabase db,
+    $TtsAudioCacheTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TtsAudioCacheTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TtsAudioCacheTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TtsAudioCacheTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> cacheKey = const Value.absent(),
+                Value<String> filePath = const Value.absent(),
+                Value<int> sampleRate = const Value.absent(),
+                Value<String> wordRangesJson = const Value.absent(),
+                Value<int> byteSize = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> lastUsedAt = const Value.absent(),
+              }) => TtsAudioCacheTableCompanion(
+                id: id,
+                cacheKey: cacheKey,
+                filePath: filePath,
+                sampleRate: sampleRate,
+                wordRangesJson: wordRangesJson,
+                byteSize: byteSize,
+                createdAt: createdAt,
+                lastUsedAt: lastUsedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String cacheKey,
+                required String filePath,
+                required int sampleRate,
+                required String wordRangesJson,
+                required int byteSize,
+                required DateTime createdAt,
+                required DateTime lastUsedAt,
+              }) => TtsAudioCacheTableCompanion.insert(
+                id: id,
+                cacheKey: cacheKey,
+                filePath: filePath,
+                sampleRate: sampleRate,
+                wordRangesJson: wordRangesJson,
+                byteSize: byteSize,
+                createdAt: createdAt,
+                lastUsedAt: lastUsedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$TtsAudioCacheTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $TtsAudioCacheTableTable,
+      TtsAudioCacheTableData,
+      $$TtsAudioCacheTableTableFilterComposer,
+      $$TtsAudioCacheTableTableOrderingComposer,
+      $$TtsAudioCacheTableTableAnnotationComposer,
+      $$TtsAudioCacheTableTableCreateCompanionBuilder,
+      $$TtsAudioCacheTableTableUpdateCompanionBuilder,
+      (
+        TtsAudioCacheTableData,
+        BaseReferences<
+          _$AppDatabase,
+          $TtsAudioCacheTableTable,
+          TtsAudioCacheTableData
+        >,
+      ),
+      TtsAudioCacheTableData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -5490,4 +6288,6 @@ class $AppDatabaseManager {
       );
   $$StudyLogTableTableTableManager get studyLogTable =>
       $$StudyLogTableTableTableManager(_db, _db.studyLogTable);
+  $$TtsAudioCacheTableTableTableManager get ttsAudioCacheTable =>
+      $$TtsAudioCacheTableTableTableManager(_db, _db.ttsAudioCacheTable);
 }

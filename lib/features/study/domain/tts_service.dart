@@ -53,6 +53,11 @@ class TtsPlaybackEvent {
 
 /// Contract độc lập platform cho phát âm và word-boundary callback.
 abstract class TtsService {
+  /// Chuẩn bị engine trước (tải model, dựng runtime) mà không phát âm — gọi
+  /// lúc mở app để lượt `speak()` đầu không phải chờ. Mặc định no-op cho impl
+  /// không cần chuẩn bị (vd `FlutterTtsService`). Idempotent.
+  Future<void> warmUp() async {}
+
   Future<void> speak(String text);
 
   Future<List<TtsVoice>> getVoices();

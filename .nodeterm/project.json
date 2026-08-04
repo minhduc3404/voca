@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "rev": 21,
+  "savedAt": "2026-08-04T07:23:41.821Z",
+  "id": "project-msebwa2d-1",
+  "name": "9.VocaApp",
+  "color": "#0a84ff",
+  "viewport": {
+    "x": -9.709984094538754,
+    "y": 609.7612963954859,
+    "zoom": 0.7164339838252767
+  },
+  "nodes": [
+    {
+      "id": "term-msebwj57-2",
+      "kind": "terminal",
+      "position": {
+        "x": 379.16212229229416,
+        "y": -767.4599272591931
+      },
+      "size": {
+        "width": 640,
+        "height": 440
+      },
+      "title": "Claude Code",
+      "titleAuto": true,
+      "color": "#d97757",
+      "group": null,
+      "tags": [],
+      "cwd": ".",
+      "agentId": "claude"
+    }
+  ],
+  "bridges": [],
+  "ropes": []
+}

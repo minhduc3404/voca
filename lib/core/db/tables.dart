@@ -171,6 +171,34 @@ class TtsWordTimingCacheTable extends Table {
   ];
 }
 
+/// Index metadata cho audio TTS đã synth, cache trên disk — bền vững qua
+/// kill app (khác RAM cache trong `SherpaOnnxTtsService`, chỉ sống trong
+/// phiên chạy hiện tại). Bytes audio KHÔNG lưu trong SQLite (tránh phình
+/// DB/WAL) — bảng chỉ trỏ tới file WAV rời trên `tts_audio_cache/` (xem
+/// `DriftTtsAudioCacheRepository`). Thêm ở schema v6.
+class TtsAudioCacheTable extends Table {
+  IntColumn get id => integer().autoIncrement()();
+
+  /// `modelId|voiceKey|speed|normalizedText` — đổi model/giọng/tốc độ tự
+  /// vô hiệu cache cũ (key không khớp, không đọc nhầm audio cũ).
+  TextColumn get cacheKey => text().unique()();
+
+  TextColumn get filePath => text()();
+
+  IntColumn get sampleRate => integer()();
+
+  /// JSON của `List<TtsWordRange>` — không tách bảng con chỉ cho vài dòng
+  /// nhỏ, gắn liền vòng đời với dòng cache audio này.
+  TextColumn get wordRangesJson => text()();
+
+  IntColumn get byteSize => integer()();
+
+  DateTimeColumn get createdAt => dateTime()();
+
+  /// Cập nhật mỗi lần cache hit — nguồn cho LRU eviction (increment sau).
+  DateTimeColumn get lastUsedAt => dateTime()();
+}
+
 /// Ghi nhật ký ôn tập theo ngày — nguồn dữ liệu cho streak chuỗi ngày học.
 /// Mỗi ngày có ≥1 lượt trả lời (`reviewCount > 0`) là một ngày "đã học".
 /// Thêm ở schema v5.

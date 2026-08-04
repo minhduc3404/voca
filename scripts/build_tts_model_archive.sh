@@ -27,7 +27,14 @@ cp extracted/vits-vctk/vits-vctk.int8.onnx slim/vits-vctk/
 cp extracted/vits-vctk/tokens.txt slim/vits-vctk/
 cp extracted/vits-vctk/lexicon.txt slim/vits-vctk/
 
-(cd slim && tar -cjf "$WORKDIR/vits-vctk-int8.tar.bz2" vits-vctk)
+# Quan trọng: dùng ustar + bỏ metadata macOS. bsdtar mặc định ghi PAX
+# extended header (com.apple.provenance) và file AppleDouble `._*`; package
+# Dart `archive` (dùng để giải nén trong app) không parse được các header
+# này → FormatException "Unexpected extension byte". `xattr -rc` xoá xattr,
+# COPYFILE_DISABLE=1 chặn file `._*`, `--format ustar` chặn PAX header.
+xattr -rc slim/vits-vctk 2>/dev/null || true
+(cd slim && COPYFILE_DISABLE=1 tar --format ustar \
+  -cjf "$WORKDIR/vits-vctk-int8.tar.bz2" vits-vctk)
 
 OUT="$OUTPUT_DIR/vits-vctk-int8.tar.bz2"
 cp "$WORKDIR/vits-vctk-int8.tar.bz2" "$OUT"

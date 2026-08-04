@@ -3,5 +3,128 @@
   "appTitle": "Voca",
   "@appTitle": {
     "description": "The application display name."
+  },
+  "conversationCategoryTitle": "Giao tiếp",
+  "@conversationCategoryTitle": {
+    "description": "Category card title on Home screen (Khám phá tab) — mock category for conversation practice."
+  },
+  "conversationCategorySubtitle": "Luyện hội thoại theo kịch bản",
+  "@conversationCategorySubtitle": {
+    "description": "Subtitle of the conversation category card on Home."
+  },
+  "conversationScreenTitle": "Luyện nói",
+  "@conversationScreenTitle": {
+    "description": "AppBar title of the conversation script list screen."
+  },
+  "conversationLoadError": "Không tải được danh sách kịch bản: {error}",
+  "@conversationLoadError": {
+    "description": "Error message when script list fails to load.",
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "retry": "Thử lại",
+  "@retry": {
+    "description": "Retry button label."
+  },
+  "minutesUnit": "{minutes} phút",
+  "@minutesUnit": {
+    "description": "Estimated duration of a script.",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "warmupTitle": "Ôn nhanh từ vựng",
+  "@warmupTitle": {
+    "description": "Warm-up screen heading."
+  },
+  "warmupSubtitle": "Những từ này sẽ xuất hiện trong hội thoại:",
+  "@warmupSubtitle": {
+    "description": "Warm-up screen subtitle."
+  },
+  "startButton": "Bắt đầu",
+  "@startButton": {
+    "description": "Start button on warm-up screen."
+  },
+  "chooseAnswerLabel": "Chọn câu trả lời:",
+  "@chooseAnswerLabel": {
+    "description": "Label above answer choices in user turn."
+  },
+  "listenAgainTooltip": "Nghe lại",
+  "@listenAgainTooltip": {
+    "description": "Tooltip for replay TTS button."
+  },
+  "showMeaningTooltip": "Xem nghĩa",
+  "@showMeaningTooltip": {
+    "description": "Tooltip for translation button."
+  },
+  "closeDialog": "Đóng",
+  "@closeDialog": {
+    "description": "Close button in dialogs."
+  },
+  "continueButton": "Tiếp tục",
+  "@continueButton": {
+    "description": "Advance to next turn button."
+  },
+  "exitSessionTitle": "Thoát buổi luyện?",
+  "@exitSessionTitle": {
+    "description": "Confirm dialog title when leaving a practice session."
+  },
+  "exitSessionMessage": "Tiến trình hội thoại sẽ không được lưu.",
+  "@exitSessionMessage": {
+    "description": "Confirm dialog message when leaving a practice session."
+  },
+  "stayButton": "Ở lại",
+  "@stayButton": {
+    "description": "Stay in session button in exit dialog."
+  },
+  "exitButton": "Thoát",
+  "@exitButton": {
+    "description": "Exit button in exit dialog."
+  },
+  "sessionCompleteTitle": "Buổi luyện đã xong!",
+  "@sessionCompleteTitle": {
+    "description": "Placeholder shown when all turns finished."
+  },
+  "sessionUsedWordsCount": "Bạn đã dùng {count} từ mới.",
+  "@sessionUsedWordsCount": {
+    "description": "How many target words were used in the session.",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "viewResultButton": "Xem kết quả",
+  "@viewResultButton": {
+    "description": "Button to open the summary screen."
+  },
+  "summaryScreenTitle": "Kết quả buổi luyện",
+  "@summaryScreenTitle": {
+    "description": "AppBar title of the summary screen."
+  },
+  "summaryCompletedTitle": "Hoàn thành!",
+  "@summaryCompletedTitle": {
+    "description": "Summary screen heading."
+  },
+  "summaryUsedWordsDetail": "Bạn đã dùng {used}/{total} từ mới trong hội thoại.",
+  "@summaryUsedWordsDetail": {
+    "description": "Summary detail: used words out of total target vocab.",
+    "placeholders": {
+      "used": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "doneButton": "Xong",
+  "@doneButton": {
+    "description": "Done button on summary screen."
   }
 }
