@@ -60,6 +60,17 @@ abstract class TtsService {
 
   Future<void> speak(String text);
 
+  /// Dừng phát âm hiện tại (nếu có) — mặc định no-op cho impl không hỗ trợ
+  /// dừng giữa chừng.
+  Future<void> stop() async {}
+
+  /// Tạm dừng phát, giữ vị trí — dùng cho lock-screen control. Mặc định
+  /// no-op cho impl không hỗ trợ tạm dừng (vd `FlutterTtsService` web).
+  Future<void> pause() async {}
+
+  /// Tiếp tục phát sau khi tạm dừng. Mặc định no-op.
+  Future<void> resume() async {}
+
   Future<List<TtsVoice>> getVoices();
 
   Future<void> setVoice(TtsVoice voice);

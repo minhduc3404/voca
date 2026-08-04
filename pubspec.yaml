@@ -51,6 +51,7 @@ dependencies:
   firebase_storage: ^12.3.7
   sherpa_onnx: ^1.13.4
   audioplayers: ^6.8.1
+  audio_service: ^0.18.19
   path: ^1.9.1
   audioplayers_platform_interface: ^7.2.0
   archive: ^4.0.9

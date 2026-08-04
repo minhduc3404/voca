@@ -8,6 +8,7 @@ import '../data/drift_tts_audio_cache_repository.dart';
 import '../data/drift_tts_word_timing_cache_repository.dart';
 import '../data/onboarding_flag_repository.dart';
 import '../data/tts/factory_tts_service.dart';
+import '../data/tts/tts_audio_handler.dart';
 import '../data/tts/tts_model_manager.dart';
 import '../data/tts_settings_repository.dart';
 import '../data/wakelock_service.dart';
@@ -59,13 +60,26 @@ final ttsAudioCacheRepositoryProvider = Provider<TtsAudioCacheRepository>((
   return DriftTtsAudioCacheRepository(ref.watch(appDatabaseProvider));
 });
 
+/// Handler `audio_service` cho phát nền + lock-screen control — override
+/// bằng instance thật trong `bootstrap()` (Android/iOS, sau khi
+/// `AudioService.init()` chạy trước `runApp()`). `null` trên web (không hỗ
+/// trợ background/lock-screen) — `ttsServiceProvider` fallback về impl TTS
+/// thuần khi đó.
+final audioHandlerProvider = Provider<TtsAudioHandler?>((ref) => null);
+
 final ttsServiceProvider = Provider<TtsService>((ref) {
   final service = FactoryTtsService(
     modelManager: ref.watch(ttsModelManagerProvider),
     audioCache: ref.watch(ttsAudioCacheRepositoryProvider),
   ).create();
   ref.onDispose(service.dispose);
-  return service;
+
+  final handler = ref.watch(audioHandlerProvider);
+  if (handler == null) return service;
+
+  handler.attachInner(service);
+  ref.onDispose(handler.dispose);
+  return handler;
 });
 
 /// Chuẩn bị TTS ngay khi mở app (đọc provider này lúc bootstrap để kích

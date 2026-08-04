@@ -172,12 +172,31 @@ class SherpaOnnxTtsService implements TtsService {
     unawaited(_events.close());
   }
 
+  @override
   Future<void> stop() async {
     _scheduleRevision++;
     _wordTimer?.cancel();
     await _player.stop();
     _playing = false;
     _events.add(const TtsPlaybackEvent.cancelled());
+  }
+
+  /// Tạm dừng — dùng cho lock-screen control (`TtsAudioHandler`). LƯU Ý:
+  /// các `Timer` wordBoundary đã lên lịch theo mốc thời gian tuyệt đối lúc
+  /// `speak()` KHÔNG bị dừng theo — sau pause/resume, highlight của lượt
+  /// đang phát có thể lệch khỏi audio (tự đúng lại ở lượt `speak()` kế
+  /// tiếp). Chấp nhận được vì pause/resume chủ yếu xảy ra khi màn hình tắt
+  /// (không nhìn thấy highlight lúc đó).
+  @override
+  Future<void> pause() async {
+    if (!_playing) return;
+    await _player.pause();
+  }
+
+  @override
+  Future<void> resume() async {
+    if (!_playing) return;
+    await _player.resume();
   }
 
   /// Lên lịch phát wordBoundary theo thời điểm từ trong audio (sample

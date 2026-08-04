@@ -49,6 +49,12 @@
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- audio_service: cho phép TTS tiếp tục phát khi tắt màn hình/chuyển
+	     app xuống nền + hiện điều khiển trên lock screen (MPNowPlayingInfoCenter). -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

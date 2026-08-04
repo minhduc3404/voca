@@ -1,5 +1,8 @@
 package com.voca.remember
 
-import io.flutter.embedding.android.FlutterActivity
+import com.ryanheise.audioservice.AudioServiceActivity
 
-class MainActivity : FlutterActivity()
+// audio_service (phát TTS nền + lock-screen control): AudioServiceActivity
+// (subclass FlutterFragmentActivity) chia sẻ đúng Flutter engine với
+// foreground service — thay FlutterActivity trơn trước đây.
+class MainActivity : AudioServiceActivity()
