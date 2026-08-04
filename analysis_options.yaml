@@ -10,6 +10,16 @@
 
 include: package:flutter_lints/flutter.yaml
 
+# Exclude generated/vendored trees the analyzer must not descend into:
+# - build/**: Flutter SwiftPM integration checks out the whole flutterfire
+#   monorepo (with its own pubspec.yaml per package) under
+#   build/ios/SourcePackages/checkouts/. None of it is app code; the analyzer
+#   can't resolve its imports (no package_config) so it reports thousands of
+#   phantom uri_does_not_exist / undefined_* errors.
+analyzer:
+  exclude:
+    - "build/**"
+
 plugins:
   import_lint: ^2.0.0
 
