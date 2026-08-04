@@ -93,7 +93,7 @@ Thay đổi code kèm theo:
   (license: VCTK CC BY 4.0 cho voice, MIT cho code — xem `tts_models.dart`).
 - Archive đã đóng gói lại (chỉ int8 + tokens + lexicon), SHA-256 đã điền vào
   `TtsModelSpec.sha256`:
-  `b8776e2a23a4d78764b452410b8747ee66610ab2a0fba8a2308c84a5c5176cfc`.
+  `13065d20d9e39dca81d2934551a41041591ffa463c50fe6dc50351fb30306d61`.
 - `TtsModelSpec.downloadUrl` giả định Release tag `tts-models-v1`, asset
   `vits-vctk-int8.tar.bz2`:
   `https://github.com/minhduc3404/voca/releases/download/tts-models-v1/vits-vctk-int8.tar.bz2`.
@@ -101,6 +101,13 @@ Thay đổi code kèm theo:
   không có tool tạo Release/upload asset trong bộ công cụ GitHub MCP hiện có
   (chỉ có `list_releases`/`get_release_by_tag`, không có `create_release`).
   Cần người có quyền trên repo tạo Release tag `tts-models-v1`, upload file
-  `vits-vctk-int8.tar.bz2` (đã chuẩn bị sẵn, đã verify checksum khớp) làm
-  asset — giữ đúng tag + tên file như trên, hoặc báo lại tag/tên khác để cập
-  nhật `downloadUrl` cho khớp.
+  `vits-vctk-int8.tar.bz2` (build bằng `scripts/build_tts_model_archive.sh`,
+  đã verify checksum khớp) làm asset — giữ đúng tag + tên file như trên, hoặc
+  báo lại tag/tên khác để cập nhật `downloadUrl` cho khớp.
+- **Lưu ý reproducibility**: đóng gói tar.bz2 phải cố định mtime/owner/group
+  (vd `tar --sort=name --mtime='UTC 2024-01-01' --owner=0 --group=0
+  --numeric-owner`), nếu không mỗi lần build lại (kể cả cùng nội dung file)
+  sẽ ra SHA-256 khác nhau — `cp` thường thay đổi mtime theo thời điểm chạy,
+  làm tar header khác byte dù nội dung giống hệt. Script
+  `scripts/build_tts_model_archive.sh` đã áp dụng cố định này; SHA-256 ở
+  trên chỉ khớp khi build qua script đó (hoặc dùng đúng các flag tar trên).
