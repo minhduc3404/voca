@@ -71,7 +71,7 @@ const ttsModels = <TtsModelSpec>[
     tokensRelPath: 'tokens.txt',
     lexiconRelPath: 'lexicon.txt',
     sha256:
-        '13065d20d9e39dca81d2934551a41041591ffa463c50fe6dc50351fb30306d61',
+        'ee14d1bea071a585767693d0ffb7963d7ad2fea0294ae276ccd166f16835e65a',
     license: 'VCTK — CC BY 4.0 (voices), MIT (code)',
   ),
 ];

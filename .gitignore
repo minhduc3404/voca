@@ -53,3 +53,8 @@ app.*.map.json
 # gen_l10n output (regenerated automatically via `generate: true` on pub get)
 lib/l10n/arb/app_localizations.dart
 lib/l10n/arb/app_localizations_*.dart
+.gradle_home/.tmp
+.gradle_home
+.reasonix
+vits-vctk.tar.bz2
+vits-vctk-int8.tar.bz2
