@@ -1,20 +1,19 @@
 /// Catalog các model TTS offline (sherpa-onnx) mà app hỗ trợ.
 ///
-/// Giá trị hằng, không chứa logic. Model được tải theo yêu cầu từ
-/// Firebase Storage (xem `tts_model_manager.dart`); app không bundle model
-/// vào binary.
+/// Giá trị hằng, không chứa logic. Model được tải theo yêu cầu qua HTTP
+/// (xem `tts_model_manager.dart`); app không bundle model vào binary.
 ///
-/// Mô hình phân phối: mỗi model là một file `tar.bz2` duy nhất trên
-/// Firebase Storage (cùng định dạng tarball `tts-models` của sherpa-onnx),
-/// được giải nén về thư mục model trên disk khi tải về. Dùng tar.bz2 vì
-/// hầu hết model (vd Piper) cần kèm thư mục `espeak-ng-data/` — không thể
-/// ship dạng vài file rời.
+/// Mô hình phân phối: mỗi model là một file `tar.bz2` duy nhất, host trên
+/// GitHub Releases (CDN miễn phí, không giới hạn bandwidth thực tế cho
+/// public repo — tránh giới hạn 1GB/ngày egress của Firebase Storage gói
+/// Spark free). Dùng tar.bz2 vì hầu hết model (vd Piper) cần kèm thư mục
+/// `espeak-ng-data/` — không thể ship dạng vài file rời.
 class TtsModelSpec {
   const TtsModelSpec({
     required this.id,
     required this.displayName,
     required this.language,
-    required this.firebasePath,
+    required this.downloadUrl,
     required this.archivePath,
     required this.modelRelPath,
     required this.tokensRelPath,
@@ -32,8 +31,9 @@ class TtsModelSpec {
   /// Mã ngôn ngữ, vd `en` (mở đường cho `vi` ở phase sau).
   final String language;
 
-  /// Đường dẫn file tar.bz2 trên Firebase Storage.
-  final String firebasePath;
+  /// URL tải file tar.bz2 (GitHub Releases asset — CDN miễn phí, không
+  /// phụ thuộc Firebase Storage/egress quota).
+  final String downloadUrl;
 
   /// Tên thư mục gốc bên trong archive (phần đầu mỗi path member).
   final String archivePath;
@@ -56,19 +56,22 @@ class TtsModelSpec {
 
 /// Model tiếng Anh mặc định (Phase A): `vits-vctk` — 109 speakers, chỉ cần
 /// `vits-vctk.onnx` + `tokens.txt` + `lexicon.txt`, KHÔNG cần `espeak-ng-data`.
-/// Dùng phiên bản `int8` (39.8 MB vs 121.3 MB) để giảm dung lượng tải.
+/// Archive chỉ đóng gói bản `int8` (39.8 MB) + `tokens.txt` + `lexicon.txt`
+/// (bỏ bản fp32 121 MB không dùng tới) — nén còn ~35 MB, thay vì 145 MB nếu
+/// dùng nguyên tarball gốc của k2-fsa.
 const ttsModels = <TtsModelSpec>[
   TtsModelSpec(
     id: 'vits-vctk-int8',
     displayName: 'VCTK (English, 109 voices)',
     language: 'en',
-    firebasePath: 'tts/vits-vctk.tar.bz2',
+    downloadUrl:
+        'https://github.com/minhduc3404/voca/releases/download/tts-models-v1/vits-vctk-int8.tar.bz2',
     archivePath: 'vits-vctk',
     modelRelPath: 'vits-vctk.int8.onnx',
     tokensRelPath: 'tokens.txt',
     lexiconRelPath: 'lexicon.txt',
     sha256:
-        '4f0a02db66914b3760b144cebc004e65dd4d1aeef43379f2b058849e74002490',
+        'b8776e2a23a4d78764b452410b8747ee66610ab2a0fba8a2308c84a5c5176cfc',
     license: 'VCTK — CC BY 4.0 (voices), MIT (code)',
   ),
 ];

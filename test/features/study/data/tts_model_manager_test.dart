@@ -6,7 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:voca_app/features/study/data/tts/tts_model_manager.dart';
 import 'package:voca_app/features/study/data/tts/tts_models.dart';
 
-/// Fake manager: override `downloadArchive` để không đụng Firebase thật.
+/// Fake manager: override `downloadArchive` để không đụng mạng thật.
 class _FakeTtsModelManager extends TtsModelManager {
   _FakeTtsModelManager({
     required super.baseDir,
@@ -57,7 +57,7 @@ void main() {
       id: real.id,
       displayName: real.displayName,
       language: real.language,
-      firebasePath: real.firebasePath,
+      downloadUrl: real.downloadUrl,
       archivePath: real.archivePath,
       modelRelPath: real.modelRelPath,
       tokensRelPath: real.tokensRelPath,
@@ -140,7 +140,7 @@ void main() {
       id: 'vits-vctk-int8',
       displayName: 'VCTK (English, 109 voices)',
       language: 'en',
-      firebasePath: 'tts/vits-vctk.tar.bz2',
+      downloadUrl: 'https://example.invalid/vits-vctk.tar.bz2',
       archivePath: 'vits-vctk',
       modelRelPath: 'vits-vctk.int8.onnx',
       tokensRelPath: 'tokens.txt',

@@ -4,7 +4,12 @@ Trạng thái: **đề xuất — chờ duyệt**. Analysis: `docs/analysis/sher
 
 Quyết định đã chốt với người dùng (2026-08-03):
 1. Word timing: **silence detection trên samples + cache** (không dùng heuristics ký tự, không dùng ASR alignment).
-2. Model phân phối: **tải từ Firebase Storage khi cần** (không bundle vào assets; tận dụng `firebase_storage` đã có).
+2. ~~Model phân phối: tải từ Firebase Storage khi cần~~ — **đổi quyết định
+   (2026-08-04)**: tải từ **GitHub Releases** (HTTP, `dart:io HttpClient`),
+   không dùng Firebase Storage cho model TTS nữa. Lý do: gói Firebase hiện
+   tại (Spark/free) giới hạn 1GB/ngày egress, không scale; xem
+   `docs/analysis/sherpa-onnx-replacement.md` §4. Vẫn không bundle model vào
+   assets.
 3. Web fallback: **giữ `FlutterTtsService` cho web**, dùng `sherpa_onnx` trên mobile.
 
 ---

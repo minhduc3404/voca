@@ -2,9 +2,9 @@
 
 Tham chiếu: `docs/tasks/2026-08-03-tts-sherpa-onnx-replacement.md`.
 
-Ghi lại 3 quyết định kỹ thuật phát sinh trong lúc implement Phase A (không đổi
-domain contract, chỉ ảnh hưởng `data/`), cùng lý do và deviation so với hành
-vi `flutter_tts` cũ.
+Ghi lại các quyết định kỹ thuật phát sinh trong lúc implement Phase A (không
+đổi domain contract, chỉ ảnh hưởng `data/`), cùng lý do và deviation so với
+hành vi `flutter_tts` cũ.
 
 ## 1. Audio session iOS: `audioplayers` (AudioContext) thay vì `audio_session`
 
@@ -53,27 +53,54 @@ bộ qua `tokens.txt` + `lexicon.txt`), 109 giọng (mở đường chọn giọ
 B), model file đơn — khớp thiết kế `TtsModelManager` hiện tại (một
 `archivePath` gốc, ba file con: model/tokens/lexicon).
 
-Trade-off: file phân phối (`tar.bz2`) vẫn chứa cả bản full-precision lẫn
-bản `int8` (nguồn phát hành k2-fsa không tách riêng) — tải về nặng hơn cần
-thiết (~152 MB nén so với ~40 MB nếu tách riêng), nhưng đổi lại giữ đúng
-format tarball gốc, không cần code build/re-pack archive riêng (rủi ro sai
-lệch checksum/nguồn gốc). Có thể tối ưu ở phase sau nếu dung lượng tải trở
-thành vấn đề thực tế.
+## 4. Phân phối model: GitHub Releases thay vì Firebase Storage — đổi quyết định
 
-## Phân phối model — trạng thái Firebase Storage
+Quyết định ban đầu trong task contract (§2, chốt 2026-08-03) là tải model từ
+Firebase Storage. Sau khi implement, phát hiện hai vấn đề chặn dùng thật:
 
-- Nguồn gốc: `https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-vctk.tar.bz2`
-  (license: xem `tts_models.dart` — VCTK CC BY 4.0 cho voice, MIT cho code).
-- Đích: Firebase Storage path `tts/vits-vctk.tar.bz2` (project `voca-370e1`,
-  bucket `voca-370e1.firebasestorage.app`), khớp `TtsModelSpec.firebasePath`
-  trong `tts_models.dart`.
-- SHA-256 của file gốc (không sửa đổi) đã điền vào
+1. **Gói Firebase hiện tại là Spark (free)**: giới hạn 1 GB/ngày egress cho
+   Storage — với model ~145 MB (tarball gốc k2-fsa, gồm cả bản fp32 không
+   dùng), chỉ ~6-7 lượt tải/ngày trước khi hết quota miễn phí; không scale
+   được khi có nhiều user cài app. Nâng lên Blaze (trả theo dùng) là lựa chọn
+   khác nhưng người dùng chủ động không muốn phụ thuộc chi phí phát sinh.
+2. **Archive gốc lãng phí ~2/3 dung lượng**: tarball k2-fsa đóng gói cả
+   `vits-vctk.onnx` (fp32, 121 MB, không dùng) lẫn `vits-vctk.int8.onnx`
+   (39.8 MB, model thật sự dùng) — vì `modelRelPath` trong `tts_models.dart`
+   chỉ trỏ tới bản int8.
+
+**Quyết định mới** (chốt với user, 2026-08-04): đóng gói lại archive chỉ gồm
+`vits-vctk.int8.onnx` + `tokens.txt` + `lexicon.txt` (giữ nguyên prefix thư
+mục `vits-vctk/` — không cần sửa `TtsModelManager._extract`), nén còn
+**~35 MB** (so với ~145 MB gốc). Host file này trên **GitHub Releases** của
+chính repo (`minhduc3404/voca`) — asset của Release được phục vụ qua CDN của
+GitHub (Fastly/`objects.githubusercontent.com`), miễn phí và không giới hạn
+bandwidth thực tế cho repo, không thêm vendor/hạ tầng cloud mới.
+
+Thay đổi code kèm theo:
+- `TtsModelSpec.firebasePath` → `TtsModelSpec.downloadUrl` (URL HTTP đầy đủ
+  tới GitHub Release asset) — field chỉ là data, domain contract không đổi.
+- `TtsModelManager.downloadArchive`: bỏ `firebase_storage`, dùng
+  `dart:io HttpClient` GET trực tiếp tới `downloadUrl`, stream vào file +
+  báo progress qua `Content-Length`. `firebase_storage` package **vẫn giữ**
+  trong `pubspec.yaml` vì feature khác (`FirebaseCatalogRepository` — catalog
+  từ vựng) vẫn dùng.
+- `pubspec.yaml`: không thêm dependency mới (dùng `dart:io` sẵn có, không cần
+  `http`/`dio`).
+
+### Trạng thái phân phối
+
+- Nguồn gốc model: `https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-vctk.tar.bz2`
+  (license: VCTK CC BY 4.0 cho voice, MIT cho code — xem `tts_models.dart`).
+- Archive đã đóng gói lại (chỉ int8 + tokens + lexicon), SHA-256 đã điền vào
   `TtsModelSpec.sha256`:
-  `4f0a02db66914b3760b144cebc004e65dd4d1aeef43379f2b058849e74002490`.
-- **Việc upload lên Firebase Storage chưa thực hiện được từ môi trường
-  sandbox này** — không có credential ghi (service account / Firebase CLI
-  login) trong container. Cần người có quyền Storage Admin trên project
-  `voca-370e1` upload thủ công file `vits-vctk.tar.bz2` (đã tải sẵn, đã
-  verify checksum khớp) vào path `tts/vits-vctk.tar.bz2`, giữ nguyên byte
-  gốc — nếu file khác byte, checksum trong `tts_models.dart` sẽ sai và
-  `TtsModelManager.ensureModel` sẽ ném `StateError` khi verify.
+  `b8776e2a23a4d78764b452410b8747ee66610ab2a0fba8a2308c84a5c5176cfc`.
+- `TtsModelSpec.downloadUrl` giả định Release tag `tts-models-v1`, asset
+  `vits-vctk-int8.tar.bz2`:
+  `https://github.com/minhduc3404/voca/releases/download/tts-models-v1/vits-vctk-int8.tar.bz2`.
+- **Việc tạo GitHub Release + upload asset chưa thực hiện được từ agent** —
+  không có tool tạo Release/upload asset trong bộ công cụ GitHub MCP hiện có
+  (chỉ có `list_releases`/`get_release_by_tag`, không có `create_release`).
+  Cần người có quyền trên repo tạo Release tag `tts-models-v1`, upload file
+  `vits-vctk-int8.tar.bz2` (đã chuẩn bị sẵn, đã verify checksum khớp) làm
+  asset — giữ đúng tag + tên file như trên, hoặc báo lại tag/tên khác để cập
+  nhật `downloadUrl` cho khớp.

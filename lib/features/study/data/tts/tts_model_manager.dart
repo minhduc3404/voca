@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:archive/archive_io.dart';
 import 'package:crypto/crypto.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -19,21 +18,21 @@ class TtsModelLoadResult {
   final Directory modelDir;
 }
 
-/// Quản lý model TTS trên disk: tải tar.bz2 từ Firebase Storage khi cần,
-/// verify checksum, giải nén (pure-Dart `archive`, không phụ thuộc binary
-/// `tar` — quan trọng trên Android), và trả về đường dẫn cho
-/// `SherpaOnnxTtsService` khởi tạo engine.
+/// Quản lý model TTS trên disk: tải tar.bz2 qua HTTP (GitHub Releases —
+/// xem `tts_models.dart`) khi cần, verify checksum, giải nén (pure-Dart
+/// `archive`, không phụ thuộc binary `tar` — quan trọng trên Android), và
+/// trả về đường dẫn cho `SherpaOnnxTtsService` khởi tạo engine.
 ///
 /// Tất cả logic I/O nằm trong `data/` (AGENTS.md §2); application/domain
-/// không biết Firebase hay filesystem.
+/// không biết HTTP hay filesystem.
 class TtsModelManager {
-  TtsModelManager({FirebaseStorage? storage, Directory? baseDir})
-    : _storage = storage,
+  TtsModelManager({HttpClient? httpClient, Directory? baseDir})
+    : _httpClient = httpClient,
       _baseDir = baseDir;
 
   /// Lazy: chỉ khởi tạo khi thật sự tải (test override `downloadArchive`
-  /// không cần Firebase initialized).
-  final FirebaseStorage? _storage;
+  /// không cần client thật).
+  final HttpClient? _httpClient;
 
   /// Thư mục gốc chứa các model (thường là app support dir). Inject để test.
   final Directory? _baseDir;
@@ -88,29 +87,39 @@ class TtsModelManager {
     }
   }
 
-  /// Tải file từ Firebase Storage về [target]. Tách thành method để test
-  /// override mà không cần mock FirebaseStorage.
+  /// Tải file từ [TtsModelSpec.downloadUrl] về [target] qua HTTP GET. Tách
+  /// thành method để test override mà không cần gọi mạng thật.
   @visibleForTesting
   Future<void> downloadArchive(
     TtsModelSpec spec,
     File target, {
     void Function(int downloadedBytes, int totalBytes)? progress,
   }) async {
-    final storage = _storage ?? FirebaseStorage.instance;
-    final ref = storage.ref(spec.firebasePath);
-    if (progress != null) {
-      final snapshot = await ref.writeToFile(target).snapshotEvents.firstWhere(
-        (snap) => snap.state == TaskState.success,
-        orElse: () => throw StateError(
-          'Tải model "${spec.id}" thất bại (Firebase Storage).',
-        ),
-      );
-      final total = snapshot.totalBytes;
-      // writeToFile không stream progress theo phần trăm dễ dùng; snapshot
-      // cuối đủ để báo 100%. Phase B có thể dùng asStream() nếu cần.
-      progress(total, total);
-    } else {
-      await ref.writeToFile(target);
+    final client = _httpClient ?? HttpClient();
+    try {
+      final request = await client.getUrl(Uri.parse(spec.downloadUrl));
+      final response = await request.close();
+      if (response.statusCode != 200) {
+        throw StateError(
+          'Tải model "${spec.id}" thất bại: HTTP ${response.statusCode}.',
+        );
+      }
+      final total = response.contentLength;
+      var downloaded = 0;
+      final sink = target.openWrite();
+      try {
+        await response.forEach((chunk) {
+          sink.add(chunk);
+          downloaded += chunk.length;
+          progress?.call(downloaded, total);
+        });
+      } finally {
+        await sink.close();
+      }
+    } finally {
+      if (_httpClient == null) {
+        client.close(force: true);
+      }
     }
   }
 
