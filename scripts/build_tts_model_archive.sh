@@ -6,9 +6,11 @@
 # giữ 3 file app thực sự cần (vits-vctk.int8.onnx, tokens.txt, lexicon.txt),
 # nén còn ~35MB.
 #
-# Cố định mtime/owner/group khi tar để build reproducible — nếu không, mỗi
-# lần chạy lại (kể cả nội dung giống hệt) sẽ ra SHA-256 khác nhau vì `cp`
-# stamp mtime theo thời điểm chạy.
+# Không cố định mtime/owner khi tar (macOS bsdtar không hỗ trợ các flag
+# GNU tar --sort/--mtime/--owner/--group/--numeric-owner) — nghĩa là
+# SHA-256 kết quả có thể khác giữa các máy/lần chạy. Không sao: chỉ cần
+# checksum trong code khớp với đúng file bạn upload. Sau khi chạy, gửi lại
+# giá trị SHA-256 script in ra để cập nhật `tts_models.dart` cho khớp.
 set -euo pipefail
 
 OUTPUT_DIR="$(pwd)"
@@ -25,13 +27,17 @@ cp extracted/vits-vctk/vits-vctk.int8.onnx slim/vits-vctk/
 cp extracted/vits-vctk/tokens.txt slim/vits-vctk/
 cp extracted/vits-vctk/lexicon.txt slim/vits-vctk/
 
-(cd slim && tar --sort=name --mtime='UTC 2024-01-01' --owner=0 --group=0 \
-  --numeric-owner -cjf "$WORKDIR/vits-vctk-int8.tar.bz2" vits-vctk)
+(cd slim && tar -cjf "$WORKDIR/vits-vctk-int8.tar.bz2" vits-vctk)
 
 OUT="$OUTPUT_DIR/vits-vctk-int8.tar.bz2"
 cp "$WORKDIR/vits-vctk-int8.tar.bz2" "$OUT"
 
 echo "Đã tạo: $OUT"
 echo "SHA-256:"
-sha256sum "$OUT"
-echo "Kỳ vọng (tts_models.dart): 13065d20d9e39dca81d2934551a41041591ffa463c50fe6dc50351fb30306d61"
+if command -v sha256sum >/dev/null 2>&1; then
+  sha256sum "$OUT"
+else
+  shasum -a 256 "$OUT"
+fi
+echo ""
+echo "Gửi lại giá trị SHA-256 ở trên để cập nhật lib/features/study/data/tts/tts_models.dart."
