@@ -3,6 +3,13 @@
 Trạng thái: **nháp — chờ duyệt**. Feature: luyện conversation (scripted, offline).
 Nguồn script: **mock hiện tại → Firebase Storage sau này** (quyết định 2026-08-04).
 
+> **Cập nhật 2026-08-04 (sau đó):** phần "user chọn câu gợi ý" mô tả ở §1
+> (bước Play, mục 3) đã **bỏ** — xem
+> `docs/tasks/2026-08-04-conversation-transcript-redesign.md` cho luồng hiện
+> hành (transcript đầy đủ, focus theo câu, không còn `choices`/chọn câu trả
+> lời). Format script §2/§3 dưới đây vẫn đúng, trừ field `choices[]` (đã bỏ
+> khỏi `turns[].speaker: user`).
+
 ## 1. Nguyên tắc
 
 - Script là **dữ liệu nội dung**, không phải localization keys — chuỗi `text`/`textVi` nằm trong script,

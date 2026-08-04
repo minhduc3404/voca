@@ -45,12 +45,7 @@ const String _orderingCoffee = '''
       "id": "t2",
       "speaker": "user",
       "text": "I'd like a latte, please.",
-      "textVi": "Cho tôi một ly latte.",
-      "choices": [
-        { "text": "I'd like a latte, please.", "textVi": "Cho tôi một ly latte.", "targetWords": ["latte"] },
-        { "text": "Can I have a latte, please?", "textVi": "Cho tôi một ly latte được không?", "targetWords": ["latte"] },
-        { "text": "A latte, please.", "textVi": "Một ly latte.", "targetWords": ["latte"] }
-      ]
+      "textVi": "Cho tôi một ly latte."
     },
     {
       "id": "t3",
@@ -62,11 +57,7 @@ const String _orderingCoffee = '''
       "id": "t4",
       "speaker": "user",
       "text": "Iced, please.",
-      "textVi": "Đá ạ.",
-      "choices": [
-        { "text": "Iced, please.", "textVi": "Đá ạ.", "targetWords": ["iced"] },
-        { "text": "I'll have it iced.", "textVi": "Cho tôi loại đá.", "targetWords": ["iced"] }
-      ]
+      "textVi": "Đá ạ."
     },
     {
       "id": "t5",
@@ -78,11 +69,7 @@ const String _orderingCoffee = '''
       "id": "t6",
       "speaker": "user",
       "text": "Takeaway, please.",
-      "textVi": "Mang đi ạ.",
-      "choices": [
-        { "text": "Takeaway, please.", "textVi": "Mang đi ạ.", "targetWords": ["takeaway"] },
-        { "text": "To go, please.", "textVi": "Mang đi ạ.", "targetWords": ["takeaway"] }
-      ]
+      "textVi": "Mang đi ạ."
     },
     {
       "id": "t7",

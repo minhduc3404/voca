@@ -30,13 +30,29 @@ void main() {
       expect(script.turns, hasLength(7));
       expect(script.turns.first.id, 't1');
       expect(script.turns.first.isAppTurn, isTrue);
-      expect(script.turns.first.choices, isEmpty);
 
       final userTurn = script.turns[1];
       expect(userTurn.isAppTurn, isFalse);
-      expect(userTurn.choices, hasLength(3));
-      expect(userTurn.choices.first.text, "I'd like a latte, please.");
-      expect(userTurn.choices.first.targetWords, ['latte']);
+      expect(userTurn.text, "I'd like a latte, please.");
+      expect(userTurn.textVi, 'Cho tôi một ly latte.');
+    });
+
+    test('vocabForTurn: match targetVocab xuất hiện trong turn.text', () async {
+      final repo = MockScriptRepository();
+      final script = (await repo.fetchScripts()).first;
+
+      final t2 = script.turns.firstWhere((t) => t.id == 't2');
+      expect(script.vocabForTurn(t2).map((v) => v.term), ['latte']);
+
+      final t5 = script.turns.firstWhere((t) => t.id == 't5');
+      // "Great. For here or takeaway?" — chứa cả "for here" lẫn "takeaway".
+      expect(
+        script.vocabForTurn(t5).map((v) => v.term),
+        containsAll(['takeaway', 'for here']),
+      );
+
+      final t1 = script.turns.firstWhere((t) => t.id == 't1');
+      expect(script.vocabForTurn(t1), isEmpty);
     });
 
     test('fromJsonString không có trường optional (description/tags) vẫn parse', () {

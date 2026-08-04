@@ -6,24 +6,16 @@ import 'package:voca_app/app/theme/app_theme.dart';
 import '../domain/conversation_script.dart';
 import 'widgets/primary_button.dart';
 
-/// Kết thúc buổi luyện — liệt kê từ vựng đã dùng trong hội thoại.
+/// Kết thúc buổi luyện — ôn lại toàn bộ từ vựng mục tiêu của script.
 /// (MVP: chỉ hiển thị. SRS link + lưu session để Phase 2.)
 class ConversationSummaryScreen extends StatelessWidget {
-  const ConversationSummaryScreen({
-    required this.script,
-    required this.usedTargetWords,
-    super.key,
-  });
+  const ConversationSummaryScreen({required this.script, super.key});
 
   final ConversationScript script;
-  final Set<String> usedTargetWords;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final usedVocab = script.targetVocab
-        .where((v) => usedTargetWords.contains(v.term))
-        .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -50,7 +42,7 @@ class ConversationSummaryScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Bạn đã dùng ${usedVocab.length}/${script.targetVocab.length} từ mới trong hội thoại.',
+                'Bạn đã nghe hết đoạn hội thoại. Ôn lại ${script.targetVocab.length} từ vựng trong bài:',
                 style: textTheme.bodyMedium?.copyWith(
                   color: AppColors.textFaint,
                 ),
@@ -59,10 +51,10 @@ class ConversationSummaryScreen extends StatelessWidget {
               const SizedBox(height: 24),
               Expanded(
                 child: ListView.separated(
-                  itemCount: usedVocab.length,
+                  itemCount: script.targetVocab.length,
                   separatorBuilder: (_, _) => const Divider(height: 1),
                   itemBuilder: (context, index) {
-                    final vocab = usedVocab[index];
+                    final vocab = script.targetVocab[index];
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: Container(

@@ -13,8 +13,10 @@ import '../domain/conversation_script.dart';
 import 'conversation_summary_screen.dart';
 import 'widgets/primary_button.dart';
 
-/// Script player — hiển thị turn app (TTS + highlight + hint) và turn user
-/// (chọn câu gợi ý). State do [ScriptPlayerController] điều phối.
+/// Script player — transcript đầy đủ hội thoại (mở màn thấy hết các câu,
+/// không hé lộ dần). Câu đang focus tự phát TTS + highlight từ + hiện bản
+/// dịch. Điều hướng: chạm 1 câu bất kỳ (freehand) hoặc nút Next/Previous.
+/// MVP tập trung nghe hiểu — không có ASR, không chọn câu trả lời.
 class ConversationPlayScreen extends ConsumerStatefulWidget {
   const ConversationPlayScreen({required this.script, super.key});
 
@@ -27,9 +29,12 @@ class ConversationPlayScreen extends ConsumerStatefulWidget {
 
 class _ConversationPlayScreenState
     extends ConsumerState<ConversationPlayScreen> {
+  late final List<GlobalKey> _turnKeys;
+
   @override
   void initState() {
     super.initState();
+    _turnKeys = List.generate(widget.script.turns.length, (_) => GlobalKey());
     // Nạp script vào player khi mở màn.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -47,74 +52,87 @@ class _ConversationPlayScreenState
 
   @override
   Widget build(BuildContext context) {
+    // Câu focus đổi (kể cả lần nạp đầu) → tự phát TTS + cuộn transcript tới
+    // câu đó. Đặt trong build (không phải initState) vì áp dụng cho MỌI turn,
+    // không riêng turn app như thiết kế cũ.
+    ref.listen<ScriptPlayState>(scriptPlayerControllerProvider, (
+      previous,
+      next,
+    ) {
+      final turn = next.focusedTurn;
+      if (turn == null) return;
+      final isNewFocus =
+          previous == null ||
+          previous.script == null ||
+          previous.focusedIndex != next.focusedIndex;
+      if (!isNewFocus) return;
+      ref.read(ttsTurnHighlightControllerProvider.notifier).speak(turn.text);
+      _scrollToFocused(next.focusedIndex);
+    });
+
     final playState = ref.watch(scriptPlayerControllerProvider);
+    final script = playState.script;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.script.titleVi),
         leading: BackButton(onPressed: () => _confirmExit(context)),
       ),
-      body: playState.script != null
-          ? _buildBody(playState)
-          : const Center(child: CircularProgressIndicator()),
+      body: script == null
+          ? const Center(child: CircularProgressIndicator())
+          : _buildBody(script, playState),
     );
   }
 
-  Widget _buildBody(ScriptPlayState playState) {
-    final active = playState.currentTurn;
-    if (playState.isCompleted || active == null) {
-      return _SummaryPlaceholder(
-        usedTargetWords: playState.usedTargetWords,
-        onFinish: () => _goToSummary(playState.usedTargetWords),
-      );
-    }
-
-    final turn = active.turn;
-    final role = turn.isAppTurn
-        ? playState.script!.appRole
-        : playState.script!.userRole;
+  Widget _buildBody(ConversationScript script, ScriptPlayState playState) {
+    final focusedTurn = playState.focusedTurn;
+    final focusedVocab = focusedTurn == null
+        ? const <TargetVocabItem>[]
+        : script.vocabForTurn(focusedTurn);
 
     return SafeArea(
       child: Column(
         children: [
-          // Role hiện tại.
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
-            child: Text(
-              role.nameVi,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: AppColors.textFaint,
-              ),
-            ),
-          ),
-          // Phần hội thoại — keyed theo turn để state TTS không bị tái sử dụng
-          // sai giữa các turn (mỗi turn app tự nói 1 lần từ initState).
           Expanded(
-            child: turn.isAppTurn
-                ? _AppTurnView(key: ValueKey(turn.id), turn: turn)
-                : _UserTurnView(key: ValueKey(turn.id), turn: turn),
-          ),
-          // Nút advance (ẩn khi turn app đang nói).
-          if (active.isResolved)
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: PrimaryButton(
-                label: 'Tiếp tục',
-                onPressed: () {
-                  final notifier = ref.read(
-                    scriptPlayerControllerProvider.notifier,
-                  );
-                  if (turn.isAppTurn) {
-                    notifier.advance();
-                  } else {
-                    notifier.advance(active.selectedChoice);
-                  }
-                },
-              ),
+            child: ListView.separated(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+              itemCount: script.turns.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 10),
+              itemBuilder: (context, index) {
+                final turn = script.turns[index];
+                return _TurnBubble(
+                  key: _turnKeys[index],
+                  script: script,
+                  turn: turn,
+                  isFocused: index == playState.focusedIndex,
+                  onTap: () => ref
+                      .read(scriptPlayerControllerProvider.notifier)
+                      .focusTurn(index),
+                );
+              },
             ),
+          ),
+          _BottomBar(
+            script: script,
+            playState: playState,
+            focusedVocab: focusedVocab,
+          ),
         ],
       ),
     );
+  }
+
+  void _scrollToFocused(int index) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final bubbleContext = _turnKeys[index].currentContext;
+      if (bubbleContext == null) return;
+      Scrollable.ensureVisible(
+        bubbleContext,
+        alignment: 0.5,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    });
   }
 
   Future<void> _confirmExit(BuildContext context) async {
@@ -139,142 +157,247 @@ class _ConversationPlayScreenState
       Navigator.pop(context);
     }
   }
-
-  void _goToSummary(Set<String> usedTargetWords) {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ConversationSummaryScreen(
-          script: widget.script,
-          usedTargetWords: usedTargetWords,
-        ),
-      ),
-    );
-  }
 }
 
-/// Turn do app nói — TTS + highlight + hint (nghe lại / xem nghĩa).
-/// Stateful + keyed theo turn.id: speak chỉ chạy 1 lần trong initState,
-/// không bị re-trigger khi highlight rebuild.
-class _AppTurnView extends ConsumerStatefulWidget {
-  const _AppTurnView({required this.turn, super.key});
+/// Một bong bóng thoại trong transcript — role app căn trái, role user căn
+/// phải (pattern chat quen thuộc). Câu đang focus mới render highlight TTS +
+/// bản dịch (các câu khác chỉ hiện text để đỡ rebuild khi highlight đổi).
+class _TurnBubble extends StatelessWidget {
+  const _TurnBubble({
+    required this.script,
+    required this.turn,
+    required this.isFocused,
+    required this.onTap,
+    super.key,
+  });
 
+  final ConversationScript script;
   final ConversationTurn turn;
-
-  @override
-  ConsumerState<_AppTurnView> createState() => _AppTurnViewState();
-}
-
-class _AppTurnViewState extends ConsumerState<_AppTurnView> {
-  @override
-  void initState() {
-    super.initState();
-    // Speak 1 lần khi turn xuất hiện (turn mới = key mới → state mới).
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      ref
-          .read(ttsTurnHighlightControllerProvider.notifier)
-          .speak(widget.turn.text);
-    });
-  }
-
-  @override
-  void dispose() {
-    // Rời turn app → dừng highlight, tránh highlight cũ hiện ở turn user.
-    ref.read(ttsTurnHighlightControllerProvider.notifier).clear();
-    super.dispose();
-  }
+  final bool isFocused;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final highlight = ref.watch(ttsTurnHighlightControllerProvider);
-    final controller = ref.read(ttsTurnHighlightControllerProvider.notifier);
+    final isApp = turn.isAppTurn;
+    final role = isApp ? script.appRole : script.userRole;
+    final textTheme = Theme.of(context).textTheme;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SizedBox(height: 24),
-          _HighlightedText(
-            text: widget.turn.text,
-            wordStart: highlight.wordStart,
-            wordEnd: highlight.wordEnd,
+    return Column(
+      crossAxisAlignment: isApp
+          ? CrossAxisAlignment.start
+          : CrossAxisAlignment.end,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+          child: Text(
+            role.nameVi,
+            style: textTheme.labelSmall?.copyWith(color: AppColors.textFaint),
           ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(
-                tooltip: 'Nghe lại',
-                icon: AppIcon('volume-up', size: 22, color: AppColors.controlIcon),
-                onPressed: () => controller.speak(widget.turn.text),
+        ),
+        Material(
+          color: isFocused
+              ? AppColors.accent.withValues(alpha: .18)
+              : AppColors.controlBg,
+          borderRadius: BorderRadius.circular(16),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(16),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.8,
               ),
-              IconButton(
-                tooltip: 'Xem nghĩa',
-                icon: AppIcon('book-open', size: 22, color: AppColors.controlIcon),
-                onPressed: () => _showTranslation(context, widget.turn),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
+                child: isFocused
+                    ? _FocusedTurnContent(turn: turn)
+                    : Text(turn.text, style: textTheme.bodyLarge),
               ),
-            ],
+            ),
           ),
-        ],
-      ),
-    );
-  }
-
-  void _showTranslation(BuildContext context, ConversationTurn turn) {
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(turn.text),
-        content: Text(turn.textVi),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Đóng'),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
-/// Turn do user trả lời — hiện các câu gợi ý để bấm chọn.
-class _UserTurnView extends ConsumerWidget {
-  const _UserTurnView({required this.turn, super.key});
+/// Nội dung câu đang focus — highlight từ theo TTS + bản dịch + nút nghe
+/// lại. Tách riêng để chỉ subtree này rebuild theo highlight, không kéo cả
+/// transcript.
+class _FocusedTurnContent extends ConsumerWidget {
+  const _FocusedTurnContent({required this.turn});
 
   final ConversationTurn turn;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final choices = turn.choices;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SizedBox(height: 24),
-          Text(
-            'Chọn câu trả lời:',
-            style: Theme.of(context).textTheme.titleMedium,
+    final highlight = ref.watch(ttsTurnHighlightControllerProvider);
+    final controller = ref.read(ttsTurnHighlightControllerProvider.notifier);
+    final textTheme = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _HighlightedText(
+          text: turn.text,
+          wordStart: highlight.wordStart,
+          wordEnd: highlight.wordEnd,
+          style: textTheme.bodyLarge?.copyWith(height: 1.4),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          turn.textVi,
+          style: textTheme.bodySmall?.copyWith(color: AppColors.textFaint),
+        ),
+        Align(
+          alignment: Alignment.centerRight,
+          child: IconButton(
+            tooltip: 'Nghe lại',
+            visualDensity: VisualDensity.compact,
+            icon: AppIcon('volume-up', size: 18, color: AppColors.controlIcon),
+            onPressed: () => controller.speak(turn.text),
           ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: ListView.separated(
-              itemCount: choices.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 10),
-              itemBuilder: (context, index) {
-                final choice = choices[index];
-                return _ChoiceButton(
-                  choice: choice,
-                  onTap: () {
-                    ref
-                        .read(scriptPlayerControllerProvider.notifier)
-                        .advance(choice);
-                  },
-                );
-              },
+        ),
+      ],
+    );
+  }
+}
+
+/// Bottom bar: từ khó của câu đang focus + Next/Previous + CTA tổng kết khi
+/// tới câu cuối.
+class _BottomBar extends ConsumerWidget {
+  const _BottomBar({
+    required this.script,
+    required this.playState,
+    required this.focusedVocab,
+  });
+
+  final ConversationScript script;
+  final ScriptPlayState playState;
+  final List<TargetVocabItem> focusedVocab;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notifier = ref.read(scriptPlayerControllerProvider.notifier);
+    final textTheme = Theme.of(context).textTheme;
+
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+        decoration: const BoxDecoration(
+          border: Border(
+            top: BorderSide(color: AppColors.controlBg, width: 1),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (focusedVocab.isNotEmpty) ...[
+              Text(
+                'Từ khó trong câu này',
+                style: textTheme.labelSmall?.copyWith(
+                  color: AppColors.textFaint,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: [
+                  for (final vocab in focusedVocab) _VocabChip(vocab: vocab),
+                ],
+              ),
+              const SizedBox(height: 12),
+            ],
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  tooltip: 'Câu trước',
+                  icon: AppIcon(
+                    'skip-prev',
+                    size: 24,
+                    color: playState.isFirst
+                        ? AppColors.textFaint
+                        : AppColors.controlIcon,
+                  ),
+                  onPressed: playState.isFirst ? null : notifier.previous,
+                ),
+                Text(
+                  '${playState.focusedIndex + 1}/${script.turns.length}',
+                  style: textTheme.labelLarge?.copyWith(
+                    color: AppColors.textFaint,
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Câu tiếp',
+                  icon: AppIcon(
+                    'skip-next',
+                    size: 24,
+                    color: playState.isLast
+                        ? AppColors.textFaint
+                        : AppColors.controlIcon,
+                  ),
+                  onPressed: playState.isLast ? null : notifier.next,
+                ),
+              ],
             ),
+            if (playState.isLast) ...[
+              const SizedBox(height: 12),
+              PrimaryButton(
+                label: 'Xem tổng kết',
+                onPressed: () => _goToSummary(context),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _goToSummary(BuildContext context) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ConversationSummaryScreen(script: script),
+      ),
+    );
+  }
+}
+
+class _VocabChip extends StatelessWidget {
+  const _VocabChip({required this.vocab});
+
+  final TargetVocabItem vocab;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.accent.withValues(alpha: .18),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            vocab.term,
+            style: textTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: AppColors.accent,
+            ),
+          ),
+          Text(
+            vocab.senseVi,
+            style: textTheme.labelSmall?.copyWith(color: AppColors.textFaint),
           ),
         ],
       ),
@@ -282,42 +405,7 @@ class _UserTurnView extends ConsumerWidget {
   }
 }
 
-class _ChoiceButton extends StatelessWidget {
-  const _ChoiceButton({required this.choice, required this.onTap});
-
-  final ScriptChoice choice;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.controlBg,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(choice.text, style: Theme.of(context).textTheme.bodyLarge),
-              const SizedBox(height: 2),
-              Text(
-                choice.textVi,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.textFaint,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Render text turn app, tô sáng từ đang đọc (word boundary) — có animation
+/// Render text turn, tô sáng từ đang đọc (word boundary) — có animation
 /// scale + màu theo pattern `_TermSpan` của study (word_card.dart):
 /// `AnimatedScale` + `AnimatedDefaultTextStyle` (160ms easeOut).
 class _HighlightedText extends StatelessWidget {
@@ -325,19 +413,18 @@ class _HighlightedText extends StatelessWidget {
     required this.text,
     required this.wordStart,
     required this.wordEnd,
+    this.style,
   });
 
   final String text;
   final int? wordStart;
   final int? wordEnd;
+  final TextStyle? style;
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final baseStyle = textTheme.headlineSmall?.copyWith(height: 1.4);
-
     if (wordStart == null || wordEnd == null) {
-      return Text(text, style: baseStyle);
+      return Text(text, style: style);
     }
 
     // Tách text thành các đoạn theo word boundary; đoạn đang đọc được
@@ -363,7 +450,7 @@ class _HighlightedText extends StatelessWidget {
           _AnimatedSpan(
             text: segment.text,
             isActive: segment.isActive,
-            style: baseStyle,
+            style: style,
           ),
       ],
     );
@@ -382,7 +469,7 @@ class _HighlightedText extends StatelessWidget {
           char == ',' ||
           char == ';' ||
           char == ':' ||
-          char == '\u2014') {
+          char == '—') {
         return i + 1; // tiến ít nhất 1 ký tự.
       }
       i++;
@@ -417,46 +504,6 @@ class _AnimatedSpan extends StatelessWidget {
             ? (style ?? const TextStyle()).copyWith(color: AppColors.accent)
             : style ?? const TextStyle(),
         child: Text(text),
-      ),
-    );
-  }
-}
-
-/// Nút chờ khi hết turn — sẽ được thay bằng màn summary.
-class _SummaryPlaceholder extends StatelessWidget {
-  const _SummaryPlaceholder({
-    required this.usedTargetWords,
-    required this.onFinish,
-  });
-
-  final Set<String> usedTargetWords;
-  final VoidCallback onFinish;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const AppIcon('check-circle', size: 56, color: AppColors.accent),
-            const SizedBox(height: 16),
-            Text(
-              'Buổi luyện đã xong!',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Bạn đã dùng ${usedTargetWords.length} từ mới.',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 16),
-            PrimaryButton(
-              label: 'Xem kết quả',
-              onPressed: onFinish,
-            ),          ],
-        ),
       ),
     );
   }

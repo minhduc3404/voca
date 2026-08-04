@@ -6,28 +6,40 @@ import 'dart:io';
 import 'package:voca_app/features/conversation/data/mock_script_repository.dart';
 import 'package:voca_app/features/conversation/domain/conversation_script.dart';
 
-// Bản sao tối giản state machine — kiểm tra logic advance/start/complete.
+// Bản sao tối giản state machine — kiểm tra logic focus/next/previous.
 // (Bản thật trong application/ dùng Riverpod Notifier; logic giống hệt.)
 class PureState {
-  PureState({this.script, this.index = 0, this.used = const {}});
+  PureState({this.script, this.focusedIndex = 0});
 
   final ConversationScript? script;
-  final int index;
-  final Set<String> used;
+  final int focusedIndex;
 
-  bool get completed => script != null && index >= script!.turns.length;
+  bool get isFirst => focusedIndex <= 0;
+  bool get isLast => script != null && focusedIndex >= script!.turns.length - 1;
 
-  PureState start(ConversationScript s) =>
-      PureState(script: s, index: 0, used: {});
+  PureState start(ConversationScript s) => PureState(script: s, focusedIndex: 0);
 
-  PureState advance([ScriptChoice? choice]) {
-    if (script == null || completed) return this;
-    final turn = script!.turns[index];
-    final nextUsed = {...used};
-    if (choice != null && !turn.isAppTurn) {
-      nextUsed.addAll(choice.targetWords);
-    }
-    return PureState(script: script, index: index + 1, used: nextUsed);
+  PureState next() {
+    final s = script;
+    if (s == null) return this;
+    final i = focusedIndex + 1;
+    if (i >= s.turns.length) return this;
+    return PureState(script: s, focusedIndex: i);
+  }
+
+  PureState previous() {
+    final s = script;
+    if (s == null) return this;
+    final i = focusedIndex - 1;
+    if (i < 0) return this;
+    return PureState(script: s, focusedIndex: i);
+  }
+
+  PureState focusTurn(int index) {
+    final s = script;
+    if (s == null) return this;
+    if (index < 0 || index >= s.turns.length) return this;
+    return PureState(script: s, focusedIndex: index);
   }
 }
 
@@ -51,36 +63,52 @@ Future<void> main() async {
   check('id == coffee-order-beginner', script.id == 'coffee-order-beginner');
   check('7 turns', script.turns.length == 7);
   check('turn 1 là app', script.turns[0].isAppTurn);
-  check('turn 2 là user + 3 choices', !script.turns[1].isAppTurn && script.turns[1].choices.length == 3);
-  check('choice đầu targetWords=[latte]', script.turns[1].choices.first.targetWords.first == 'latte');
+  check('turn 2 là user', !script.turns[1].isAppTurn);
+  check('turn 2 text = latte order', script.turns[1].text == "I'd like a latte, please.");
   check('targetVocab 4 từ', script.targetVocab.length == 4);
+
+  // vocabForTurn
+  final t2Vocab = script.vocabForTurn(script.turns[1]).map((v) => v.term).toList();
+  check('vocabForTurn t2 == [latte]', t2Vocab.length == 1 && t2Vocab.first == 'latte');
+  final t5 = script.turns.firstWhere((t) => t.id == 't5');
+  final t5Vocab = script.vocabForTurn(t5).map((v) => v.term).toSet();
+  check(
+    'vocabForTurn t5 chứa takeaway + for here',
+    t5Vocab.containsAll({'takeaway', 'for here'}),
+  );
+  final t1Vocab = script.vocabForTurn(script.turns[0]);
+  check('vocabForTurn t1 rỗng', t1Vocab.isEmpty);
 
   // State machine
   var s = PureState().start(script);
-  check('start: index 0, turn app', s.index == 0 && s.script!.turns[0].isAppTurn);
-  check('chưa completed', !s.completed);
+  check('start: focus 0, turn app, isFirst', s.focusedIndex == 0 && s.script!.turns[0].isAppTurn && s.isFirst);
+  check('chưa isLast', !s.isLast);
 
-  s = s.advance(); // t1 app
-  check('advance app → index 1 (user)', s.index == 1);
+  s = s.next(); // t2
+  check('next → focus 1 (user)', s.focusedIndex == 1 && !s.script!.turns[1].isAppTurn);
 
-  s = s.advance(script.turns[1].choices.first); // t2 latte
-  check('advance user → index 2 + used={latte}', s.index == 2 && s.used.contains('latte'));
+  s = s.previous();
+  check('previous → focus 0', s.focusedIndex == 0);
 
-  s = s.advance(); // t3 app
-  s = s.advance(script.turns[3].choices.first); // t4 iced
-  check('used có latte+iced', s.used.containsAll(['latte', 'iced']));
+  s = s.focusTurn(4); // t5
+  check('focusTurn(4) → focus 4', s.focusedIndex == 4);
 
-  // chơi hết
-  var done = PureState().start(script);
-  for (final t in script.turns) {
-    if (!t.isAppTurn) {
-      done = done.advance(t.choices.first);
-    } else {
-      done = done.advance();
-    }
+  s = s.focusTurn(-1); // out of range, no-op
+  check('focusTurn(-1) no-op → vẫn focus 4', s.focusedIndex == 4);
+
+  // đi tới cuối
+  var atEnd = PureState().start(script);
+  for (var i = 0; i < script.turns.length + 3; i++) {
+    atEnd = atEnd.next();
   }
-  check('hết script → completed', done.completed);
-  check('used = latte,iced,takeaway', done.used.containsAll(['latte', 'iced', 'takeaway']) && done.used.length == 3);
+  check('next lặp lại → dừng ở isLast', atEnd.isLast && atEnd.focusedIndex == script.turns.length - 1);
+
+  // đi ngược về đầu
+  var atStart = atEnd;
+  for (var i = 0; i < script.turns.length + 3; i++) {
+    atStart = atStart.previous();
+  }
+  check('previous lặp lại → dừng ở isFirst', atStart.isFirst && atStart.focusedIndex == 0);
 
   stdout.writeln(failures == 0 ? '\nALL PASS' : '\n$failures FAILURES');
   exit(failures == 0 ? 0 : 1);

@@ -15,41 +15,14 @@ class TargetVocabItem {
   }
 }
 
-/// Một lựa chọn người dùng có thể bấm ở turn `speaker: user`.
-class ScriptChoice {
-  const ScriptChoice({
-    required this.text,
-    required this.textVi,
-    required this.targetWords,
-  });
-
-  final String text;
-  final String textVi;
-
-  /// Các từ trong `targetVocab` mà choice này dùng — dùng cho summary.
-  final List<String> targetWords;
-
-  factory ScriptChoice.fromJson(Map<String, dynamic> json) {
-    return ScriptChoice(
-      text: json['text'] as String,
-      textVi: json['textVi'] as String,
-      targetWords: (json['targetWords'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
-          const [],
-    );
-  }
-}
-
-/// Một lượt trong script. `speaker: app` → TTS đọc `text`;
-/// `speaker: user` → hiện `choices` để bấm chọn.
+/// Một lượt trong script — cả `speaker: app` lẫn `speaker: user` đều là câu
+/// thoại cố định, tự phát TTS theo role khi được focus (không còn chọn câu).
 class ConversationTurn {
   const ConversationTurn({
     required this.id,
     required this.speaker,
     required this.text,
     required this.textVi,
-    required this.choices,
   });
 
   final String id;
@@ -57,24 +30,18 @@ class ConversationTurn {
   /// `"app"` hoặc `"user"` — theo schema script.
   final String speaker;
 
-  /// `true` = turn do app nói (TTS), `false` = turn do người dùng trả lời.
+  /// `true` = turn do app nói (TTS), `false` = turn do vai người dùng nói.
   bool get isAppTurn => speaker == 'app';
 
   final String text;
   final String textVi;
-  final List<ScriptChoice> choices;
 
   factory ConversationTurn.fromJson(Map<String, dynamic> json) {
-    final speaker = json['speaker'] as String;
     return ConversationTurn(
       id: json['id'] as String,
-      speaker: speaker,
+      speaker: json['speaker'] as String,
       text: json['text'] as String,
       textVi: json['textVi'] as String,
-      choices: (json['choices'] as List<dynamic>?)
-              ?.map((e) => ScriptChoice.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          const [],
     );
   }
 }
@@ -159,5 +126,14 @@ class ConversationScript {
 
   factory ConversationScript.fromJsonString(String source) {
     return ConversationScript.fromJson(jsonDecode(source) as Map<String, dynamic>);
+  }
+
+  /// Các `targetVocab` xuất hiện trong `turn.text` — dùng cho panel "từ khó"
+  /// của câu đang focus trên màn play.
+  List<TargetVocabItem> vocabForTurn(ConversationTurn turn) {
+    final lowerText = turn.text.toLowerCase();
+    return targetVocab
+        .where((vocab) => lowerText.contains(vocab.term.toLowerCase()))
+        .toList();
   }
 }

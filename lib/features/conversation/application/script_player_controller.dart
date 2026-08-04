@@ -2,85 +2,69 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/conversation_script.dart';
 
-/// Một turn trong phiên đang chơi.
-class ActiveTurn {
-  const ActiveTurn({required this.turn, required this.selectedChoice});
-
-  final ConversationTurn turn;
-
-  /// Choice user đã bấm — `null` nếu chưa chọn (turn app không có).
-  final ScriptChoice? selectedChoice;
-
-  /// `true` khi đã hiển thị xong và có thể advance.
-  bool get isResolved => turn.isAppTurn || selectedChoice != null;
-}
-
 /// State thuần của script player — presentation chỉ render theo state này.
+/// Model "focus theo index": không còn turn ẩn/hiện tuần tự hay chọn câu —
+/// toàn bộ transcript hiển thị, `focusedIndex` là câu đang phát/highlight.
 class ScriptPlayState {
-  const ScriptPlayState({
-    required this.script,
-    required this.currentIndex,
-    required this.usedTargetWords,
-  });
+  const ScriptPlayState({required this.script, required this.focusedIndex});
 
   /// `null` = chưa nạp script (màn vừa mở).
   final ConversationScript? script;
-  final int currentIndex;
+  final int focusedIndex;
 
-  /// Các từ trong `targetVocab` user đã dùng qua choice — cho summary.
-  final Set<String> usedTargetWords;
+  static const empty = ScriptPlayState(script: null, focusedIndex: 0);
 
-  static const empty = ScriptPlayState(
-    script: null,
-    currentIndex: 0,
-    usedTargetWords: <String>{},
-  );
-
-  /// Turn hiện tại — `null` khi chưa có script hoặc đã hết.
-  ActiveTurn? get currentTurn {
+  /// Turn đang focus — `null` khi chưa có script.
+  ConversationTurn? get focusedTurn {
     final script = this.script;
     if (script == null) return null;
-    if (currentIndex >= script.turns.length) return null;
-    return ActiveTurn(turn: script.turns[currentIndex], selectedChoice: null);
+    if (focusedIndex < 0 || focusedIndex >= script.turns.length) return null;
+    return script.turns[focusedIndex];
   }
 
-  /// `true` khi đã chơi xong tất cả turn.
-  bool get isCompleted => script != null && currentIndex >= script!.turns.length;
+  bool get isFirst => focusedIndex <= 0;
+
+  bool get isLast => script != null && focusedIndex >= script!.turns.length - 1;
 }
 
-/// State machine turn của script player — orchestration thuần.
-/// Screen gọi [start] để nạp script, [advance] sau mỗi turn.
+/// State machine "focus" của script player — orchestration thuần.
+/// Screen gọi [start] để nạp script, [focusTurn]/[next]/[previous] để đổi
+/// câu đang focus (freehand chạm câu hoặc nút Next/Previous).
 class ScriptPlayerController extends Notifier<ScriptPlayState> {
   @override
   ScriptPlayState build() => ScriptPlayState.empty;
 
-  /// Nạp script để chơi — reset state.
+  /// Nạp script để chơi — reset về câu đầu.
   void start(ConversationScript script) {
-    state = ScriptPlayState(
-      script: script,
-      currentIndex: 0,
-      usedTargetWords: <String>{},
-    );
+    state = ScriptPlayState(script: script, focusedIndex: 0);
   }
 
-  /// Advance sang turn kế — khi app đã nói xong / user đã chọn.
-  /// Từ `targetVocab` của choice được bấm sẽ được ghi nhận cho summary.
-  void advance([ScriptChoice? selectedChoice]) {
+  /// Chuyển focus tới turn ở [index] bất kỳ (chạm câu trong transcript).
+  void focusTurn(int index) {
+    final script = state.script;
+    if (script == null) return;
+    if (index < 0 || index >= script.turns.length) return;
+    state = ScriptPlayState(script: script, focusedIndex: index);
+  }
+
+  /// Focus sang câu kế tiếp — no-op nếu đang ở câu cuối.
+  void next() {
     final current = state;
     final script = current.script;
-    if (script == null || current.isCompleted) return;
+    if (script == null) return;
+    final nextIndex = current.focusedIndex + 1;
+    if (nextIndex >= script.turns.length) return;
+    state = ScriptPlayState(script: script, focusedIndex: nextIndex);
+  }
 
-    final turn = script.turns[current.currentIndex];
-    final used = {...current.usedTargetWords};
-    if (selectedChoice != null && !turn.isAppTurn) {
-      used.addAll(selectedChoice.targetWords);
-    }
-
-    state = ScriptPlayState(
-      script: script,
-      currentIndex: current.currentIndex + 1,
-      usedTargetWords: used,
-    );
+  /// Focus sang câu trước — no-op nếu đang ở câu đầu.
+  void previous() {
+    final current = state;
+    final script = current.script;
+    if (script == null) return;
+    final prevIndex = current.focusedIndex - 1;
+    if (prevIndex < 0) return;
+    state = ScriptPlayState(script: script, focusedIndex: prevIndex);
   }
 
   /// Reset về script rỗng — khi thoát màn play.
