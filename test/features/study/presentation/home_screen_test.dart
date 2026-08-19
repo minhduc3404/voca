@@ -6,6 +6,7 @@ import 'package:voca_app/features/study/data/tts_service.dart';
 import 'package:voca_app/features/study/data/wakelock_service.dart';
 import 'package:voca_app/features/study/domain/progress_repository.dart';
 import 'package:voca_app/features/study/domain/study_card.dart';
+import 'package:voca_app/features/study/domain/study_scope.dart';
 import 'package:voca_app/features/study/domain/word_progress.dart';
 import 'package:voca_app/features/vocabulary/application/providers.dart';
 import 'package:voca_app/features/vocabulary/domain/catalog_word.dart';
@@ -42,7 +43,10 @@ class _FakeTopicLibraryRepository implements TopicLibraryRepository {
 
 class _EmptyProgressRepository implements ProgressRepository {
   @override
-  Future<List<StudyCard>> getDueCards(DateTime now) async => const [];
+  Future<List<StudyCard>> getDueCards(
+    DateTime now, {
+    StudyScope scope = const StudyScope.all(),
+  }) async => const [];
 
   @override
   Future<WordProgress> getProgress(int cardId) async =>

@@ -12,6 +12,7 @@ import 'package:voca_app/features/study/application/providers.dart';
 import 'package:voca_app/features/study/data/onboarding_flag_repository.dart';
 import 'package:voca_app/features/study/domain/progress_repository.dart';
 import 'package:voca_app/features/study/domain/study_card.dart';
+import 'package:voca_app/features/study/domain/study_scope.dart';
 import 'package:voca_app/features/study/domain/study_log_repository.dart';
 import 'package:voca_app/features/study/domain/study_stats.dart';
 import 'package:voca_app/features/study/domain/study_stats_repository.dart';
@@ -25,7 +26,10 @@ import 'package:voca_app/features/vocabulary/domain/vocabulary_catalog_repositor
 
 class _EmptyProgressRepository implements ProgressRepository {
   @override
-  Future<List<StudyCard>> getDueCards(DateTime now) async => const [];
+  Future<List<StudyCard>> getDueCards(
+    DateTime now, {
+    StudyScope scope = const StudyScope.all(),
+  }) async => const [];
 
   @override
   Future<WordProgress> getProgress(int cardId) async =>

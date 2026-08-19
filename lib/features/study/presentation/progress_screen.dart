@@ -99,8 +99,24 @@ class _ProgressBody extends ConsumerWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
+          const SizedBox(height: 4),
+          Text(
+            'Chạm để ôn riêng nhóm từ này',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppColors.textFaint,
+            ),
+          ),
           const SizedBox(height: 8),
-          for (final topic in state.activeTopics) _TopicTile(topic: topic),
+          for (final topic in state.activeTopics)
+            _TopicTile(
+              topic: topic,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => MemoScreen(scope: topic.scope),
+                ),
+              ),
+            ),
         ],
       ],
     );
@@ -222,38 +238,55 @@ class _SummaryCard extends StatelessWidget {
 }
 
 class _TopicTile extends StatelessWidget {
-  const _TopicTile({required this.topic});
+  const _TopicTile({required this.topic, required this.onTap});
 
   final ActiveTopic topic;
+  final VoidCallback onTap;
+
+  /// Nhãn nhóm từ tự thêm — domain để [ActiveTopic.name] rỗng cho nhóm này
+  /// (không giữ chuỗi UI), presentation đặt tên.
+  static const _manualLabel = 'Từ tôi lưu';
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
         color: AppColors.controlBg,
         borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          const AppIcon('book-open', size: 20, color: AppColors.accent),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              topic.name,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
+              children: [
+                AppIcon(
+                  topic.isManual ? 'user' : 'book-open',
+                  size: 20,
+                  color: AppColors.accent,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    topic.isManual ? _manualLabel : topic.name,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Text(
+                  '${topic.wordCount} từ',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textFaint,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                AppIcon('skip-next', size: 16, color: AppColors.textFaint),
+              ],
             ),
           ),
-          Text(
-            '${topic.wordCount} từ',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.textFaint,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

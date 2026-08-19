@@ -49,8 +49,12 @@ class DriftStudyStatsRepository implements StudyStatsRepository {
 
   @override
   Future<List<ActiveTopic>> getActiveTopics() async {
-    // Join vocabulary_table (có topic_id) với downloaded_topics_table để lấy
-    // tên hiển thị. Chỉ tính topic có ≥1 từ.
+    // Join vocabulary_table với downloaded_topics_table để lấy tên hiển thị.
+    // KHÔNG lọc `topic_id IS NOT NULL`: các từ người dùng tự thêm (topic_id
+    // NULL) gộp thành đúng một nhóm (SQLite coi các NULL là bằng nhau khi
+    // GROUP BY) và trả về với `topicId == null` → `ActiveTopic.isManual`.
+    // Trước đây nhóm này bị loại nên tổng số từ liệt kê ở màn Tiến độ không
+    // khớp `totalCount`/`dueCount` (vốn luôn đếm cả từ tự thêm).
     final rows = await _db.customSelect(
       '''
       SELECT v.topic_id AS topic_id,
@@ -58,7 +62,6 @@ class DriftStudyStatsRepository implements StudyStatsRepository {
              COUNT(*) AS word_count
       FROM vocabulary_table v
       LEFT JOIN downloaded_topics_table d ON d.topic_id = v.topic_id
-      WHERE v.topic_id IS NOT NULL
       GROUP BY v.topic_id
       ORDER BY word_count DESC
       ''',
@@ -67,8 +70,9 @@ class DriftStudyStatsRepository implements StudyStatsRepository {
     return [
       for (final row in rows)
         ActiveTopic(
-          topicId: row.read<String>('topic_id'),
-          name: row.read<String>('name'),
+          topicId: row.readNullable<String>('topic_id'),
+          // NULL với nhóm tự thêm — nhãn hiển thị do presentation đặt.
+          name: row.readNullable<String>('name') ?? '',
           wordCount: row.read<int>('word_count'),
         ),
     ];

@@ -6,6 +6,7 @@ import 'package:voca_app/features/study/data/tts_service.dart';
 import 'package:voca_app/features/study/data/wakelock_service.dart';
 import 'package:voca_app/features/study/domain/progress_repository.dart';
 import 'package:voca_app/features/study/domain/study_card.dart';
+import 'package:voca_app/features/study/domain/study_scope.dart';
 import 'package:voca_app/features/study/domain/word_progress.dart';
 import 'package:voca_app/features/study/presentation/memo_screen.dart';
 import 'package:voca_app/l10n/arb/app_localizations.dart';
@@ -21,7 +22,10 @@ class _InMemoryRepository implements ProgressRepository {
   final Map<int, WordProgress> _progress;
 
   @override
-  Future<List<StudyCard>> getDueCards(DateTime now) async => cards;
+  Future<List<StudyCard>> getDueCards(
+    DateTime now, {
+    StudyScope scope = const StudyScope.all(),
+  }) async => cards;
 
   @override
   Future<WordProgress> getProgress(int cardId) async => _progress[cardId]!;

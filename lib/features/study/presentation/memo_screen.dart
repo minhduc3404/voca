@@ -12,6 +12,7 @@ import '../application/session_controller.dart';
 import '../application/tts_highlight_controller.dart';
 import '../domain/study_rating.dart';
 import '../domain/study_card.dart';
+import '../domain/study_scope.dart';
 import 'tts_settings_screen.dart';
 import 'widgets/remember_button.dart';
 import 'widgets/word_card.dart';
@@ -41,8 +42,29 @@ String _formatSpeed(double speed) {
   return speed.toStringAsFixed(2).replaceFirst(RegExp(r'0$'), '');
 }
 
-class MemoScreen extends ConsumerWidget {
-  const MemoScreen({super.key});
+/// Màn học. [scope] giới hạn tập thẻ của phiên (mặc định: toàn bộ bộ học).
+///
+/// Override `studyScopeProvider` trong một `ProviderScope` riêng thay vì
+/// truyền scope xuống controller: mỗi scope có container con riêng nên mở
+/// phiên chủ đề A rồi chủ đề B không dùng lại state của nhau. Hệ quả có
+/// chủ đích: rời màn rồi vào lại sẽ nạp lại danh sách thẻ due (trước đây
+/// phiên cũ sống trong container gốc và giữ nguyên vị trí đang dở).
+class MemoScreen extends StatelessWidget {
+  const MemoScreen({this.scope = const StudyScope.all(), super.key});
+
+  final StudyScope scope;
+
+  @override
+  Widget build(BuildContext context) {
+    return ProviderScope(
+      overrides: [studyScopeProvider.overrideWithValue(scope)],
+      child: const _MemoView(),
+    );
+  }
+}
+
+class _MemoView extends ConsumerWidget {
+  const _MemoView();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

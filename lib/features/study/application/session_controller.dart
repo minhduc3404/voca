@@ -36,7 +36,9 @@ class SessionController extends AsyncNotifier<StudySessionState> {
   @override
   Future<StudySessionState> build() async {
     final repository = ref.watch(progressRepositoryProvider);
-    final dueCards = await repository.getDueCards(DateTime.now());
+    // Phạm vi do `MemoScreen` override qua ProviderScope; mặc định toàn bộ.
+    final scope = ref.watch(studyScopeProvider);
+    final dueCards = await repository.getDueCards(DateTime.now(), scope: scope);
     final progress = dueCards.isEmpty
         ? null
         : await repository.getProgress(dueCards.first.id);

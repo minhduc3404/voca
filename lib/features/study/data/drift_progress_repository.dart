@@ -5,6 +5,7 @@ import '../../../core/lexicon/pronunciation_segment.dart';
 import '../domain/progress_repository.dart';
 import '../domain/study_card.dart';
 import '../domain/study_log_repository.dart';
+import '../domain/study_scope.dart';
 import '../domain/word_progress.dart';
 import 'drift_study_log_repository.dart';
 
@@ -21,8 +22,22 @@ class DriftProgressRepository implements ProgressRepository {
   final StudyLogRepository _studyLog;
 
   @override
-  Future<List<StudyCard>> getDueCards(DateTime now) async {
-    final allVocab = await _db.select(_db.vocabularyTable).get();
+  Future<List<StudyCard>> getDueCards(
+    DateTime now, {
+    StudyScope scope = const StudyScope.all(),
+  }) async {
+    final query = _db.select(_db.vocabularyTable);
+    switch (scope.kind) {
+      case StudyScopeKind.all:
+        break;
+      case StudyScopeKind.topic:
+        // `topicId` luôn khác null khi kind == topic (bảo đảm bởi
+        // constructor `StudyScope.topic`).
+        query.where((t) => t.topicId.equals(scope.topicId!));
+      case StudyScopeKind.manual:
+        query.where((t) => t.topicId.isNull());
+    }
+    final allVocab = await query.get();
     final dueCards = <StudyCard>[];
 
     for (final vocab in allVocab) {

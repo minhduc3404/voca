@@ -14,6 +14,7 @@ import '../data/tts_settings_repository.dart';
 import '../data/wakelock_service.dart';
 import '../domain/progress_repository.dart';
 import '../domain/study_log_repository.dart';
+import '../domain/study_scope.dart';
 import '../domain/study_stats_repository.dart';
 import '../domain/tts_audio_cache_repository.dart';
 import '../domain/tts_service.dart';
@@ -39,6 +40,17 @@ final studyStatsRepositoryProvider = Provider<StudyStatsRepository>((ref) {
 final onboardingFlagRepositoryProvider = Provider<OnboardingFlagRepository>(
   (ref) => OnboardingFlagRepository(),
 );
+
+/// Phạm vi từ vựng của phiên học hiện tại. Mặc định [StudyScope.all] — ôn
+/// toàn bộ bộ học như trước.
+///
+/// `MemoScreen` bọc chính nó trong một `ProviderScope` và override provider
+/// này để mở phiên học giới hạn (một chủ đề, hoặc riêng từ tự thêm) mà
+/// không cần đổi chữ ký `sessionControllerProvider` — mỗi scope là một
+/// container con nên hai phiên khác scope không dùng chung state.
+final studyScopeProvider = Provider<StudyScope>((ref) {
+  return const StudyScope.all();
+});
 
 /// Đã xem onboarding chưa — dùng cho màn đầu tiên (app.dart `_Root`).
 final onboardingSeenProvider = FutureProvider<bool>((ref) {

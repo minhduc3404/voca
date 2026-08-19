@@ -6,6 +6,7 @@ import 'package:voca_app/features/study/data/tts_service.dart';
 import 'package:voca_app/features/study/data/wakelock_service.dart';
 import 'package:voca_app/features/study/domain/progress_repository.dart';
 import 'package:voca_app/features/study/domain/study_card.dart';
+import 'package:voca_app/features/study/domain/study_scope.dart';
 import 'package:voca_app/features/study/domain/study_log_repository.dart';
 import 'package:voca_app/features/study/domain/study_stats.dart';
 import 'package:voca_app/features/study/domain/study_stats_repository.dart';
@@ -53,7 +54,10 @@ class _FakeStudyLogRepository implements StudyLogRepository {
 
 class _EmptyProgressRepository implements ProgressRepository {
   @override
-  Future<List<StudyCard>> getDueCards(DateTime now) async => const [];
+  Future<List<StudyCard>> getDueCards(
+    DateTime now, {
+    StudyScope scope = const StudyScope.all(),
+  }) async => const [];
 
   @override
   Future<WordProgress> getProgress(int cardId) async =>
@@ -182,6 +186,44 @@ void main() {
     await tester.pumpAndSettle();
 
     // MemoScreen được push — có back (canPop) + appBar.
+    expect(find.byTooltip('Quay lại'), findsOneWidget);
+  });
+
+  testWidgets('nhóm từ tự thêm hiện nhãn "Từ tôi lưu"', (tester) async {
+    final stats = _FakeStudyStatsRepository(
+      topics: const [
+        ActiveTopic(topicId: null, name: '', wordCount: 7),
+        ActiveTopic(topicId: 'travel', name: 'Du lịch', wordCount: 3),
+      ],
+    );
+    final log = _FakeStudyLogRepository(dates: {'2026-08-03'});
+
+    await tester.pumpWidget(wrap(stats, log));
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('Từ tôi lưu'), findsOneWidget);
+    expect(find.text('7 từ'), findsOneWidget);
+    expect(find.text('Du lịch'), findsOneWidget);
+  });
+
+  testWidgets('chạm nhóm từ → push MemoScreen ôn riêng nhóm đó', (
+    tester,
+  ) async {
+    final stats = _FakeStudyStatsRepository(
+      topics: const [
+        ActiveTopic(topicId: 'travel', name: 'Du lịch', wordCount: 3),
+      ],
+    );
+    final log = _FakeStudyLogRepository(dates: {'2026-08-03'});
+
+    await tester.pumpWidget(wrap(stats, log));
+    await tester.pump();
+    await tester.pump();
+
+    await tester.tap(find.text('Du lịch'));
+    await tester.pumpAndSettle();
+
     expect(find.byTooltip('Quay lại'), findsOneWidget);
   });
 }

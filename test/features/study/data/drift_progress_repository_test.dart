@@ -7,6 +7,7 @@ import 'package:voca_app/core/db/app_database.dart';
 import 'package:voca_app/features/study/data/drift_progress_repository.dart';
 import 'package:voca_app/features/study/domain/srs_scheduler.dart';
 import 'package:voca_app/features/study/domain/study_rating.dart';
+import 'package:voca_app/features/study/domain/study_scope.dart';
 
 void main() {
   late AppDatabase db;
@@ -175,6 +176,83 @@ void main() {
       expect(card.phonetic, '/elderberry/');
       expect(card.partOfSpeech, 'noun');
       expect(card.exampleSentence, 'This is elderberry.');
+    });
+  });
+
+  group('DriftProgressRepository.getDueCards — StudyScope', () {
+    Future<int> insertScopedVocab(String term, {String? topicId}) {
+      return db
+          .into(db.vocabularyTable)
+          .insert(
+            VocabularyTableCompanion.insert(
+              term: term,
+              definition: '$term (định nghĩa)',
+              language: 'en',
+              phonetic: '/$term/',
+              exampleSentence: 'This is $term.',
+              createdAt: seededAt,
+              topicId: Value(topicId),
+            ),
+          );
+    }
+
+    test('mặc định (all) → trả về mọi từ, không lọc', () async {
+      final travelId = await insertScopedVocab('visa', topicId: 'travel');
+      final manualId = await insertScopedVocab('serendipity');
+
+      final due = await repository.getDueCards(seededAt);
+      expect(due.map((c) => c.id), containsAll([travelId, manualId]));
+    });
+
+    test('scope topic → chỉ từ của chủ đề đó', () async {
+      final travelId = await insertScopedVocab('visa', topicId: 'travel');
+      await insertScopedVocab('spoon', topicId: 'food');
+      await insertScopedVocab('serendipity');
+
+      final due = await repository.getDueCards(
+        seededAt,
+        scope: const StudyScope.topic('travel'),
+      );
+      expect(due.map((c) => c.id), [travelId]);
+    });
+
+    test('scope manual → chỉ từ tự thêm (topicId IS NULL)', () async {
+      await insertScopedVocab('visa', topicId: 'travel');
+      final manualId = await insertScopedVocab('serendipity');
+
+      final due = await repository.getDueCards(
+        seededAt,
+        scope: const StudyScope.manual(),
+      );
+      expect(due.map((c) => c.id), [manualId]);
+    });
+
+    test('scope vẫn tôn trọng lịch SRS — từ chưa đến hạn bị loại', () async {
+      final travelId = await insertScopedVocab('visa', topicId: 'travel');
+      final before = await repository.getProgress(travelId);
+      await repository.recordAnswer(
+        scheduleNextReview(
+          current: before,
+          rating: StudyRating.easy,
+          now: seededAt,
+        ),
+      );
+
+      final due = await repository.getDueCards(
+        seededAt,
+        scope: const StudyScope.topic('travel'),
+      );
+      expect(due, isEmpty);
+    });
+
+    test('scope không khớp từ nào → rỗng', () async {
+      await insertScopedVocab('visa', topicId: 'travel');
+
+      final due = await repository.getDueCards(
+        seededAt,
+        scope: const StudyScope.topic('không-tồn-tại'),
+      );
+      expect(due, isEmpty);
     });
   });
 }

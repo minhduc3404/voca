@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:voca_app/core/db/app_database.dart';
 import 'package:voca_app/features/study/data/drift_study_log_repository.dart';
 import 'package:voca_app/features/study/data/drift_study_stats_repository.dart';
+import 'package:voca_app/features/study/domain/study_scope.dart';
 
 void main() {
   late AppDatabase db;
@@ -169,9 +170,35 @@ void main() {
   });
 
   group('DriftStudyStatsRepository.getActiveTopics', () {
-    test('không có topic_id → rỗng', () async {
-      await insertVocab('manual-word'); // catalogId null → topicId null
+    test('không có từ nào → rỗng', () async {
       expect(await statsRepo.getActiveTopics(), isEmpty);
+    });
+
+    test('từ không thuộc chủ đề → gộp thành 1 nhóm tự thêm', () async {
+      await insertVocab('manual-word'); // catalogId null → topicId null
+      await insertVocab('another-manual');
+
+      final topics = await statsRepo.getActiveTopics();
+      expect(topics, hasLength(1));
+      expect(topics.single.topicId, isNull);
+      expect(topics.single.isManual, isTrue);
+      expect(topics.single.wordCount, 2);
+      expect(topics.single.scope, const StudyScope.manual());
+    });
+
+    test('nhóm tự thêm đứng cạnh chủ đề catalog, sắp theo số từ', () async {
+      await insertVocab('manual-1');
+      await insertVocab('manual-2');
+      await insertVocab('manual-3');
+      await insertVocab('travel', catalogId: 'travel-001');
+
+      final topics = await statsRepo.getActiveTopics();
+      expect(topics, hasLength(2));
+      expect(topics.first.isManual, isTrue); // 3 từ > 1 từ
+      expect(topics.first.wordCount, 3);
+      expect(topics.last.topicId, 'travel');
+      expect(topics.last.isManual, isFalse);
+      expect(topics.last.scope, const StudyScope.topic('travel'));
     });
 
     test('join downloaded_topics_table lấy tên hiển thị, sắp theo số từ', () async {
